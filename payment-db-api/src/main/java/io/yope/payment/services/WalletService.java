@@ -12,7 +12,7 @@ import io.yope.payment.exceptions.ObjectNotFoundException;
  * @author mgerardi
  *
  */
-public interface WalletInterface {
+public interface WalletService {
 
     /**
      * creates a wallet.
