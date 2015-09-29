@@ -41,7 +41,7 @@ public interface Transaction {
         IN
     }
 
-    String getId();
+    Long getId();
 
     Wallet getSource();
 

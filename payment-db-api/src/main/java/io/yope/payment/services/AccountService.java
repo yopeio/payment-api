@@ -6,6 +6,7 @@ package io.yope.payment.services;
 import java.util.List;
 
 import io.yope.payment.domain.Account;
+import io.yope.payment.exceptions.ObjectNotFoundException;
 
 /**
  * @author mgerardi
@@ -21,26 +22,28 @@ public interface AccountService {
     Account create(Account account);
 
     /**
-     * retrieves a user by their id.
+     * retrieves an account by their id.
      * @param id
-     * @return the requested user
+     * @return the requested user or {@literal null} if none found;
      */
     Account getById(Long id);
 
     /**
-     * updates a user.
+     * updates an account with a given {@code id}
      * @param id the id of the user.
      * @param account the account containing the modifications.
      * @return the updated user
+     * @throws ObjectNotFoundException if no user with {@code id} found
      */
-    Account update(Long id, Account account);
+    Account update(Long id, Account account) throws ObjectNotFoundException;
 
     /**
-     * deletes a user.
+     * deletes an account with a given {@code id}
      * @param id the id of the user.
      * @return the deleted user
+     * @throws ObjectNotFoundException if no user with {@code id} found
      */
-    Account delete(Long id);
+    Account delete(Long id) throws ObjectNotFoundException;
 
     /**
      * retrieves all the users.

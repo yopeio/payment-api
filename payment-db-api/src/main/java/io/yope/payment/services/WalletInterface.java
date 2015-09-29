@@ -6,6 +6,7 @@ package io.yope.payment.services;
 import java.util.List;
 
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.exceptions.ObjectNotFoundException;
 
 /**
  * @author mgerardi
@@ -23,14 +24,14 @@ public interface WalletInterface {
     /**
      * retrieves a wallet by id
      * @param id the id of the wallet
-     * @return a wallet
+     * @return a wallet or {@literal null} if none found
      */
     Wallet getById(Long id);
 
     /**
      * retrieves a wallet by the hash
      * @param hash the hash of the wallet
-     * @return a wallet
+     * @return a wallet or {@literal null} if none found
      */
     Wallet getByHash(String hash);
 
@@ -39,15 +40,17 @@ public interface WalletInterface {
      * @param wallet the wallet modifications
      * @param id the id of the wallet
      * @return the new wallet
+     * @throws ObjectNotFoundException if no wallet with the given id is found
      */
-    Wallet update(Long id, Wallet wallet);
+    Wallet update(Long id, Wallet wallet) throws ObjectNotFoundException;
 
     /**
      * deletes a wallet by id
      * @param id the id of the wallet
      * @return the deleted wallet.
+     * @throws ObjectNotFoundException if no wallet with the given id is found
      */
-    Wallet delete(Long id);
+    Wallet delete(Long id) throws ObjectNotFoundException;
 
     /**
      * retrieves a list of wallets owned to an account.

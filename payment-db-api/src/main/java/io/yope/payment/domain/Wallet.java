@@ -17,7 +17,12 @@ public interface Wallet {
         PENDENT;
     }
 
-    String getId();
+    public enum Type {
+        EXTERNAL,
+        INTERNAL;
+    }
+
+    Long getId();
 
     String getHash();
 
@@ -32,5 +37,7 @@ public interface Wallet {
     Long getCreationDate();
 
     Long getModificationDate();
+
+    Type getType();
 
 }

@@ -24,7 +24,7 @@ public interface Account {
         DEVELOPER;
     }
 
-    String getId();
+    Long getId();
 
     String getEmail();
 
