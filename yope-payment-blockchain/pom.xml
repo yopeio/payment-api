@@ -14,13 +14,11 @@
     <dependencies>
         <dependency>
             <groupId>io.yope.payment</groupId>
-            <artifactId>yope-payment-db</artifactId>
-            <version>${project.version}</version>
+            <artifactId>yope-payment-db-api</artifactId>
         </dependency>
         <dependency>
             <groupId>io.yope.payment</groupId>
             <artifactId>yope-payment-mock</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.bitcoinj</groupId>

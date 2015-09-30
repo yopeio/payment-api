@@ -24,7 +24,7 @@ import lombok.ToString;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(of = {"id", "balance"}, includeFieldNames = false)
+@ToString(of = {"name", "balance"}, includeFieldNames = false)
 @NodeEntity
 public class Neo4JWallet implements Wallet {
 
@@ -49,6 +49,10 @@ public class Neo4JWallet implements Wallet {
 
     private Type type;
 
+    private byte[] content;
+
+    private String privateKey;
+
     public static Neo4JWallet.Neo4JWalletBuilder from(final Wallet wallet) {
         return Neo4JWallet.builder()
                 .balance(wallet.getBalance())
@@ -59,6 +63,9 @@ public class Neo4JWallet implements Wallet {
                 .hash(wallet.getHash())
                 .id(wallet.getId())
                 .status(wallet.getStatus())
-                .name(wallet.getName());
+                .name(wallet.getName())
+                .privateKey(wallet.getPrivateKey())
+                .content(wallet.getContent());
     }
+
 }

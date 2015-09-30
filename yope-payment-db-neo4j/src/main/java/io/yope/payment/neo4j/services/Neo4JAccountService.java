@@ -6,7 +6,11 @@ package io.yope.payment.neo4j.services;
 
 import java.util.List;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.support.Neo4jTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Status;
@@ -19,11 +23,15 @@ import io.yope.payment.services.AccountService;
  * @author massi
  *
  */
-public class Neo4JAccountService implements AccountService {
+@Service
+@Transactional
+public class Neo4JAccountService implements AccountService, InitializingBean {
 
     @Autowired
     private AccountRepository repository;
 
+    @Autowired
+    private Neo4jTemplate template;
 
     /*
      * (non-Javadoc)
@@ -78,4 +86,9 @@ public class Neo4JAccountService implements AccountService {
         return repository.findAll().as(List.class);
     }
 
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        template.query("MATCH (n:Account) SET n:`_Account`", null).finish();
+        template.query("MATCH (n:Wallet) SET n:`_Wallet`", null).finish();
+    }
 }

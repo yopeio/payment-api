@@ -8,6 +8,6 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>yope-payment-db</artifactId>
+    <artifactId>yope-payment-db-api</artifactId>
 
 </project>

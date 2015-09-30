@@ -3,6 +3,8 @@ package io.yope.payment.neo4j.services;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.Wallet.Status;
@@ -11,6 +13,8 @@ import io.yope.payment.neo4j.domain.Neo4JWallet;
 import io.yope.payment.neo4j.repositories.WalletRepository;
 import io.yope.payment.services.WalletService;
 
+@Service
+@Transactional
 public class Neo4JWalletService implements WalletService {
 
     @Autowired
@@ -74,7 +78,6 @@ public class Neo4JWalletService implements WalletService {
      */
     @Override
     public List<Wallet> get(final Long accountId) {
-        // TODO Auto-generated method stub
         return repository.findAllByOwner(accountId);
     }
 
