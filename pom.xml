@@ -17,8 +17,9 @@
         <module>yope-payment-rest</module>
         <module>yope-payment-security</module>
         <module>yope-payment-blockchain</module>
-        <module>yope-payment-db</module>
+        <module>yope-payment-db-api</module>
         <module>yope-payment-mock</module>
+        <module>yope-payment-db-neo4j</module>
     </modules>
 
     <properties>
@@ -41,22 +42,22 @@
         <dependencies>
             <dependency>
                 <groupId>io.yope.payment</groupId>
-                <artifactId>blockchain</artifactId>
+                <artifactId>yope-payment-blockchain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.yope.payment</groupId>
-                <artifactId>db</artifactId>
+                <artifactId>yope-payment-db-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.yope.payment</groupId>
-                <artifactId>rest</artifactId>
+                <artifactId>yope-payment-rest</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.yope.payment</groupId>
-                <artifactId>security</artifactId>
+                <artifactId>yope-payment-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- third party dependencies -->
