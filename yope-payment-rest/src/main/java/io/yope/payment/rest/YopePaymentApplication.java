@@ -10,7 +10,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 @Configuration
 @EnableAutoConfiguration
-@ComponentScan("io.yope.payment.blockchain.bitcoinj,io.yope.payment.mock")
+@ComponentScan("io.yope.payment.blockchain.bitcoinj,io.yope.payment.mock,io.yope.payment.rest.resources")
 public class YopePaymentApplication {
     public static void main(String[] args) throws Exception {
         SpringApplication.run(YopePaymentApplication.class, args);

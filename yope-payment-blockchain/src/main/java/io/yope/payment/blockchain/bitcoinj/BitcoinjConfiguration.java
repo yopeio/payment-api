@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -72,10 +73,12 @@ public class BitcoinjConfiguration {
         BitcoinjBlockchainServiceImpl blockChainService =
                 new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup);
         List<Account> accounts = accountService.getAccounts();
+        List<Wallet> wallets = new ArrayList();
         for (Account account : accounts) {
-            List<Wallet> wallets = walletService.get(account.getId());
-            blockChainService.init(wallets);
+            wallets.addAll(walletService.get(account.getId()));
         }
+
+        blockChainService.init(wallets);
         return blockChainService;
     }
 

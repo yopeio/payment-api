@@ -1,28 +1,29 @@
 package io.yope.payment.mock.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.yope.payment.domain.Wallet;
 import lombok.Data;
-import lombok.Getter;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
 @Accessors(fluent=true) @JsonSerialize
-public class WalletMock implements Wallet {
+public class WalletMock implements Wallet, Cloneable, Serializable {
 
-    private long id;
-    private String hash;
-    private BigDecimal balance;
-    private Status status;
-    private String name;
-    private String description;
-    private long creationDate;
-    private long modificationDate;
-    private Type type;
-    private byte[] content;
-    private String publicKey;
+    @JsonProperty private long id;
+    @JsonProperty private String hash;
+    @JsonProperty private BigDecimal balance;
+    @JsonProperty private Status status;
+    @JsonProperty private String name;
+    @JsonProperty private String description;
+    @JsonProperty private long creationDate;
+    @JsonProperty private long modificationDate;
+    @JsonProperty private Type type;
+    @JsonProperty private byte[] content;
+    @JsonProperty private String privateKey;
 
     @Override
     public Long getId() {
@@ -76,6 +77,10 @@ public class WalletMock implements Wallet {
 
     @Override
     public String getPrivateKey() {
-        return publicKey;
+        return privateKey;
+    }
+
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }
