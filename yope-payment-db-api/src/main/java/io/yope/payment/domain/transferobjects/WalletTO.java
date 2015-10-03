@@ -6,8 +6,12 @@ package io.yope.payment.domain.transferobjects;
 import java.math.BigDecimal;
 
 import io.yope.payment.domain.Wallet;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import lombok.experimental.Wither;
 
 /**
  * @author mgerardi
@@ -15,7 +19,11 @@ import lombok.Getter;
  */
 @Builder
 @Getter
+@AllArgsConstructor
 public class WalletTO implements Wallet {
+
+    public WalletTO() {
+    }
 
     private Long id;
 
@@ -35,8 +43,8 @@ public class WalletTO implements Wallet {
 
     private Type type;
 
-    private byte[] content;
+    @Wither private byte[] content;
 
-    private String privateKey;
+    @Wither private String privateKey;
 
 }

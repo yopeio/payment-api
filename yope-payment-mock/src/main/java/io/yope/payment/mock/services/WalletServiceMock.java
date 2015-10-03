@@ -1,8 +1,8 @@
 package io.yope.payment.mock.services;
 
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
-import io.yope.payment.mock.domain.WalletMock;
 import io.yope.payment.services.WalletService;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
 public class WalletServiceMock implements WalletService {
     @Override
     public Wallet create(Wallet wallet) {
-        return new WalletMock().
+        return WalletTO.builder().
                 name(wallet.getName())
                 .status(wallet.getStatus())
                 .type(wallet.getType())
@@ -21,7 +21,7 @@ public class WalletServiceMock implements WalletService {
                 .description(wallet.getDescription())
                 .hash(wallet.getHash())
                 .privateKey(wallet.getPrivateKey())
-                .content(wallet.getContent());
+                .content(wallet.getContent()).build();
     }
 
     @Override

@@ -4,7 +4,7 @@ import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.mock.domain.WalletMock;
+import io.yope.payment.domain.transferobjects.WalletTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
@@ -66,10 +66,9 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             throw new BlockchainException(e);
         }
         registerInBlockchain(btcjWallet);
-        WalletMock wallet = new WalletMock();
-        wallet.hash(freshKey.toAddress(params).toString()).
+        WalletTO wallet = WalletTO.builder().hash(freshKey.toAddress(params).toString()).
                 content(outputStream.toByteArray()).
-                privateKey(freshKey.getPrivateKeyEncoded(params).toString());
+                privateKey(freshKey.getPrivateKeyEncoded(params).toString()).build();
         return wallet;
     }
 

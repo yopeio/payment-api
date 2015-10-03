@@ -8,6 +8,7 @@ import java.util.Set;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Wallet;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 
 /**
@@ -15,6 +16,7 @@ import lombok.Getter;
  *
  */
 @Getter
+@Data
 @Builder
 public class AccountTO implements Account {
 

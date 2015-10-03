@@ -1,3 +1,8 @@
 logging:
     level:
         org.bitcoinj: ERROR
+
+neo4j:
+    neo4jUrl:
+    neo4jUsername:
+    neo4jPassword:
