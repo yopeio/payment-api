@@ -156,6 +156,21 @@
                 <artifactId>bitcoinj-core</artifactId>
                 <version>${bitcoinj.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-neo4j</artifactId>
+                <version>3.3.2.RELEASE</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-neo4j-rest</artifactId>
+                <version>3.3.2.RELEASE</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-commons</artifactId>
+                <version>1.11.0.RELEASE</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
