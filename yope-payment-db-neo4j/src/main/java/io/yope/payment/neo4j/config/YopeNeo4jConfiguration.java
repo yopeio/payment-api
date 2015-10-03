@@ -1,11 +1,10 @@
 package io.yope.payment.neo4j.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Relationship;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -13,15 +12,19 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.neo4j.config.EnableNeo4jRepositories;
 import org.springframework.data.neo4j.config.Neo4jConfiguration;
 import org.springframework.data.neo4j.core.TypeRepresentationStrategy;
-import org.springframework.data.neo4j.rest.SpringCypherRestGraphDatabase;
+import org.springframework.data.neo4j.rest.SpringRestGraphDatabase;
 import org.springframework.data.neo4j.support.typerepresentation.NoopRelationshipTypeRepresentationStrategy;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @EnableTransactionManagement
 @Configuration
 @EnableScheduling
 @EnableAutoConfiguration
+@EnableConfigurationProperties
 @ComponentScan(basePackages = {"io.yope.payment.neo4j.services"})
 @EnableNeo4jRepositories(basePackages = "io.yope.payment.neo4j.repositories")
 @Import(RestDataConfiguration.class)
@@ -46,8 +49,8 @@ public class YopeNeo4jConfiguration extends Neo4jConfiguration {
 
     @Bean
     public GraphDatabaseService graphDatabaseService(
-            Neo4jSettings settings) {
-        return new SpringCypherRestGraphDatabase(settings.getNeo4jUrl(), settings.getNeo4jUsername(), settings.getNeo4jPassword());
+            final Neo4jSettings settings) {
+        return new SpringRestGraphDatabase(settings.getNeo4jUrl(), settings.getNeo4jUsername(), settings.getNeo4jPassword());
     }
 
     @Override

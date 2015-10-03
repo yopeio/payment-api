@@ -88,7 +88,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        template.query("MATCH (n:Account) SET n:`_Account`", null).finish();
-        template.query("MATCH (n:Wallet) SET n:`_Wallet`", null).finish();
+        template.query("MATCH (n:Account) SET n:`_Neo4JAccount`", null).finish();
+        template.query("MATCH (n:Wallet) SET n:`_Neo4JWallet`", null).finish();
     }
 }
