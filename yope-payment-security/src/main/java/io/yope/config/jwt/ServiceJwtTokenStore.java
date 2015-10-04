@@ -1,7 +1,5 @@
 package io.yope.config.jwt;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.jwt.JwtHelper;
@@ -14,20 +12,19 @@ import org.springframework.transaction.annotation.Transactional;
 import io.yope.oauth.model.JWTCommon;
 import io.yope.oauth.model.OAuthAccessToken;
 import io.yope.oauth.model.OAuthRefreshToken;
-import io.yope.repository.OAuthAccessTokenStore;
+import io.yope.repository.IOAuthAccessToken;
 import io.yope.utils.BasicAuth;
 import io.yope.utils.ThreadLocalUtils;
+import lombok.extern.slf4j.Slf4j;
 
-@Transactional(value="restTransactionManager", rollbackFor = Exception.class)
+@Transactional(value="restTransactionManager", rollbackFor = Exception.class) @Slf4j
 public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 	
-	private static final Logger log = LoggerFactory.getLogger(ServiceJwtTokenStore.class.getSimpleName());
-	
-	@Autowired private OAuthAccessTokenStore accessTokenDao;
+	@Autowired private IOAuthAccessToken accessTokenRepository;
 	
 	@Override
-	protected OAuthAccessTokenStore getAccessDao() {
-		return accessTokenDao;
+	protected IOAuthAccessToken getAccessDao() {
+		return accessTokenRepository;
 	}
 	
 	@Override
@@ -75,7 +72,7 @@ public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 		}
 		log.info("Let´s save it... " + accessToken.getAuthenticationId());
 	
-		accessTokenDao.saveOrUpdate(accessToken);
+		accessTokenRepository.saveOrUpdate(accessToken);
 	}
 
 

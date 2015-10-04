@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Controller;
 
+import io.yope.config.OAuth2ServerConfig;
+import io.yope.config.SecurityConfig;
 import io.yope.payment.neo4j.config.RestDataConfiguration;
 import io.yope.payment.neo4j.config.YopeNeo4jConfiguration;
 
@@ -17,6 +19,8 @@ import io.yope.payment.neo4j.config.YopeNeo4jConfiguration;
 @Import({
         RestDataConfiguration.class,
         YopeNeo4jConfiguration.class,
+        OAuth2ServerConfig.class,
+        SecurityConfig.class
 //        BitcoinjConfiguration.class,
 //        BitcoinjMainNetConfiguration.class,
 //        BitcoinjTestNetConfiguration.class,

@@ -29,8 +29,6 @@ public abstract class AbstractJwtTokenStore implements TokenStore {
 	@Autowired protected IOAuthRefreshToken refreshTokenDao;
 	
 	protected final AuthenticationKeyGenerator authenticationKeyGenerator = new DefaultAuthenticationKeyGenerator();
-
-	private int webAppTokenExpiresInSeconds = 600; // XXX TODO globalConfig.advancedProps.integer("webAPP.oauth.token.access.expiresInSeconds")
 	
 	/*
 	 * Force all extending sub classed of this one to inherit this functionality

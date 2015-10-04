@@ -23,6 +23,13 @@ import org.springframework.web.accept.ContentNegotiationStrategy;
 import org.springframework.web.accept.HeaderContentNegotiationStrategy;
 import org.springframework.web.client.RestTemplate;
 
+import io.yope.auth.AccessDeniedExceptionHandler;
+import io.yope.auth.UnauthorizedEntryPoint;
+import io.yope.oauth.model.OAuthAccessToken;
+import io.yope.repository.IOAuthAccessToken;
+import io.yope.repository.IOAuthRefreshToken;
+import io.yope.repository.OAuthAccessTokenStore;
+import io.yope.repository.OAuthRefreshTokenStore;
 import io.yope.repository.user.UserService;
 import io.yope.repository.user.UserServiceNoSqlImpl;
 
@@ -36,11 +43,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired private AuthenticationEntryPoint authenticationEntryPoint;
 	@Autowired private AccessDeniedHandler accessDeniedHandler;
 	@Autowired private PasswordEncoder passEncoder;
-	
-	@Bean
-	public RestTemplate restTemplate() {
-		return new RestTemplate();
-	}
 
 	@Autowired private UserService userService;
 
@@ -63,18 +65,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers(HttpMethod.POST, "/api/me/password/forgot")
 				.antMatchers(HttpMethod.POST, "/api/actions/password/reset")
 				.antMatchers(HttpMethod.POST, "/api/webid")
-
-				.antMatchers(HttpMethod.POST, "/api/idnow/{tranNumber}")
-				.antMatchers(HttpMethod.GET, "/api/barzahlen/ping")
-				.antMatchers(HttpMethod.POST, "/api/barzahlen/notifications")
-				.antMatchers(HttpMethod.PUT, "/api/transactions/p2p/{token}")
-				.antMatchers(HttpMethod.GET, "/api/transactions/p2p/{token}")
-				.antMatchers(HttpMethod.POST, "/api/transactions/p2p/{token}")
-				.antMatchers(HttpMethod.GET, "/api/ref/{id}")
-				.antMatchers(HttpMethod.PUT, "/api/ref/{id}")
-				.antMatchers(HttpMethod.GET, "/api/ref/activate/{id}")
-				.antMatchers(HttpMethod.POST, "/api/ref")
-				.antMatchers(HttpMethod.POST, "/api/aff/invite/instant")
 				.antMatchers(HttpMethod.PUT, "/api/transactions/p2p/internal/{token}")
 				.antMatchers(HttpMethod.GET, "/api/transactions/p2p/internal/{token}");
 	}
@@ -183,42 +173,28 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.permitAll()
 				.antMatchers(HttpMethod.POST, "/api/users/shadow")
 				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/me/password/forgot")
-				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/actions/password/reset")
-				.permitAll()
-				.antMatchers("/admin/**")
-				.permitAll()
-				.antMatchers(HttpMethod.GET,
-						"/api/actions/email/validate/{id}/{verificationCode}")
-				.permitAll()
-				.antMatchers(HttpMethod.GET, "/api/users/invitationcode/{code}")
-				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/webid/")
-				.permitAll()
-				.antMatchers(HttpMethod.GET, "/api/barzahlen/ping")
-				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/barzahlen/notifications")
-				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/idnow/{tranNumber}")
-				.permitAll()
-				.antMatchers(HttpMethod.GET, "/api/ref/**")
-				.permitAll()
-				.antMatchers(HttpMethod.PUT, "/api/ref/**")
-				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/ref")
-				.permitAll()
-				.antMatchers(HttpMethod.PUT, "/api/transactions/p2p/{token}")
-				.permitAll()
-				.antMatchers(HttpMethod.GET, "/api/transactions/p2p/{token}")
-				.permitAll()
-				.antMatchers(HttpMethod.PUT,
-						"/api/transactions/p2p/internal/{token}")
-				.permitAll()
-				.antMatchers(HttpMethod.GET,
-						"/api/transactions/p2p/internal/{token}").permitAll()
 				.antMatchers(HttpMethod.GET,
 						"/secured/route/oauth").fullyAuthenticated();
 	}
 
+	@Bean
+	public RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
+
+	@Bean AccessDeniedHandler accessDeniedHandler() {
+		return new AccessDeniedExceptionHandler();
+	}
+
+	@Bean AuthenticationEntryPoint entryPointBean() {
+		return new UnauthorizedEntryPoint();
+	}
+	
+	@Bean IOAuthAccessToken ioAuthAccessToken() {
+		return new OAuthAccessTokenStore();
+	}
+	
+	@Bean IOAuthRefreshToken iOAuthRefreshToken() {
+		return new OAuthRefreshTokenStore();
+	}
 }

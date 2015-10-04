@@ -31,7 +31,6 @@ import io.yope.config.jwt.ServiceJwtTokenStore;
 @Primary
 public class OAuth2ServerConfig {
 	
-	
 	public static final String WEB_APP_CLIENT = "yope-client";
 	public static final String IPHONE_CLIENT = "iphone";
 	public static final String ANDROID_CLIENT = "android";
@@ -94,8 +93,8 @@ public class OAuth2ServerConfig {
 		            .authorizedGrantTypes("password", "authorization_code", "refresh_token", "implicit")
 		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
 		            .scopes("read", "write", "trust", "update")
-		            .accessTokenValiditySeconds(accessTokenValiditySeconds) //globalConfigs.advancedProps.integer("oauth.token.access.expiresInSeconds"))
-		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds) // globalConfigs.advancedProps.integer("oauth.token.refresh.expiresInSeconds"))
+		            .accessTokenValiditySeconds(accessTokenValiditySeconds) 
+		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds)
 		            .secret("secret")
 		     .and()
 		        .withClient(ANDROID_CLIENT)
@@ -103,14 +102,11 @@ public class OAuth2ServerConfig {
 		            .authorizedGrantTypes("password", "authorization_code", "refresh_token", "implicit")
 		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
 		            .scopes("read", "write", "trust", "update")
-		            .accessTokenValiditySeconds(accessTokenValiditySeconds) // globalConfigs.advancedProps.integer("oauth.token.access.expiresInSeconds"))
-		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds) // globalConfigs.advancedProps.integer("oauth.token.refresh.expiresInSeconds"))
+		            .accessTokenValiditySeconds(accessTokenValiditySeconds) 
+		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds) 
 		            .secret("secret");
-		 	
 		}
 	}
-	
-	
 }
 
 

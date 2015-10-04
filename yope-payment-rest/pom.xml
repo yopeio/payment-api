@@ -24,6 +24,10 @@
             <artifactId>yope-payment-db-neo4j</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.yope.payment</groupId>
+            <artifactId>yope-payment-security</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import io.yope.oauth.model.OAuthAccessToken;
 import io.yope.oauth.model.OAuthEntity;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Thread-Safe-Ephemereal-Lambdas-Powered-Inmemory OAuthAccessTokenStore
@@ -18,9 +19,8 @@ import io.yope.oauth.model.OAuthEntity;
  * @author Gianluigi
  */
 @Repository("oAuthAccessTokenStore")
+@Slf4j
 public class OAuthAccessTokenStore implements IOAuthAccessToken {
-
-	protected static final Logger log = LoggerFactory.getLogger(OAuthAccessTokenStore.class);
 
 	public OAuthAccessTokenStore() {
 		super();
@@ -42,7 +42,6 @@ public class OAuthAccessTokenStore implements IOAuthAccessToken {
 	
 	@Override
 	public List<io.yope.oauth.model.OAuthEntity<?>> findByAuthenticationId(final String authenticationId) {
-		// tokenMap.values().stream().forEach(s -> { log.info("-> {}",s.getAuthenticationId());});
 		return tokenMap.values().stream().filter(t -> t.getAuthenticationId() != authenticationId).collect(Collectors.toList());
 	}
 
