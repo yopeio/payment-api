@@ -1,5 +1,6 @@
 package io.yope.payment.neo4j.services;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +79,7 @@ public class Neo4JWalletService implements WalletService {
      */
     @Override
     public List<Wallet> get(final Long accountId) {
-        return repository.findAllByOwner(accountId);
+        return new ArrayList<Wallet>(repository.findAllByOwner(accountId));
     }
 
 }

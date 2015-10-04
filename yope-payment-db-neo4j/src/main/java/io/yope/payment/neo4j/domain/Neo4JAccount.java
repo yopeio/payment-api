@@ -3,7 +3,9 @@
  */
 package io.yope.payment.neo4j.domain;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.neo4j.annotation.GraphId;
 import org.springframework.data.neo4j.annotation.Indexed;
@@ -33,7 +35,7 @@ public class Neo4JAccount implements Account {
     private final String email;
 
     @RelatedTo(type="OWN")
-    private final Set<Wallet> wallets;
+    private final Set<Neo4JWallet> wallets;
 
     private final String firstName;
 
@@ -56,9 +58,12 @@ public class Neo4JAccount implements Account {
                 .status(account.getStatus())
                 .modificationDate(account.getModificationDate())
                 .registrationDate(account.getRegistrationDate())
-                .wallets(account.getWallets());
+                .wallets(account.getWallets().stream().map( t -> Neo4JWallet.from(t).build()).collect(Collectors.toSet()));
 
     }
 
-
+    @Override
+    public Set<Wallet> getWallets() {
+        return new HashSet<Wallet>(wallets);
+    }
 }

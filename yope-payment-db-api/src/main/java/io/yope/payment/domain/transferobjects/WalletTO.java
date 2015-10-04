@@ -9,8 +9,6 @@ import io.yope.payment.domain.Wallet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 import lombok.experimental.Wither;
 
 /**

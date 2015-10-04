@@ -36,7 +36,6 @@
         <joda.version>2.8.2</joda.version>
         <spring-boot-starter-remote-shell.version>1.3.0.M2</spring-boot-starter-remote-shell.version>
         <bitcoinj.version>0.13.1</bitcoinj.version>
-        <neo4j.version>2.2.5</neo4j.version>
     </properties>
 
     <dependencyManagement>
@@ -92,30 +91,6 @@
                 <artifactId>joda-time</artifactId>
                 <version>${joda.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.neo4j</groupId>
-                <artifactId>neo4j</artifactId>
-                <version>${neo4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.neo4j</groupId>
-                <artifactId>neo4j-kernel</artifactId>
-                <version>${neo4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.neo4j</groupId>
-                <artifactId>neo4j-kernel</artifactId>
-                <version>${neo4j.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.neo4j</groupId>
-                <artifactId>neo4j-io</artifactId>
-                <version>${neo4j.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
             <!-- test dependencies -->
             <dependency>
                 <groupId>junit</groupId>
@@ -155,6 +130,11 @@
                 <groupId>org.bitcoinj</groupId>
                 <artifactId>bitcoinj-core</artifactId>
                 <version>${bitcoinj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-neo4j-rest</artifactId>
+                <version>3.2.2.RELEASE</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

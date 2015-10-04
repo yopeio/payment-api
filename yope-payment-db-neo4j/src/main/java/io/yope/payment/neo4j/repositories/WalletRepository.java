@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.GraphRepository;
+import org.springframework.data.repository.query.Param;
 
-import io.yope.payment.domain.Wallet;
 import io.yope.payment.neo4j.domain.Neo4JWallet;
 
 /**
@@ -23,6 +23,6 @@ public interface WalletRepository extends GraphRepository<Neo4JWallet> {
      * @return a list of wallet
      */
     @Query("MATCH (a)-[:OWNS]->(w:Wallet) where id(a) = {accountId} RETURN w")
-    List<Wallet> findAllByOwner(Long accountId);
+    List<Neo4JWallet> findAllByOwner(@Param("accountId") Long accountId);
 
 }

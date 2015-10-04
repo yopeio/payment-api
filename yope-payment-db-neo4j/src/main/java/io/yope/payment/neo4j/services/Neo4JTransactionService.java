@@ -3,6 +3,7 @@
  */
 package io.yope.payment.neo4j.services;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.neo4j.domain.Neo4JTransaction;
+import io.yope.payment.neo4j.domain.Neo4JWallet;
 import io.yope.payment.neo4j.repositories.TransactionRepository;
 import io.yope.payment.services.TransactionService;
 import io.yope.payment.services.WalletService;
@@ -37,13 +39,13 @@ public class Neo4JTransactionService implements TransactionService {
      */
     @Override
     public Transaction create(final Transaction transaction) throws ObjectNotFoundException {
-        final Transaction toSave = createTransaction(transaction);
+        final Neo4JTransaction toSave = createTransaction(transaction);
         return repository.save(toSave);
     }
 
-    private Transaction createTransaction(final Transaction transaction) throws ObjectNotFoundException {
-        final Wallet source = walletService.getByHash(transaction.getSource().getHash());
-        final Wallet destination = walletService.getByHash(transaction.getDestination().getHash());
+    private Neo4JTransaction createTransaction(final Transaction transaction) throws ObjectNotFoundException {
+        final Neo4JWallet source = Neo4JWallet.from(walletService.getByHash(transaction.getSource().getHash())).build();
+        final Neo4JWallet destination = Neo4JWallet.from(walletService.getByHash(transaction.getDestination().getHash())).build();
         final StringBuffer msg = new StringBuffer();
         if (source == null) {
             msg.append("source hash:").append(transaction.getSource().getHash()).append("\n");
@@ -77,20 +79,20 @@ public class Neo4JTransactionService implements TransactionService {
             throws ObjectNotFoundException {
         if (Direction.IN.equals(direction)) {
             if (Strings.isNullOrEmpty(reference)) {
-                return repository.findWalletTransactionsIn(walletHash);
+                return new ArrayList<Transaction>(repository.findWalletTransactionsIn(walletHash));
             }
-            return repository.findWalletTransactionsIn(walletHash, reference);
+            return new ArrayList<Transaction>(repository.findWalletTransactionsIn(walletHash, reference));
         }
         if (Direction.OUT.equals(direction)) {
             if (Strings.isNullOrEmpty(reference)) {
-                return repository.findWalletTransactionsOut(walletHash);
+                return new ArrayList<Transaction>(repository.findWalletTransactionsOut(walletHash));
             }
-            return repository.findWalletTransactionsOut(walletHash, reference);
+            return new ArrayList<Transaction>(repository.findWalletTransactionsOut(walletHash, reference));
         }
         if (Strings.isNullOrEmpty(reference)) {
-            return repository.findWalletTransactions(walletHash);
+            return new ArrayList<Transaction>(repository.findWalletTransactions(walletHash));
         }
-        return repository.findWalletTransactions(walletHash, reference);
+        return new ArrayList<Transaction>(repository.findWalletTransactions(walletHash, reference));
     }
 
     /* (non-Javadoc)
@@ -101,20 +103,20 @@ public class Neo4JTransactionService implements TransactionService {
             throws ObjectNotFoundException {
         if (Direction.IN.equals(direction)) {
             if (Strings.isNullOrEmpty(reference)) {
-                return repository.findAccountTransactionsIn(accountId);
+                return new ArrayList<Transaction>(repository.findAccountTransactionsIn(accountId));
             }
-            return repository.findAccountTransactionsIn(accountId, reference);
+            return new ArrayList<Transaction>(repository.findAccountTransactionsIn(accountId, reference));
         }
         if (Direction.OUT.equals(direction)) {
             if (Strings.isNullOrEmpty(reference)) {
-                return repository.findAccountTransactionsOut(accountId);
+                return new ArrayList<Transaction>(repository.findAccountTransactionsOut(accountId));
             }
-            return repository.findAccountTransactionsOut(accountId, reference);
+            return new ArrayList<Transaction>(repository.findAccountTransactionsOut(accountId, reference));
         }
         if (Strings.isNullOrEmpty(reference)) {
-            return repository.findAccountTransactions(accountId);
+            return new ArrayList<Transaction>(repository.findAccountTransactions(accountId));
         }
-        return repository.findAccountTransactions(accountId, reference);
+        return new ArrayList<Transaction>(repository.findAccountTransactions(accountId, reference));
     }
 
 }
