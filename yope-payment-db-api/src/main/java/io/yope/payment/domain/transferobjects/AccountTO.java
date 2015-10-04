@@ -3,38 +3,40 @@
  */
 package io.yope.payment.domain.transferobjects;
 
-import java.util.Set;
-
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Wallet;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 /**
  * @author mgerardi
  *
  */
-@Getter
-@Data
 @Builder
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class AccountTO implements Account {
 
-    private final Long id;
+    private Long id;
 
-    private final String email;
+    private String email;
 
-    private final Set<Wallet> wallets;
+    private Set<Wallet> wallets;
 
-    private final String firstName;
+    private String firstName;
 
-    private final String lastName;
+    private String lastName;
 
-    private final Status status;
+    private Status status;
 
-    private final Type type;
+    private Type type;
 
-    private final Long registrationDate;
+    private Long registrationDate;
 
-    private final Long modificationDate;
+    private Long modificationDate;
 }

@@ -3,12 +3,14 @@
  */
 package io.yope.payment.domain.transferobjects;
 
-import java.math.BigDecimal;
-
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 /**
  * @author mgerardi
@@ -16,28 +18,30 @@ import lombok.Getter;
  */
 @Builder
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class TransactionTO implements Transaction {
 
-    private final Long id;
+    private Long id;
 
-    private final Wallet source;
+    private Wallet source;
 
-    private final Wallet destination;
+    private Wallet destination;
 
-    private final String reference;
+    private String reference;
 
-    private final Status status;
+    private Status status;
 
-    private final String description;
+    private String description;
 
-    private final BigDecimal amount;
+    private BigDecimal amount;
 
-    private final Long creationDate;
+    private Long creationDate;
 
-    private final Long acceptedDate;
+    private Long acceptedDate;
 
-    private final Long deniedDate;
+    private Long deniedDate;
 
-    private final Long completedDate;
+    private Long completedDate;
 
 }
