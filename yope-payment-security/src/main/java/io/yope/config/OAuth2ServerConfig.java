@@ -44,7 +44,6 @@ public class OAuth2ServerConfig {
 
 		@Autowired private AuthenticationManager authenticationManager;
 
-		//@Autowired private GlobalConfigurations globalConfigs; // let´s simplify for the time being...
 		private final static Integer accessTokenValiditySeconds = 300;
 		private final static Integer refreshTokenValiditySeconds = 300;
 		private final static Integer webappOAuthExpiresInSeconds = 500; 
