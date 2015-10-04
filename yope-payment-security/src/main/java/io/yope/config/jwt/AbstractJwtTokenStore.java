@@ -21,11 +21,11 @@ import io.yope.oauth.model.OAuthEntity;
 import io.yope.oauth.model.OAuthRefreshToken;
 import io.yope.repository.IOAuthAccessToken;
 import io.yope.repository.IOAuthRefreshToken;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class AbstractJwtTokenStore implements TokenStore {
 	
-	private static final Logger log = LoggerFactory.getLogger(AbstractJwtTokenStore.class.getSimpleName());
-
 	@Autowired protected IOAuthRefreshToken refreshTokenDao;
 	
 	protected final AuthenticationKeyGenerator authenticationKeyGenerator = new DefaultAuthenticationKeyGenerator();
@@ -76,7 +76,7 @@ public abstract class AbstractJwtTokenStore implements TokenStore {
 		OAuthRefreshToken refreshEntity = refreshTokenDao.findByTokenId(common.getJti());
 		if(refreshEntity == null)
 			return null;
-		return SerializationUtils.deserialize(refreshEntity.getoAuth2RefreshToken());
+		return SerializationUtils.deserialize(refreshEntity.getOAuth2RefreshToken());
 	}
 
 	@Override
@@ -130,17 +130,6 @@ public abstract class AbstractJwtTokenStore implements TokenStore {
 		}
 		
 		final Object authentication = SerializationUtils.deserialize(storedObject.get(0).getToken());
-
-		// if this is a token obtained for the web client, then force expiry.
-//		if(OAuth2ServerConfig.WEB_APP_CLIENT.equals(storedObject.get(0).getClientId())) {
-//			DefaultOAuth2AccessToken token = (DefaultOAuth2AccessToken) authentication;
-//			
-//			if(token.getExpiresIn() < webAppTokenExpiresInSeconds ) {
-//				token.setExpiration(DateUtil.getTimeInUTC().minusSeconds(1).toDate());
-//				storedObject.get(0).setToken(SerializationUtils.serialize(token));
-//				return (OAuth2AccessToken) authentication;
-//			}
-//		}
 		
 		updateLastLogin(storedObject.get(0));
 

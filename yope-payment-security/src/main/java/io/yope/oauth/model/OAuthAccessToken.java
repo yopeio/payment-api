@@ -4,6 +4,10 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter @Setter
 public class OAuthAccessToken extends OAuthEntity<OAuthAccessToken>{
 
 	private static final long serialVersionUID = -7945135597484875770L;
@@ -12,8 +16,7 @@ public class OAuthAccessToken extends OAuthEntity<OAuthAccessToken>{
 	private String userAgent;
 	private String remoteIP;
 	
-	public OAuthAccessToken() {
-    }
+	public OAuthAccessToken() {}
 
 	public OAuthAccessToken(final OAuth2AccessToken oAuth2AccessToken, final OAuth2Authentication authentication, final String authenticationId, String jti, String refreshJTI, Long lastLogin, String userAgent, String remoteIP) {
        super(oAuth2AccessToken, authentication, authenticationId, jti, refreshJTI, lastLogin);
@@ -22,33 +25,6 @@ public class OAuthAccessToken extends OAuthEntity<OAuthAccessToken>{
        this.remoteIP = remoteIP;
     }
 	
-	public User getUser() {
-		return user;
-	}
-	
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public String getUserAgent() {
-		return userAgent;
-	}
-
-	public void setUserAgent(String userAgent) {
-		this.userAgent = userAgent;
-	}
-
-	public String getRemoteIP() {
-		return remoteIP;
-	}
-
-	public void setRemoteIP(String remoteIP) {
-		this.remoteIP = remoteIP;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -58,9 +34,6 @@ public class OAuthAccessToken extends OAuthEntity<OAuthAccessToken>{
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

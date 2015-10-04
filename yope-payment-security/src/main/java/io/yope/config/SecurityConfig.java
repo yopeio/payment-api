@@ -25,7 +25,6 @@ import org.springframework.web.client.RestTemplate;
 
 import io.yope.auth.AccessDeniedExceptionHandler;
 import io.yope.auth.UnauthorizedEntryPoint;
-import io.yope.oauth.model.OAuthAccessToken;
 import io.yope.repository.IOAuthAccessToken;
 import io.yope.repository.IOAuthRefreshToken;
 import io.yope.repository.OAuthAccessTokenStore;
@@ -99,7 +98,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(final AuthenticationManagerBuilder auth)
 			throws Exception {
-		auth.userDetailsService(userService()).passwordEncoder(passEncoder);
+		auth.userDetailsService(userService).passwordEncoder(passEncoder);
 	}
 
 	@Override

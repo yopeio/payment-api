@@ -15,11 +15,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.yope.utils.ThreadLocalUtils;
+import lombok.extern.slf4j.Slf4j;
 
-@Component
+@Component @Slf4j
 public class LocaleFilter extends OncePerRequestFilter {
-	
-	private final Logger logger = LoggerFactory.getLogger(LocaleFilter.class);
 	
 	@Override
 	protected void initFilterBean() throws ServletException {
