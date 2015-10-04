@@ -1,6 +1,7 @@
 package io.yope.payment.rest.resources;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -39,6 +40,7 @@ public class WalletResource {
                 type(wallet.getType()).
                 balance(wallet.getBalance()).
                 description(wallet.getDescription())
+                .hash(UUID.randomUUID().toString())
                 .build();
         saved = walletService.create(toSave);
 
