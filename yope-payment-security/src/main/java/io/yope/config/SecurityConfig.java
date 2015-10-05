@@ -50,22 +50,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(final WebSecurity web) throws Exception {
 		web.debug(true)
 				.ignoring()
-				.antMatchers("/webjars/**", "/images/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/admin/**")
+				.antMatchers("/webjars/**", "/images/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/wallets/**")
 				.and()
 				.ignoring()
 				.antMatchers(HttpMethod.OPTIONS, "/**")
-				.antMatchers(HttpMethod.GET, "/api/version/mobile")
-				.antMatchers(HttpMethod.GET, "/api/version/web")
-				.antMatchers(HttpMethod.GET, "/api/__tk26__/*")
-				.antMatchers(HttpMethod.POST, "/api/users")
-				.antMatchers(HttpMethod.GET, "/api/actions/email/validate/{id}/{verificationCode}")
-				.antMatchers(HttpMethod.GET, "/api/users/invitationcode/{code}")
-				.antMatchers(HttpMethod.POST, "/api/users/shadow")
-				.antMatchers(HttpMethod.POST, "/api/me/password/forgot")
-				.antMatchers(HttpMethod.POST, "/api/actions/password/reset")
-				.antMatchers(HttpMethod.POST, "/api/webid")
-				.antMatchers(HttpMethod.PUT, "/api/transactions/p2p/internal/{token}")
-				.antMatchers(HttpMethod.GET, "/api/transactions/p2p/internal/{token}");
+				.antMatchers(HttpMethod.GET, "/wallets");
 	}
 	
 	@Bean
@@ -132,9 +121,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				// SECURE IT
 				.antMatchers("/users/**", "/cards/**", "/accounts/**",
 						"/postident/**", "/idnow/**", "/webid/**", "/me/**",
-						"/actions/**", "/ref/**", "/resources/**", "/ps/**",
-						"/transactions/**", "/kyc/**", "/settings/**",
-						"/transactions/p2p/**", "/barzahlen/**", 
 						"/api/version",
 						"/secured/route/oauth")
 				.and()
@@ -165,10 +151,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/api/resources/**")
 				.fullyAuthenticated()
 				.antMatchers(HttpMethod.OPTIONS, "/**")
-				.permitAll()
-				.antMatchers(HttpMethod.GET, "/api/version")
-				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/users")
 				.permitAll()
 				.antMatchers(HttpMethod.POST, "/api/users/shadow")
 				.permitAll()
