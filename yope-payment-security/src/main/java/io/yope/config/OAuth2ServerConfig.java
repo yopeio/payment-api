@@ -21,21 +21,21 @@ import io.yope.config.jwt.ServiceJwtTokenStore;
 
 /**
  * Reference: http://projects.spring.io/spring-security-oauth/docs/oauth2.html
- * 
+ *
  * @author Gianluigi
  */
 @ComponentScan
 @EnableResourceServer
-@Import({SecurityConfig.class})
+@Import(SecurityConfig.class)
 @Order(value=2)
 @Primary
 public class OAuth2ServerConfig {
-	
-	public static final String WEB_APP_CLIENT = "yope-client";
+
+	public static final String WEB_APP_CLIENT = "my-trusted-wdpClient";
 	public static final String IPHONE_CLIENT = "iphone";
 	public static final String ANDROID_CLIENT = "android";
 
-	private static final String API_RESOURCE = "API";
+	private static final String API_RESOURCE = "oauth2-resource";
 
 	@Configuration
 	@EnableAuthorizationServer
@@ -46,8 +46,8 @@ public class OAuth2ServerConfig {
 
 		private final static Integer accessTokenValiditySeconds = 300;
 		private final static Integer refreshTokenValiditySeconds = 300;
-		private final static Integer webappOAuthExpiresInSeconds = 500; 
-		
+		private final static Integer webappOAuthExpiresInSeconds = 500;
+
 		// OAuth2 security configurer
 		@Override
 		public void configure(final AuthorizationServerSecurityConfigurer oauthServer) throws Exception {
@@ -55,7 +55,7 @@ public class OAuth2ServerConfig {
 				.tokenKeyAccess("isAnonymous() || hasAuthority('ROLE_TRUSTED_CLIENT')")
 				.checkTokenAccess("hasAuthority('ROLE_TRUSTED_CLIENT')");
 		}
-		
+
 		// OAuth2 endpoint configurer
 		@Override
 		public void configure(final AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
@@ -64,12 +64,12 @@ public class OAuth2ServerConfig {
 				.tokenStore(tokenStore())
 				.accessTokenConverter(accessTokenConverter());
 		}
-		
+
 		@Bean
 		public JwtAccessTokenConverter accessTokenConverter() {
 			return new JwtAccessTokenConverter();
 		}
-				
+
 		@Bean
 		public TokenStore tokenStore() {
 			return new ServiceJwtTokenStore();
@@ -92,7 +92,7 @@ public class OAuth2ServerConfig {
 		            .authorizedGrantTypes("password", "authorization_code", "refresh_token", "implicit")
 		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
 		            .scopes("read", "write", "trust", "update")
-		            .accessTokenValiditySeconds(accessTokenValiditySeconds) 
+		            .accessTokenValiditySeconds(accessTokenValiditySeconds)
 		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds)
 		            .secret("secret")
 		     .and()
@@ -101,8 +101,8 @@ public class OAuth2ServerConfig {
 		            .authorizedGrantTypes("password", "authorization_code", "refresh_token", "implicit")
 		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
 		            .scopes("read", "write", "trust", "update")
-		            .accessTokenValiditySeconds(accessTokenValiditySeconds) 
-		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds) 
+		            .accessTokenValiditySeconds(accessTokenValiditySeconds)
+		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds)
 		            .secret("secret");
 		}
 	}

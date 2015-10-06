@@ -50,29 +50,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(final WebSecurity web) throws Exception {
 		web.debug(true)
 				.ignoring()
-				.antMatchers("/webjars/**", "/images/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/wallets/**", "/accounts/**")
+				.antMatchers("/webjars/**", "/images/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/wallets/**")
 				.and()
 				.ignoring()
 				.antMatchers(HttpMethod.OPTIONS, "/**")
 				.antMatchers(HttpMethod.GET, "/wallets");
 	}
-	
+
 	@Bean
 	public PasswordEncoder passwordEncoder() { // no enconding for the time being
         return new PasswordEncoder() {
-			
+
 			@Override
-			public boolean matches(CharSequence rawPassword, String encodedPassword) {
+			public boolean matches(final CharSequence rawPassword, final String encodedPassword) {
 				return true;
 			}
-			
+
 			@Override
-			public String encode(CharSequence rawPassword) {
+			public String encode(final CharSequence rawPassword) {
 				return rawPassword.toString();
 			}
 		};
     }
-	
+
 	@Bean
 	public UserService userService() {
         return new UserServiceNoSqlImpl();
@@ -92,14 +92,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	/** This is the configuration for the security module itself*/
-	protected void configure(HttpSecurity http) throws Exception {
+	protected void configure(final HttpSecurity http) throws Exception {
 
 		ContentNegotiationStrategy contentNegotiationStrategy = http
 				.getSharedObject(ContentNegotiationStrategy.class);
 		if (contentNegotiationStrategy == null) {
 			contentNegotiationStrategy = new HeaderContentNegotiationStrategy();
 		}
-		MediaTypeRequestMatcher preferredMatcher = new MediaTypeRequestMatcher(
+		final MediaTypeRequestMatcher preferredMatcher = new MediaTypeRequestMatcher(
 				contentNegotiationStrategy,
 				MediaType.APPLICATION_FORM_URLENCODED,
 				MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA);
@@ -132,23 +132,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.xssProtection()
 				.and()
 				.authorizeRequests()
-				.antMatchers("/api/users/**")
+				.antMatchers("/accounts/**")
 				.fullyAuthenticated()
-				.antMatchers("/api/cards/**")
-				.fullyAuthenticated()
-				.antMatchers("/api/accounts/**")
-				.fullyAuthenticated()
-				.antMatchers("/api//kyc/**")
-				.fullyAuthenticated()
-				.antMatchers("/api/ps/**")
-				.fullyAuthenticated()
-				.antMatchers("/api/me/**")
-				.fullyAuthenticated()
-				.antMatchers("/api//transactions/**")
-				.fullyAuthenticated()
-				.antMatchers("/api/settings/**")
-				.fullyAuthenticated()
-				.antMatchers("/api/resources/**")
+				.antMatchers("/transactions/**")
 				.fullyAuthenticated()
 				.antMatchers(HttpMethod.OPTIONS, "/**")
 				.permitAll()
@@ -170,11 +156,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Bean AuthenticationEntryPoint entryPointBean() {
 		return new UnauthorizedEntryPoint();
 	}
-	
+
 	@Bean IOAuthAccessToken ioAuthAccessToken() {
 		return new OAuthAccessTokenStore();
 	}
-	
+
 	@Bean IOAuthRefreshToken iOAuthRefreshToken() {
 		return new OAuthRefreshTokenStore();
 	}

@@ -17,95 +17,99 @@ import io.yope.utils.BasicAuth;
 import io.yope.utils.ThreadLocalUtils;
 import lombok.extern.slf4j.Slf4j;
 
-@Transactional(value="restTransactionManager", rollbackFor = Exception.class) @Slf4j
+@Transactional(value="neo4jTransactionManager", rollbackFor = Exception.class) @Slf4j
 public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
-	
+
 	@Autowired private IOAuthAccessToken accessTokenRepository;
-	
+
 	@Override
 	protected IOAuthAccessToken getAccessDao() {
 		return accessTokenRepository;
 	}
-	
+
 	@Override
 	public OAuth2Authentication readAuthentication(final OAuth2AccessToken paramOAuth2AccessToken) {
 		final OAuthAccessToken token = (OAuthAccessToken) readAuthenticationFromDB(paramOAuth2AccessToken.getValue());
-		
+
 		final OAuth2Authentication token2 = org.springframework.security.oauth2.common.util.SerializationUtils.deserialize(token.getAuthentication());
 		log.info("Auth token {}", token2);
-		
-		// TODO XXX 
-		User loggedUser = (User) token2.getPrincipal();
-		User u = (User) token.getUser();
+
+		// TODO XXX
+		final User loggedUser = (User) token2.getPrincipal();
+		final User u = token.getUser();
 		log.info("------------------------------------");
 		log.info("Logged User  {}", loggedUser);
 		log.info("Registered User  {}", u);
 		log.info("------------------------------------");
 		//
-		
+
 		// does it have any sense?
 		if(!u.getUsername().equals(loggedUser.getUsername())) {
 			throw new InvalidTokenException("Invalid access token");
 		}
-			
+
 		return token2;
 	}
-	
+
 	@Override
-	public void storeAccessToken(OAuth2AccessToken paramOAuth2AccessToken, OAuth2Authentication paramOAuth2Authentication) {
-		JWTCommon accessJTI = io.yope.utils.Serializer.createFromJson(JWTCommon.class, JwtHelper.decode(paramOAuth2AccessToken.getValue()).getClaims());
-		
+	public void storeAccessToken(final OAuth2AccessToken paramOAuth2AccessToken, final OAuth2Authentication paramOAuth2Authentication) {
+		final JWTCommon accessJTI = io.yope.utils.Serializer.createFromJson(JWTCommon.class, JwtHelper.decode(paramOAuth2AccessToken.getValue()).getClaims());
+
 		if (paramOAuth2AccessToken.getRefreshToken() != null) {
-			JWTCommon refreshJTI = extractJtiFromRefreshToken(paramOAuth2AccessToken.getRefreshToken().getValue());
+			extractJtiFromRefreshToken(paramOAuth2AccessToken.getRefreshToken().getValue());
 		}
-		
+
 		final String ip = BasicAuth.getClientIP(ThreadLocalUtils.currentRequest.get());
 		final String remoteClientName = BasicAuth.getClientDevice(ThreadLocalUtils.currentRequest.get());
-				
+
 		OAuthAccessToken accessToken = null; // TODO refactor
 		if(paramOAuth2AccessToken.getRefreshToken() != null) {
-			JWTCommon refreshJTI = extractJtiFromRefreshToken(paramOAuth2AccessToken.getRefreshToken().getValue());
+			final JWTCommon refreshJTI = extractJtiFromRefreshToken(paramOAuth2AccessToken.getRefreshToken().getValue());
 			accessToken = new OAuthAccessToken(paramOAuth2AccessToken, paramOAuth2Authentication, authenticationKeyGenerator.extractKey(paramOAuth2Authentication), accessJTI.getJti(), refreshJTI.getJti(), System.currentTimeMillis(), remoteClientName, ip);
 		}
 		else {
 			accessToken = new OAuthAccessToken(paramOAuth2AccessToken, paramOAuth2Authentication, authenticationKeyGenerator.extractKey(paramOAuth2Authentication), accessJTI.getJti(), null, System.currentTimeMillis(), remoteClientName, ip);
 		}
 		log.info("Let´s save it... " + accessToken.getAuthenticationId());
-	
+
 		accessTokenRepository.saveOrUpdate(accessToken);
 	}
 
 
 	@Override
-	@Transactional(value="restTransactionManager", readOnly=false, rollbackFor = Exception.class)
+	@Transactional(value="neo4jTransactionManager", readOnly=false, rollbackFor = Exception.class)
 	public void removeAccessToken(final OAuth2AccessToken paramOAuth2AccessToken) {
-		JWTCommon common = extractJtiFromRefreshToken(paramOAuth2AccessToken.getValue());
-		OAuthAccessToken storedObject = (OAuthAccessToken) getAccessDao().findByTokenId(common.getJti());
+		final JWTCommon common = extractJtiFromRefreshToken(paramOAuth2AccessToken.getValue());
+		final OAuthAccessToken storedObject = (OAuthAccessToken) getAccessDao().findByTokenId(common.getJti());
 		if(storedObject != null) {
 			getAccessDao().delete(storedObject);
 		}
 	}
-	
+
 	@Override
-	@Transactional(value="restTransactionManager", readOnly=false, rollbackFor = Exception.class)
-	public void removeRefreshToken(OAuth2RefreshToken paramOAuth2RefreshToken) {
-		if(paramOAuth2RefreshToken == null) return;
-		
-		JWTCommon common = extractJtiFromRefreshToken(paramOAuth2RefreshToken.getValue());
-		OAuthRefreshToken storedObject = refreshTokenDao.findByTokenId(common.getJti());
+	@Transactional(value="neo4jTransactionManager", readOnly=false, rollbackFor = Exception.class)
+	public void removeRefreshToken(final OAuth2RefreshToken paramOAuth2RefreshToken) {
+		if(paramOAuth2RefreshToken == null) {
+            return;
+        }
+
+		final JWTCommon common = extractJtiFromRefreshToken(paramOAuth2RefreshToken.getValue());
+		final OAuthRefreshToken storedObject = refreshTokenDao.findByTokenId(common.getJti());
 		if(storedObject != null) {
 			refreshTokenDao.delete(storedObject);
 		}
-	
+
 	}
 
 	@Override
-	@Transactional(value="restTransactionManager", readOnly=false, rollbackFor = Exception.class)
-	public void removeAccessTokenUsingRefreshToken(OAuth2RefreshToken paramOAuth2RefreshToken) {
-		if(paramOAuth2RefreshToken == null) return;
-		
-		JWTCommon common = extractJtiFromRefreshToken(paramOAuth2RefreshToken.getValue());
-		OAuthAccessToken storedToken = (OAuthAccessToken) getAccessDao().findByRefreshToken(common.getJti());
+	@Transactional(value="neo4jTransactionManager", readOnly=false, rollbackFor = Exception.class)
+	public void removeAccessTokenUsingRefreshToken(final OAuth2RefreshToken paramOAuth2RefreshToken) {
+		if(paramOAuth2RefreshToken == null) {
+            return;
+        }
+
+		final JWTCommon common = extractJtiFromRefreshToken(paramOAuth2RefreshToken.getValue());
+		final OAuthAccessToken storedToken = (OAuthAccessToken) getAccessDao().findByRefreshToken(common.getJti());
 		if(storedToken != null) {
 			getAccessDao().delete(storedToken);
 		}

@@ -1,7 +1,24 @@
 package io.yope.payment.rest.resources;
 
+import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.AccountTO;
@@ -11,16 +28,6 @@ import io.yope.payment.rest.requests.RegistrationRequest;
 import io.yope.payment.services.AccountService;
 import io.yope.payment.services.WalletService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Account resource.
@@ -64,7 +71,7 @@ public class AccountResource {
                         description(registrationRequest.getDescription()).
                         type(Wallet.Type.INTERNAL).
                         build();
-        Wallet savedInWallet = walletService.create(inWallet);
+        final Wallet savedInWallet = walletService.create(inWallet);
         account.getWallets().add(savedInWallet);
         if (StringUtils.isNotBlank(registrationRequest.getHash())) {
             walletName = registrationRequest.getFirstName()+"'s External Wallet";
@@ -73,11 +80,11 @@ public class AccountResource {
                     hash(registrationRequest.getHash()).
                     type(Wallet.Type.EXTERNAL).
                     build();
-            Wallet savedExWallet = walletService.create(exWallet);
+            final Wallet savedExWallet = walletService.create(exWallet);
             account.getWallets().add(savedExWallet);
         }
-        Account savedAccount = accountService.create(account);
-        AccountTO to = toAccounTO(savedAccount);
+        final Account savedAccount = accountService.create(account);
+        final AccountTO to = toAccounTO(savedAccount);
         final ResponseHeader header = new ResponseHeader(true, "");
         response.setStatus(Response.Status.CREATED.getStatusCode());
         return new PaymentResponse<Account>(header, to);
@@ -95,9 +102,9 @@ public class AccountResource {
                                                                 @RequestBody(required=false) final AccountTO account) {
         final ResponseHeader header = new ResponseHeader(true, "");
         try {
-            Account updated = accountService.update(accountId, account);
+            final Account updated = accountService.update(accountId, account);
             return new PaymentResponse(header, toAccounTO(updated));
-        } catch (ObjectNotFoundException e) {
+        } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
             return new PaymentResponse(header.success(false).errorCode(e.getMessage()), account);
         }
@@ -110,7 +117,7 @@ public class AccountResource {
      */
     @RequestMapping(value="/{accountId}", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> getAccount(@PathVariable final long accountId) {
-        Account account = accountService.getById(accountId);
+        final Account account = accountService.getById(accountId);
         final ResponseHeader header = new ResponseHeader(true, "");
         return new PaymentResponse<Account>(header, toAccounTO(account));
     }
@@ -121,10 +128,10 @@ public class AccountResource {
      * @return
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public @ResponseBody PaymentResponse<List<AccountTO>> getAccounts(@PathVariable final long accountId) {
-        List<AccountTO> accountTOs = Lists.newArrayList();
-        List<Account> accounts = accountService.getAccounts();
-        for (Account account : accounts) {
+    public @ResponseBody PaymentResponse<List<AccountTO>> getAccounts() {
+        final List<AccountTO> accountTOs = Lists.newArrayList();
+        final List<Account> accounts = accountService.getAccounts();
+        for (final Account account : accounts) {
             accountTOs.add(toAccounTO(account));
         }
         final ResponseHeader header = new ResponseHeader(true, "");
@@ -145,13 +152,13 @@ public class AccountResource {
             account = accountService.delete(accountId);
             response.setStatus(Response.Status.CREATED.getStatusCode());
             return new PaymentResponse<Account>(header, toAccounTO(account));
-        } catch (ObjectNotFoundException e) {
+        } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
             return new PaymentResponse(header.success(false).errorCode(e.getMessage()), account);
         }
     }
 
-    private AccountTO toAccounTO(Account savedAccount) {
+    private AccountTO toAccounTO(final Account savedAccount) {
         return AccountTO.builder()
                 .email(savedAccount.getEmail())
                 .firstName(savedAccount.getFirstName())
