@@ -10,4 +10,10 @@
 
     <artifactId>yope-payment-db-api</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+        </dependency>
+    </dependencies>
 </project>

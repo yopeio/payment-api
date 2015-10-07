@@ -30,6 +30,13 @@ public interface AccountService {
     Account getById(Long id);
 
     /**
+     * retrieves an account by their id.
+     * @param id
+     * @return the requested user or {@literal null} if none found;
+     */
+    Account getByEmail(String email);
+
+    /**
      * updates an account with a given {@code id}
      * @param id the id of the user.
      * @param account the account containing the modifications.

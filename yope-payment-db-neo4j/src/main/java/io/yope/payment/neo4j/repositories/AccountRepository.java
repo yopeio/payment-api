@@ -13,4 +13,6 @@ import io.yope.payment.neo4j.domain.Neo4JAccount;
  */
 public interface AccountRepository extends GraphRepository<Neo4JAccount> {
 
+    Neo4JAccount findByEmail(String email);
+
 }
