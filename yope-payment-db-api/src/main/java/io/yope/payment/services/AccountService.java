@@ -6,6 +6,7 @@ package io.yope.payment.services;
 import java.util.List;
 
 import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 
 /**
@@ -19,7 +20,7 @@ public interface AccountService {
      * @param account the account to be created.
      * @return the new account with a new id
      */
-    Account create(Account account);
+    Account create(Account account, Wallet... wallets);
 
     /**
      * retrieves an account by their id.

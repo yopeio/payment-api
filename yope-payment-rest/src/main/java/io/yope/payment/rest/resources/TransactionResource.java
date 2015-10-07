@@ -1,21 +1,25 @@
 package io.yope.payment.rest.resources;
 
-import io.yope.payment.domain.Account;
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import io.yope.payment.domain.Transaction;
-import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.services.AccountService;
 import io.yope.payment.services.TransactionService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
-import java.util.List;
 
 /**
  * Wallet Resource.
@@ -23,7 +27,6 @@ import java.util.List;
 @Controller
 @EnableAutoConfiguration
 @RequestMapping("/transactions")
-@Slf4j
 public class TransactionResource {
 
     @Autowired
@@ -38,10 +41,10 @@ public class TransactionResource {
      * @return
      */
     @RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<Wallet> createWallet(
+    public @ResponseBody PaymentResponse<Transaction> createTransaction(
             final HttpServletResponse response,
             @RequestBody(required=false) final TransactionTO transaction) {
-        final ResponseHeader header = new ResponseHeader(true, "");
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.CREATED.getStatusCode());
         final TransactionTO toSave =  TransactionTO.builder()
                 .acceptedDate(transaction.getAcceptedDate())
                 .amount(transaction.getAmount())
@@ -54,21 +57,20 @@ public class TransactionResource {
                 .source(transaction.getSource())
                 .status(transaction.getStatus())
                 .build();
-        Transaction saved = null;
         try {
-            saved = transactionService.create(toSave);
+            final Transaction saved = transactionService.create(toSave);
             response.setStatus(Response.Status.CREATED.getStatusCode());
-            return new PaymentResponse(header, saved);
-        } catch (ObjectNotFoundException e) {
+            return new PaymentResponse<Transaction>(header, saved);
+        } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse(header.success(false).errorCode("not found"), saved);
+            return new PaymentResponse<Transaction>(header.success(false).errorCode("not found"), null);
         }
     }
 
     @RequestMapping(value="/{transactionId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Transaction> get(@PathVariable final long transactionId) {
-        final ResponseHeader header = new ResponseHeader(true, "");
-        return new PaymentResponse(header, transactionService.get(transactionId));
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
+        return new PaymentResponse<Transaction>(header, transactionService.get(transactionId));
     }
 
     /**
@@ -80,14 +82,14 @@ public class TransactionResource {
     public @ResponseBody PaymentResponse<List<Transaction>> getTransactions(final HttpServletResponse response,
                                                                                    @RequestHeader final String reference,
                                                                                    @RequestHeader final long accountId) {
-        Account account = accountService.getById(accountId);
-        final ResponseHeader header = new ResponseHeader(true, "");
+        accountService.getById(accountId);
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
         List<Transaction> transactions = null;
         try {
             transactions = transactionService.getForAccount(accountId, reference, Transaction.Direction.BOTH);
-        } catch (ObjectNotFoundException e) {
+        } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse(header.success(false).errorCode(e.getMessage()), account);
+            return new PaymentResponse<List<Transaction>>(header.success(false).errorCode(e.getMessage()), null);
         }
         return new PaymentResponse<List<Transaction>>(header, transactions);
     }

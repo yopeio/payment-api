@@ -15,7 +15,7 @@ import io.yope.payment.neo4j.config.YopeNeo4jConfiguration;
 @Controller
 @Configuration
 @EnableAutoConfiguration
-@ComponentScan("io.yope.payment.rest.resources")
+@ComponentScan({"io.yope.payment.rest.resources", "io.yope.payment.rest.helpers"})
 @Import({
         RestDataConfiguration.class,
         YopeNeo4jConfiguration.class,

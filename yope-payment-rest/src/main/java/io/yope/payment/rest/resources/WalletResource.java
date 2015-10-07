@@ -1,22 +1,27 @@
 package io.yope.payment.rest.resources;
 
+import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
-import io.yope.payment.services.AccountService;
 import io.yope.payment.services.TransactionService;
 import io.yope.payment.services.WalletService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Wallet Resource.
@@ -24,14 +29,10 @@ import java.util.UUID;
 @Controller
 @EnableAutoConfiguration
 @RequestMapping("/wallets")
-@Slf4j
 public class WalletResource {
 
     @Autowired
     private WalletService walletService;
-
-    @Autowired
-    private AccountService accountService;
 
     @Autowired
     private TransactionService transactionService;
@@ -46,7 +47,7 @@ public class WalletResource {
     public @ResponseBody PaymentResponse<Wallet> createWallet(
             final HttpServletResponse response,
             @RequestBody(required=false) final WalletTO wallet) {
-        final ResponseHeader header = new ResponseHeader(true, "");
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.CREATED.getStatusCode());
         final WalletTO toSave =  WalletTO.builder().
                 name(wallet.getName()).
                 status(Wallet.Status.PENDENT).
@@ -56,7 +57,7 @@ public class WalletResource {
                 .hash(UUID.randomUUID().toString())
                 .build();
         response.setStatus(Response.Status.CREATED.getStatusCode());
-        return new PaymentResponse(header, walletService.create(toSave));
+        return new PaymentResponse<Wallet>(header, walletService.create(toSave));
     }
 
     /**
@@ -69,14 +70,14 @@ public class WalletResource {
     public @ResponseBody PaymentResponse<Wallet> updateWallet(
             @RequestBody(required=false) final WalletTO wallet,
             final HttpServletResponse response) {
-        final ResponseHeader header = new ResponseHeader(true, "");
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         Wallet saved = null;
         try {
             saved = walletService.update(wallet.getId(), wallet);
-            return new PaymentResponse(header, saved);
-        } catch (ObjectNotFoundException e) {
+            return new PaymentResponse<Wallet>(header, saved);
+        } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse(header.success(false).errorCode(e.getMessage()), wallet);
+            return new PaymentResponse<Wallet>(header.success(false).errorCode(e.getMessage()), wallet);
         }
     }
 
@@ -89,13 +90,13 @@ public class WalletResource {
     @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<List<Wallet>> getWallets(@RequestHeader final long accountId,
                                                                   final HttpServletResponse response) {
-        final ResponseHeader header = new ResponseHeader(true, "");
-        List<Wallet> wallets = walletService.get(accountId);
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
+        final List<Wallet> wallets = walletService.get(accountId);
         if (wallets != null && !wallets.isEmpty()) {
-            return new PaymentResponse(header, wallets);
+            return new PaymentResponse<List<Wallet>>(header, wallets);
         } else {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse(header.success(false).errorCode("not found"), wallets);
+            return new PaymentResponse<List<Wallet>>(header.success(false).errorCode("not found"), wallets);
         }
     }
 
@@ -110,13 +111,13 @@ public class WalletResource {
     public PaymentResponse<Wallet> getWallet(@RequestHeader final long accountId,
                                              @PathVariable final long walletId,
                                              final HttpServletResponse response) {
-        final ResponseHeader header = new ResponseHeader(true, "");
-        Wallet wallet = walletService.getById(walletId);
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
+        final Wallet wallet = walletService.getById(walletId);
         if (wallet != null) {
-            return new PaymentResponse(header, wallet);
+            return new PaymentResponse<Wallet>(header, wallet);
         } else {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse(header.success(false).errorCode(walletId + " not found"), wallet);
+            return new PaymentResponse<Wallet>(header.success(false).errorCode(walletId + " not found"), wallet);
         }
     }
 
@@ -127,18 +128,18 @@ public class WalletResource {
      * @param response
      * @return
      */
-    @RequestMapping(value="/transactions/{walletId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value="/{walletId}/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<List<Transaction>> getForWallet(@PathVariable final String walletId,
                                                                          @RequestHeader final String reference,
                                                                          final HttpServletResponse response) {
-        final ResponseHeader header = new ResponseHeader(true, "");
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
         List<Transaction> transactions = null;
         try {
             transactions = transactionService.getForWallet(walletId, reference, Transaction.Direction.BOTH);
-            return new PaymentResponse(header, transactions);
-        } catch (ObjectNotFoundException e) {
+            return new PaymentResponse<List<Transaction>>(header, transactions);
+        } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse(header.success(false).errorCode("not found"), transactions);
+            return new PaymentResponse<List<Transaction>>(header.success(false).errorCode("not found"), transactions);
         }
     }
 
@@ -153,13 +154,13 @@ public class WalletResource {
     public PaymentResponse<Wallet> deactivateWallet(@RequestHeader final long accountId,
                                                     @PathVariable final long walletId,
                                                     final HttpServletResponse response) {
-        final ResponseHeader header = new ResponseHeader(true, "");
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         try {
-            response.setStatus(Response.Status.CREATED.getStatusCode());
-            return new PaymentResponse(header, walletService.delete(walletId));
-        } catch (ObjectNotFoundException e) {
+            response.setStatus(Response.Status.ACCEPTED.getStatusCode());
+            return new PaymentResponse<Wallet>(header, walletService.delete(walletId));
+        } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse(header.success(false).errorCode(walletId + " not found"), null);
+            return new PaymentResponse<Wallet>(header.success(false).errorCode(walletId + " not found"), null);
         }
     }
 

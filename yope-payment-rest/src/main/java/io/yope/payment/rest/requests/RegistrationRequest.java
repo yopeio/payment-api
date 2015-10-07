@@ -3,6 +3,7 @@
  */
 package io.yope.payment.rest.requests;
 
+import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
 import lombok.Getter;
@@ -14,7 +15,7 @@ import lombok.Getter;
 @Getter
 public class RegistrationRequest {
 
-    @NotBlank
+    @Email
     private String email;
 
     @NotBlank
@@ -23,6 +24,8 @@ public class RegistrationRequest {
     @NotBlank
     private String lastName;
 
+    @NotBlank
+    private String password;
     /*
      * Wallet details
      */

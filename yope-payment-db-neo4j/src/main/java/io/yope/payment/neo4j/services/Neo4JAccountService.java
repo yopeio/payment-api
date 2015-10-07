@@ -14,32 +14,48 @@ import org.springframework.transaction.annotation.Transactional;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Status;
+import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.neo4j.domain.Neo4JAccount;
 import io.yope.payment.neo4j.repositories.AccountRepository;
 import io.yope.payment.services.AccountService;
+import io.yope.payment.services.WalletService;
 
 /**
  * @author massi
  *
  */
 @Service
-@Transactional
+@Transactional("neo4jTransactionManager")
 public class Neo4JAccountService implements AccountService, InitializingBean {
 
     @Autowired
-    private AccountRepository repository;
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private WalletService walletService;
 
     @Autowired
     private Neo4jTemplate template;
+
 
     /*
      * (non-Javadoc)
      * @see io.yope.payment.services.AccountService#create(io.yope.payment.domain.Account)
      */
     @Override
-    public Account create(final Account account) {
-        return repository.save(Neo4JAccount.from(account).registrationDate(System.currentTimeMillis()).build());
+    @Transactional("neo4jTransactionManager")
+    public Account create(final Account account, final Wallet... wallets) {
+        for (final Wallet wallet: wallets) {
+            if (wallet == null) {
+                continue;
+            }
+            account.getWallets().add(walletService.create(wallet));
+        }
+        if (account.getFirstName().equals("enrico")) {
+            throw new IllegalArgumentException();
+        }
+        return accountRepository.save(Neo4JAccount.from(account).registrationDate(System.currentTimeMillis()).build());
     }
 
     /*
@@ -48,7 +64,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public Account getById(final Long id) {
-        return repository.findOne(id);
+        return accountRepository.findOne(id);
     }
 
     /*
@@ -60,7 +76,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
         if (getById(id) == null) {
             throw new ObjectNotFoundException(String.valueOf(id), Account.class);
         }
-        return repository.save(Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).id(id).build());
+        return accountRepository.save(Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).id(id).build());
     }
 
     /*
@@ -74,7 +90,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
             throw new ObjectNotFoundException(String.valueOf(id), Account.class);
         }
         final Neo4JAccount toDelete = Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).status(Status.DEACTIVATED).build();
-        return repository.save(toDelete);
+        return accountRepository.save(toDelete);
     }
 
     /*
@@ -83,7 +99,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public List<Account> getAccounts() {
-        return repository.findAll().as(List.class);
+        return accountRepository.findAll().as(List.class);
     }
 
     @Override
@@ -91,4 +107,5 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
         template.query("MATCH (n:Account) SET n:`_Neo4JAccount`", null).finish();
         template.query("MATCH (n:Wallet) SET n:`_Neo4JWallet`", null).finish();
     }
+
 }
