@@ -79,9 +79,9 @@ public class AccountHelper {
                     .balance(BigDecimal.ZERO)
                     .build();
         }
-        final Account savedAccount = this.accountService.create(account, inWallet, exWallet);
-        this.securityService.createCredentials(registration.getEmail(), registration.getPassword());
-        return this.toAccounTO(savedAccount);
+        final Account savedAccount = accountService.create(account, inWallet, exWallet);
+        securityService.createCredentials(registration.getEmail(), registration.getPassword(), registration.getType().toString());
+        return toAccounTO(savedAccount);
 
     }
 
@@ -94,9 +94,9 @@ public class AccountHelper {
                 description(wallet.getDescription())
                 .hash(UUID.randomUUID().toString())
                 .build();
-        final Wallet saved = this.walletService.create(toSave);
+        final Wallet saved = walletService.create(toSave);
         account.getWallets().add(saved);
-        this.accountService.update(account.getId(), account);
+        accountService.update(account.getId(), account);
         return saved;
     }
 
@@ -115,28 +115,28 @@ public class AccountHelper {
     }
 
     public AccountTO update(final Long accountId, final AccountTO account) throws ObjectNotFoundException {
-        return this.toAccounTO(this.accountService.update(accountId, account));
+        return toAccounTO(accountService.update(accountId, account));
     }
 
     public AccountTO getById(final Long accountId) {
-        return this.toAccounTO(this.accountService.getById(accountId));
+        return toAccounTO(accountService.getById(accountId));
     }
 
     public List<AccountTO> getAccounts() {
         final List<AccountTO> accountTOs = Lists.newArrayList();
-        final List<Account> accounts = this.accountService.getAccounts();
+        final List<Account> accounts = accountService.getAccounts();
         for (final Account account : accounts) {
-            accountTOs.add(this.toAccounTO(account));
+            accountTOs.add(toAccounTO(account));
         }
         return accountTOs;
     }
 
     public AccountTO delete(final Long accountId) throws ObjectNotFoundException {
-        return this.toAccounTO(this.accountService.delete(accountId));
+        return toAccounTO(accountService.delete(accountId));
     }
 
     public AccountTO getByEmail(final String email) {
-        return this.toAccounTO(this.accountService.getByEmail(email));
+        return toAccounTO(accountService.getByEmail(email));
     }
 
     public boolean owns(final Account account, final Long walletId) {

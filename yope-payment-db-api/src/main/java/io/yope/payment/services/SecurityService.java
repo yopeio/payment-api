@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.User;
  */
 public interface SecurityService {
 
-    boolean createCredentials(String username, String password);
+    boolean createCredentials(String username, String password, String role);
 
     User getUser();
 }

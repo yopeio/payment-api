@@ -3,6 +3,7 @@ package io.yope.payment.rest.resources;
 import java.text.MessageFormat;
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
@@ -38,7 +39,7 @@ public class AccountResource extends BaseResource {
     public @ResponseBody PaymentResponse<Account> createAccount(
             final HttpServletResponse response,
             @RequestBody(required=true) final RegistrationRequest registrationRequest) {
-        final AccountTO to = this.accountHelper.registerAccount(registrationRequest);
+        final AccountTO to = accountHelper.registerAccount(registrationRequest);
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
         response.setStatus(Response.Status.CREATED.getStatusCode());
         return new PaymentResponse<Account>(header, to);
@@ -51,16 +52,17 @@ public class AccountResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{accountId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
+    @RolesAllowed("ADMIN")
     public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
             @PathVariable("accountId") final Long accountId,
             @RequestBody(required=false) final AccountTO account) {
-        final Account loggedAccount = this.getLoggedAccount();
+        final Account loggedAccount = getLoggedAccount();
         if (!Type.ADMIN.equals(loggedAccount.getType())) {
             return this.unauthorized(null);
         }
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         try {
-            final AccountTO updated = this.accountHelper.update(accountId, account);
+            final AccountTO updated = accountHelper.update(accountId, account);
             return new PaymentResponse<Account>(header, updated);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
@@ -77,7 +79,7 @@ public class AccountResource extends BaseResource {
     @RequestMapping(value="/me", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
                                                                 @RequestBody(required=false) final AccountTO account) {
-        final Account loggedAccount = this.getLoggedAccount();
+        final Account loggedAccount = getLoggedAccount();
         if (loggedAccount == null) {
             return this.unauthorized(null);
         }
@@ -91,11 +93,11 @@ public class AccountResource extends BaseResource {
      */
     @RequestMapping(value="/{accountId}", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> getAccount(@PathVariable("accountId") final Long accountId) {
-        final Account loggedAccount = this.getLoggedAccount();
+        final Account loggedAccount = getLoggedAccount();
         if (!Type.ADMIN.equals(loggedAccount.getType())) {
             return this.unauthorized(null);
         }
-        final Account account = this.accountHelper.getById(accountId);
+        final Account account = accountHelper.getById(accountId);
         if (account == null) {
             return this.notFound(null, MessageFormat.format("Account {0} not found", accountId));
         }
@@ -109,7 +111,7 @@ public class AccountResource extends BaseResource {
      */
     @RequestMapping(value="/me", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> getAccount() {
-        final Account loggedAccount = this.getLoggedAccount();
+        final Account loggedAccount = getLoggedAccount();
         if (loggedAccount == null) {
             return this.unauthorized(null);
         }
@@ -124,10 +126,10 @@ public class AccountResource extends BaseResource {
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<List<AccountTO>> getAccounts() {
-        final List<AccountTO> accounts = this.accountHelper.getAccounts();
+        final List<AccountTO> accounts = accountHelper.getAccounts();
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
 
-        final Account loggedAccount = this.getLoggedAccount();
+        final Account loggedAccount = getLoggedAccount();
         if (Type.ADMIN.equals(loggedAccount.getType())) {
             return new PaymentResponse<List<AccountTO>>(header, accounts);
         }
@@ -141,13 +143,13 @@ public class AccountResource extends BaseResource {
     @RequestMapping(value="/{accountId}", method = RequestMethod.DELETE, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> deleteAccount(final HttpServletResponse response,
             @PathVariable("accountId") final Long accountId) {
-        final Account loggedAccount = this.getLoggedAccount();
+        final Account loggedAccount = getLoggedAccount();
         if (!Type.ADMIN.equals(loggedAccount.getType())) {
             return this.unauthorized(null);
         }
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         try {
-            final AccountTO account = this.accountHelper.delete(accountId);
+            final AccountTO account = accountHelper.delete(accountId);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Account>(header, account);
         } catch (final ObjectNotFoundException e) {
@@ -163,7 +165,7 @@ public class AccountResource extends BaseResource {
      */
     @RequestMapping(value="/me", method = RequestMethod.DELETE, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> deleteAccount(final HttpServletResponse response) {
-        final Account loggedAccount = this.getLoggedAccount();
+        final Account loggedAccount = getLoggedAccount();
         if (loggedAccount == null) {
             return this.unauthorized(null);
         }

@@ -21,7 +21,7 @@ public class OAuthSecurityService implements SecurityService {
      * @see io.yope.payment.services.SecurityService#createCredentials(java.lang.String, java.lang.String)
      */
     @Override
-    public boolean createCredentials(final String username, final String password) {
+    public boolean createCredentials(final String username, final String password, final String role) {
         // TODO Auto-generated method stub
         return false;
     }
