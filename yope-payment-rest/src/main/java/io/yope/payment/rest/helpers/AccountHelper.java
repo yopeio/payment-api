@@ -23,7 +23,7 @@ import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.requests.RegistrationRequest;
 import io.yope.payment.services.AccountService;
-import io.yope.payment.services.SecurityService;
+import io.yope.payment.services.UserSecurityService;
 import io.yope.payment.services.WalletService;
 
 /**
@@ -40,7 +40,7 @@ public class AccountHelper {
     private WalletService walletService;
 
     @Autowired
-    private SecurityService securityService;
+    private UserSecurityService securityService;
 
     public AccountTO registerAccount(final RegistrationRequest registration) {
         Type type = registration.getType();
@@ -80,7 +80,7 @@ public class AccountHelper {
                     .build();
         }
         final Account savedAccount = accountService.create(account, inWallet, exWallet);
-        securityService.createCredentials(registration.getEmail(), registration.getPassword(), registration.getType().toString());
+        securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
         return toAccounTO(savedAccount);
 
     }

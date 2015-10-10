@@ -36,4 +36,10 @@ public class AccountServiceMock implements AccountService {
     public List<Account> getAccounts() {
         return new ArrayList<Account>();
     }
+
+    @Override
+    public Account getByEmail(final String email) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

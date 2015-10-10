@@ -52,7 +52,6 @@ public class AccountResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{accountId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
-    @RolesAllowed("ADMIN")
     public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
             @PathVariable("accountId") final Long accountId,
             @RequestBody(required=false) final AccountTO account) {
@@ -125,12 +124,12 @@ public class AccountResource extends BaseResource {
      * @return
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
+    @RolesAllowed("ADMIN")
     public @ResponseBody PaymentResponse<List<AccountTO>> getAccounts() {
-        final List<AccountTO> accounts = accountHelper.getAccounts();
-        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
-
         final Account loggedAccount = getLoggedAccount();
         if (Type.ADMIN.equals(loggedAccount.getType())) {
+            final List<AccountTO> accounts = accountHelper.getAccounts();
+            final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
             return new PaymentResponse<List<AccountTO>>(header, accounts);
         }
         return this.unauthorized(null);
