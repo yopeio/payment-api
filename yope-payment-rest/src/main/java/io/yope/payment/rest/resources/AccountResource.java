@@ -3,7 +3,6 @@ package io.yope.payment.rest.resources;
 import java.text.MessageFormat;
 import java.util.List;
 
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
@@ -47,7 +46,7 @@ public class AccountResource extends BaseResource {
 
     /**
      * Update Account.
-      * @param accountId
+     * @param accountId
      * @param account
      * @return
      */
@@ -124,7 +123,6 @@ public class AccountResource extends BaseResource {
      * @return
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    @RolesAllowed("ADMIN")
     public @ResponseBody PaymentResponse<List<AccountTO>> getAccounts() {
         final Account loggedAccount = getLoggedAccount();
         if (Type.ADMIN.equals(loggedAccount.getType())) {

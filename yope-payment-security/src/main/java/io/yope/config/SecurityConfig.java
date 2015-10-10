@@ -53,6 +53,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     /** This is the configuration for the OAuth module */
     public void configure(final WebSecurity web) throws Exception {
         web.debug(true).ignoring()
+                .antMatchers(HttpMethod.POST, "/accounts/**")
                 .antMatchers("/webjars/**", "/images/**",
                         "/oauth/uncache_approvals", "/oauth/cache_approvals")
                 .and().ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
@@ -131,7 +132,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/wallets/**").fullyAuthenticated()
                 .antMatchers("/transactions/**").fullyAuthenticated()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .antMatchers(HttpMethod.POST, "/accounts").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/users/shadow").permitAll()
                 .antMatchers(HttpMethod.GET, "/secured/route/oauth").fullyAuthenticated();
     }
