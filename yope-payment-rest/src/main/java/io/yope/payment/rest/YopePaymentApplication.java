@@ -24,7 +24,6 @@ import io.yope.payment.neo4j.config.YopeNeo4jConfiguration;
 //        BitcoinjConfiguration.class,
 //        BitcoinjMainNetConfiguration.class,
 //        BitcoinjTestNetConfiguration.class,
-//        MockConfiguration.class
 })
 
 public class YopePaymentApplication {

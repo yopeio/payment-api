@@ -19,7 +19,6 @@
         <module>yope-payment-blockchain</module>
         <module>yope-payment-db-api</module>
         <module>yope-payment-db-neo4j</module>
-        <module>yope-payment-mock</module>
     </modules>
 
     <properties>
