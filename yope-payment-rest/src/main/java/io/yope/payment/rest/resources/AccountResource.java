@@ -1,13 +1,12 @@
 package io.yope.payment.rest.resources;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,12 +15,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Account.Type;
 import io.yope.payment.domain.transferobjects.AccountTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
-import io.yope.payment.rest.helpers.AccountHelper;
 import io.yope.payment.rest.requests.RegistrationRequest;
-import io.yope.payment.services.SecurityService;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Account resource.
@@ -29,14 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Controller
 @EnableAutoConfiguration
 @RequestMapping("/accounts")
-@Slf4j
-public class AccountResource {
-
-    @Autowired
-    private AccountHelper accountService;
-
-    @Autowired
-    private SecurityService securityService;
+public class AccountResource extends BaseResource {
 
     /**
      * Create Account.
@@ -48,7 +38,7 @@ public class AccountResource {
     public @ResponseBody PaymentResponse<Account> createAccount(
             final HttpServletResponse response,
             @RequestBody(required=true) final RegistrationRequest registrationRequest) {
-        final AccountTO to = this.accountService.registerAccount(registrationRequest);
+        final AccountTO to = this.accountHelper.registerAccount(registrationRequest);
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
         response.setStatus(Response.Status.CREATED.getStatusCode());
         return new PaymentResponse<Account>(header, to);
@@ -62,30 +52,36 @@ public class AccountResource {
      */
     @RequestMapping(value="/{accountId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
-                                                                @PathVariable final Long accountId,
-                                                                @RequestBody(required=false) final AccountTO account) {
-
-        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
-
+            @PathVariable("accountId") final Long accountId,
+            @RequestBody(required=false) final AccountTO account) {
         final Account loggedAccount = this.getLoggedAccount();
-        /*
-        if (!loggedAccount.getId().equals(accountId)) {
-            return new PaymentResponse<Account>(header.success(false).status(Response.Status.UNAUTHORIZED.getStatusCode()), null);
+        if (!Type.ADMIN.equals(loggedAccount.getType())) {
+            return this.unauthorized(null);
         }
-        */
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         try {
-            final AccountTO updated = this.accountService.update(accountId, account);
+            final AccountTO updated = this.accountHelper.update(accountId, account);
             return new PaymentResponse<Account>(header, updated);
         } catch (final ObjectNotFoundException e) {
-            response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse<Account>(header.success(false).status(Response.Status.BAD_REQUEST.getStatusCode()).errorCode(e.getMessage()), null);
+            response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
+            return this.notFound(null, e.getMessage());
         }
+
     }
 
-    private Account getLoggedAccount() {
-        final User user = this.securityService.getUser();
-        log.info("logged as {}", user.getUsername());
-        return this.accountService.getByEmail(user.getUsername());
+    /**
+     * Update Personal Account.
+     * @param account
+     * @return
+     */
+    @RequestMapping(value="/me", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
+    public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
+                                                                @RequestBody(required=false) final AccountTO account) {
+        final Account loggedAccount = this.getLoggedAccount();
+        if (loggedAccount == null) {
+            return this.unauthorized(null);
+        }
+        return this.updateAccount(response, loggedAccount.getId(), account);
     }
 
     /**
@@ -94,13 +90,31 @@ public class AccountResource {
      * @return
      */
     @RequestMapping(value="/{accountId}", method = RequestMethod.GET, produces = "application/json")
-    public @ResponseBody PaymentResponse<Account> getAccount(@PathVariable final Long accountId) {
-        final AccountTO account = this.accountService.getById(accountId);
-        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
-        if (account == null) {
-            header.success(false).status(Response.Status.NOT_FOUND.getStatusCode());
+    public @ResponseBody PaymentResponse<Account> getAccount(@PathVariable("accountId") final Long accountId) {
+        final Account loggedAccount = this.getLoggedAccount();
+        if (!Type.ADMIN.equals(loggedAccount.getType())) {
+            return this.unauthorized(null);
         }
+        final Account account = this.accountHelper.getById(accountId);
+        if (account == null) {
+            return this.notFound(null, MessageFormat.format("Account {0} not found", accountId));
+        }
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
         return new PaymentResponse<Account>(header, account);
+    }
+
+    /**
+     * Get Personal Account.
+     * @return
+     */
+    @RequestMapping(value="/me", method = RequestMethod.GET, produces = "application/json")
+    public @ResponseBody PaymentResponse<Account> getAccount() {
+        final Account loggedAccount = this.getLoggedAccount();
+        if (loggedAccount == null) {
+            return this.unauthorized(null);
+        }
+        final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
+        return new PaymentResponse<Account>(header, loggedAccount);
     }
 
     /**
@@ -110,37 +124,50 @@ public class AccountResource {
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<List<AccountTO>> getAccounts() {
-        final List<AccountTO> accounts = this.accountService.getAccounts();
+        final List<AccountTO> accounts = this.accountHelper.getAccounts();
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
 
         final Account loggedAccount = this.getLoggedAccount();
-        /*
-        if (loggedAccount.getType().equals(Type.SELLER)
-                || loggedAccount.getType().equals(Type.BUYER)) {
-            return new PaymentResponse<List<AccountTO>>(header.success(false).status(Response.Status.UNAUTHORIZED.getStatusCode()), null);
+        if (Type.ADMIN.equals(loggedAccount.getType())) {
+            return new PaymentResponse<List<AccountTO>>(header, accounts);
         }
-        */
-        return new PaymentResponse<List<AccountTO>>(header, accounts);
+        return this.unauthorized(null);
     }
 
     /**
-     * Delete Account.
-     * @param accountId
+     * Delete Personal Account.
      * @return
      */
     @RequestMapping(value="/{accountId}", method = RequestMethod.DELETE, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> deleteAccount(final HttpServletResponse response,
-                                                                @PathVariable final long accountId) {
-        AccountTO account = null;
+            @PathVariable("accountId") final Long accountId) {
+        final Account loggedAccount = this.getLoggedAccount();
+        if (!Type.ADMIN.equals(loggedAccount.getType())) {
+            return this.unauthorized(null);
+        }
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         try {
-            account = this.accountService.delete(accountId);
+            final AccountTO account = this.accountHelper.delete(accountId);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Account>(header, account);
         } catch (final ObjectNotFoundException e) {
-            response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return new PaymentResponse<Account>(header.success(false).status(Response.Status.BAD_REQUEST.getStatusCode()).errorCode(e.getMessage()), account);
+            response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
+            return this.notFound(null, e.getMessage());
         }
+
+    }
+
+    /**
+     * Delete Personal Account.
+     * @return
+     */
+    @RequestMapping(value="/me", method = RequestMethod.DELETE, produces = "application/json")
+    public @ResponseBody PaymentResponse<Account> deleteAccount(final HttpServletResponse response) {
+        final Account loggedAccount = this.getLoggedAccount();
+        if (loggedAccount == null) {
+            return this.unauthorized(null);
+        }
+        return this.deleteAccount(response, loggedAccount.getId());
     }
 
 

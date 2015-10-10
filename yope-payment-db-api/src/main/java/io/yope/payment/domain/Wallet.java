@@ -14,7 +14,7 @@ public interface Wallet {
     enum Status {
         ACTIVE,
         DELETED,
-        PENDENT;
+        PENDING;
     }
 
     public enum Type {

@@ -39,129 +39,125 @@ import io.yope.repository.user.UserServiceNoSqlImpl;
 @EnableResourceServer
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-	@Autowired private AuthenticationEntryPoint authenticationEntryPoint;
-	@Autowired private AccessDeniedHandler accessDeniedHandler;
-	@Autowired private PasswordEncoder passEncoder;
+    @Autowired
+    private AuthenticationEntryPoint authenticationEntryPoint;
+    @Autowired
+    private AccessDeniedHandler accessDeniedHandler;
+    @Autowired
+    private PasswordEncoder passEncoder;
 
-	@Autowired private UserService userService;
+    @Autowired
+    private UserService userService;
 
-	@Override
-	/** This is the configuration for the OAuth module*/
-	public void configure(final WebSecurity web) throws Exception {
-		web.debug(true)
-				.ignoring()
-				.antMatchers("/webjars/**", "/images/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/wallets/**")
-				.and()
-				.ignoring()
-				.antMatchers(HttpMethod.OPTIONS, "/**")
-				.antMatchers(HttpMethod.GET, "/wallets");
-	}
-
-	@Bean
-	public PasswordEncoder passwordEncoder() { // no enconding for the time being
-        return new PasswordEncoder() {
-
-			@Override
-			public boolean matches(final CharSequence rawPassword, final String encodedPassword) {
-				return true;
-			}
-
-			@Override
-			public String encode(final CharSequence rawPassword) {
-				return rawPassword.toString();
-			}
-		};
+    @Override
+    /** This is the configuration for the OAuth module */
+    public void configure(final WebSecurity web) throws Exception {
+        web.debug(true).ignoring()
+                .antMatchers("/webjars/**", "/images/**",
+                        "/oauth/uncache_approvals", "/oauth/cache_approvals",
+                        "/wallets/**")
+                .and().ignoring().antMatchers(HttpMethod.OPTIONS, "/**")
+                .antMatchers(HttpMethod.GET, "/wallets");
     }
 
-	@Bean
-	public UserService userService() {
+    @Bean
+    public PasswordEncoder passwordEncoder() { // no enconding for the time
+                                               // being
+        return new PasswordEncoder() {
+
+            @Override
+            public boolean matches(final CharSequence rawPassword,
+                    final String encodedPassword) {
+                return true;
+            }
+
+            @Override
+            public String encode(final CharSequence rawPassword) {
+                return rawPassword.toString();
+            }
+        };
+    }
+
+    @Bean
+    public UserService userService() {
         return new UserServiceNoSqlImpl();
     }
 
-	@Override
-	@Bean
-	public AuthenticationManager authenticationManagerBean() throws Exception {
-		return super.authenticationManagerBean();
-	}
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
 
-	@Override
-	protected void configure(final AuthenticationManagerBuilder auth)
-			throws Exception {
-		auth.userDetailsService(userService).passwordEncoder(passEncoder);
-	}
+    @Override
+    protected void configure(final AuthenticationManagerBuilder auth)
+            throws Exception {
+        auth.userDetailsService(this.userService).passwordEncoder(this.passEncoder);
+    }
 
-	@Override
-	/** This is the configuration for the security module itself*/
-	protected void configure(final HttpSecurity http) throws Exception {
+    @Override
+    /** This is the configuration for the security module itself */
+    protected void configure(final HttpSecurity http) throws Exception {
 
-		ContentNegotiationStrategy contentNegotiationStrategy = http
-				.getSharedObject(ContentNegotiationStrategy.class);
-		if (contentNegotiationStrategy == null) {
-			contentNegotiationStrategy = new HeaderContentNegotiationStrategy();
-		}
-		final MediaTypeRequestMatcher preferredMatcher = new MediaTypeRequestMatcher(
-				contentNegotiationStrategy,
-				MediaType.APPLICATION_FORM_URLENCODED,
-				MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA);
+        ContentNegotiationStrategy contentNegotiationStrategy = http
+                .getSharedObject(ContentNegotiationStrategy.class);
+        if (contentNegotiationStrategy == null) {
+            contentNegotiationStrategy = new HeaderContentNegotiationStrategy();
+        }
+        final MediaTypeRequestMatcher preferredMatcher = new MediaTypeRequestMatcher(
+                contentNegotiationStrategy,
+                MediaType.APPLICATION_FORM_URLENCODED,
+                MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA);
 
-		http.anonymous()
-				.disable()
-				.sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-				.and()
-				.exceptionHandling()
-				.accessDeniedHandler(accessDeniedHandler)
-				// handle access denied in general (for example comming from
-				// @PreAuthorization
-				.authenticationEntryPoint(authenticationEntryPoint)
-				// handle authentication exceptions for unauthorized calls.
-				.defaultAuthenticationEntryPointFor(authenticationEntryPoint, preferredMatcher)
-				.and()
-				.requestMatchers()
-				// SECURE IT
-				.antMatchers("/users/**", "/cards/**", "/accounts/**",
-						"/postident/**", "/idnow/**", "/webid/**", "/me/**",
-						"/api/version",
-						"/secured/route/oauth")
-				.and()
-				.headers()
-				.contentTypeOptions()
-				.cacheControl()
-				.frameOptions()
-				.httpStrictTransportSecurity()
-				.xssProtection()
-				.and()
-				.authorizeRequests()
-				.antMatchers("/accounts/**")
-				.fullyAuthenticated()
-				.antMatchers("/transactions/**")
-				.fullyAuthenticated()
-				.antMatchers(HttpMethod.OPTIONS, "/**")
-				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/users/shadow")
-				.permitAll()
-				.antMatchers(HttpMethod.GET,
-						"/secured/route/oauth").fullyAuthenticated();
-	}
+        http.anonymous().disable().sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+                .exceptionHandling().accessDeniedHandler(this.accessDeniedHandler)
+                // handle access denied in general (for example comming from
+                // @PreAuthorization
+                .authenticationEntryPoint(this.authenticationEntryPoint)
+                // handle authentication exceptions for unauthorized calls.
+                .defaultAuthenticationEntryPointFor(this.authenticationEntryPoint,
+                        preferredMatcher)
+                .and().requestMatchers()
+                // SECURE IT
+                .antMatchers("/accounts/**", "/wallets/**",
+                        "/postident/**", "/idnow/**", "/webid/**", "/me/**",
+                        "/api/version", "/secured/route/oauth")
+                .and().headers().contentTypeOptions().cacheControl()
+                .frameOptions().httpStrictTransportSecurity().xssProtection()
+                .and()
+                .authorizeRequests().antMatchers("/accounts/**")
+                .fullyAuthenticated().antMatchers("/wallets/**")
+                .fullyAuthenticated().antMatchers("/transactions/**")
+                .fullyAuthenticated().antMatchers(HttpMethod.OPTIONS, "/**")
+                .permitAll().antMatchers(HttpMethod.POST, "/accounts")
+                .permitAll().antMatchers(HttpMethod.POST, "/api/users/shadow")
+                .permitAll().antMatchers(HttpMethod.GET, "/secured/route/oauth")
+                .fullyAuthenticated();
+    }
 
-	@Bean
-	public RestTemplate restTemplate() {
-		return new RestTemplate();
-	}
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 
-	@Bean AccessDeniedHandler accessDeniedHandler() {
-		return new AccessDeniedExceptionHandler();
-	}
+    @Bean
+    AccessDeniedHandler accessDeniedHandler() {
+        return new AccessDeniedExceptionHandler();
+    }
 
-	@Bean AuthenticationEntryPoint entryPointBean() {
-		return new UnauthorizedEntryPoint();
-	}
+    @Bean
+    AuthenticationEntryPoint entryPointBean() {
+        return new UnauthorizedEntryPoint();
+    }
 
-	@Bean IOAuthAccessToken ioAuthAccessToken() {
-		return new OAuthAccessTokenStore();
-	}
+    @Bean
+    IOAuthAccessToken ioAuthAccessToken() {
+        return new OAuthAccessTokenStore();
+    }
 
-	@Bean IOAuthRefreshToken iOAuthRefreshToken() {
-		return new OAuthRefreshTokenStore();
-	}
+    @Bean
+    IOAuthRefreshToken iOAuthRefreshToken() {
+        return new OAuthRefreshTokenStore();
+    }
 }

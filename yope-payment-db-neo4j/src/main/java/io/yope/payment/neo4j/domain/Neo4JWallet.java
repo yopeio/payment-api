@@ -31,15 +31,15 @@ public class Neo4JWallet implements Wallet {
     @GraphId
     private Long id;
 
+    @Indexed
+    private String name;
+
     @Indexed(unique = true)
     private String hash;
 
     private BigDecimal balance;
 
     private Status status;
-
-    @Indexed
-    private String name;
 
     private String description;
 

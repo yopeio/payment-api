@@ -52,7 +52,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
             }
             account.getWallets().add(this.walletService.create(wallet));
         }
-        if (account.getFirstName().equals("enrico")) {
+        if (account.getFirstName().equals("wrong")) {
             throw new IllegalArgumentException();
         }
         return this.accountRepository.save(Neo4JAccount.from(account).registrationDate(System.currentTimeMillis()).build());

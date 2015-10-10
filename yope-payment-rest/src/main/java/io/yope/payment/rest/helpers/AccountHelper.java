@@ -3,6 +3,7 @@
  */
 package io.yope.payment.rest.helpers;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,6 +15,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Account.Status;
+import io.yope.payment.domain.Account.Type;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.AccountTO;
 import io.yope.payment.domain.transferobjects.WalletTO;
@@ -21,6 +24,7 @@ import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.requests.RegistrationRequest;
 import io.yope.payment.services.AccountService;
 import io.yope.payment.services.SecurityService;
+import io.yope.payment.services.WalletService;
 
 /**
  * @author massi
@@ -33,14 +37,22 @@ public class AccountHelper {
     private AccountService accountService;
 
     @Autowired
+    private WalletService walletService;
+
+    @Autowired
     private SecurityService securityService;
 
     public AccountTO registerAccount(final RegistrationRequest registration) {
+        Type type = registration.getType();
+        if (type==null) {
+            type = Type.SELLER;
+        }
         final Account account = AccountTO.builder()
                 .email(registration.getEmail())
                 .firstName(registration.getFirstName())
                 .lastName(registration.getLastName())
-                .type(registration.getType())
+                .type(type)
+                .status(Status.ACTIVE)
                 .wallets(Sets.newLinkedHashSet())
                 .build();
         String walletName = registration.getName();
@@ -48,25 +60,44 @@ public class AccountHelper {
             walletName = registration.getFirstName()+"'s Internal Wallet";
         }
         final Wallet inWallet =
-                WalletTO.builder().
-                        name(walletName).
-                        hash(UUID.randomUUID().toString()).
-                        description(registration.getDescription()).
-                        type(Wallet.Type.INTERNAL).
-                        build();
+                WalletTO.builder()
+                .name(walletName)
+                        .hash(UUID.randomUUID().toString())
+                        .description(registration.getDescription())
+                        .type(Wallet.Type.INTERNAL)
+                        .balance(BigDecimal.ZERO)
+                        .status(Wallet.Status.ACTIVE)
+                        .build();
         Wallet exWallet = null;
         if (StringUtils.isNotBlank(registration.getHash())) {
             walletName = registration.getFirstName()+"'s External Wallet";
-            exWallet = WalletTO.builder().
-                    name(walletName).
-                    hash(registration.getHash()).
-                    type(Wallet.Type.EXTERNAL).
-                    build();
+            exWallet = WalletTO.builder()
+                    .name(walletName)
+                    .hash(registration.getHash())
+                    .type(Wallet.Type.EXTERNAL)
+                    .status(Wallet.Status.ACTIVE)
+                    .balance(BigDecimal.ZERO)
+                    .build();
         }
         final Account savedAccount = this.accountService.create(account, inWallet, exWallet);
         this.securityService.createCredentials(registration.getEmail(), registration.getPassword());
         return this.toAccounTO(savedAccount);
 
+    }
+
+    public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException {
+        final WalletTO toSave =  WalletTO.builder().
+                name(wallet.getName()).
+                status(Wallet.Status.PENDING).
+                type(wallet.getType()).
+                balance(wallet.getBalance()).
+                description(wallet.getDescription())
+                .hash(UUID.randomUUID().toString())
+                .build();
+        final Wallet saved = this.walletService.create(toSave);
+        account.getWallets().add(saved);
+        this.accountService.update(account.getId(), account);
+        return saved;
     }
 
     private AccountTO toAccounTO(final Account account) {
@@ -78,6 +109,8 @@ public class AccountHelper {
                 .modificationDate(account.getModificationDate())
                 .registrationDate(account.getRegistrationDate())
                 .wallets(account.getWallets())
+                .type(account.getType())
+                .status(account.getStatus())
                 .build();
     }
 
@@ -104,6 +137,12 @@ public class AccountHelper {
 
     public AccountTO getByEmail(final String email) {
         return this.toAccounTO(this.accountService.getByEmail(email));
+    }
+
+    public boolean owns(final Account account, final Long walletId) {
+        return account.getWallets().stream()
+                .filter(o -> o.getId().equals(walletId))
+                .findFirst().isPresent();
     }
 
 
