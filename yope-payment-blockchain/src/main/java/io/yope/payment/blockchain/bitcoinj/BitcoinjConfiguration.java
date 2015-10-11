@@ -1,10 +1,7 @@
 package io.yope.payment.blockchain.bitcoinj;
 
-import io.yope.payment.blockchain.BlockChainService;
-import io.yope.payment.domain.Account;
-import io.yope.payment.domain.Wallet;
-import io.yope.payment.services.AccountService;
-import io.yope.payment.services.WalletService;
+import java.io.File;
+
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
@@ -18,9 +15,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import io.yope.payment.blockchain.BlockChainService;
+import io.yope.payment.services.AccountService;
+import io.yope.payment.services.WalletService;
 
 @Configuration
 @EnableAutoConfiguration
@@ -32,22 +29,22 @@ public class BitcoinjConfiguration {
     private static final String DEFAULT_LOCATION = "yope-payment-blockchain/src/main/resources/blockstores";
 
     @Bean
-    public Context getContext(NetworkParameters params ) {
+    public Context getContext(final NetworkParameters params ) {
         return new Context(params);
     }
 
     @Bean
-    public BlockChain getChain(NetworkParameters params,
-                               SPVBlockStore blockStore,
-                               Context context)
+    public BlockChain getChain(final NetworkParameters params,
+                               final SPVBlockStore blockStore,
+                               final Context context)
             throws BlockStoreException {
         return new BlockChain(context, blockStore);
     }
 
     @Bean
-    public SPVBlockStore getBlockStore(NetworkParameters params)
+    public SPVBlockStore getBlockStore(final NetworkParameters params)
             throws BlockStoreException {
-        String blockstore = params instanceof TestNet3Params ? "tbtc_blockstore" : "main_blockstore";
+        final String blockstore = params instanceof TestNet3Params ? "tbtc_blockstore" : "main_blockstore";
 
         return new SPVBlockStore(params,
                 new File(getBlockstoresLocation(), blockstore));
@@ -58,27 +55,35 @@ public class BitcoinjConfiguration {
     }
 
     @Bean
-    public PeerGroup getPeers(NetworkParameters params,BlockChain chain) {
+    public PeerGroup getPeers(final NetworkParameters params,final BlockChain chain) {
         return new PeerGroup(params, chain);
     }
 
     @Bean
-    public BlockChainService getBlockchainService(NetworkParameters params,
-                                                  BlockChain blockChain,
-                                                  PeerGroup peerGroup,
-                                                  WalletService walletService,
-                                                  AccountService accountService
+    public BlockChainService getBlockchainService(final NetworkParameters params,
+                                                  final BlockChain blockChain,
+                                                  final PeerGroup peerGroup,
+                                                  final WalletService walletService,
+                                                  final AccountService accountService
                                                   ){
 
-        BitcoinjBlockchainServiceImpl blockChainService =
+        final BitcoinjBlockchainServiceImpl blockChainService =
                 new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup);
+        /*
+         * TODO
+         * remove code
+         * we do not need to init the wallets for the users.
+         * if external, they have been already initialized into blockchain
+         * if internal, they will not be seen by the blockchain
+         *
         List<Account> accounts = accountService.getAccounts();
-        List<Wallet> wallets = new ArrayList();
+        List<Wallet> wallets = new ArrayList<Wallet>();
         for (Account account : accounts) {
             wallets.addAll(walletService.get(account.getId()));
         }
 
         blockChainService.init(wallets);
+        */
         return blockChainService;
     }
 

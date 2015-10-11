@@ -5,7 +5,6 @@ package io.yope.payment.rest.helpers;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,25 +58,11 @@ public class AccountHelper {
         if (StringUtils.isEmpty(walletName)) {
             walletName = registration.getFirstName()+"'s Internal Wallet";
         }
-        final Wallet inWallet =
-                WalletTO.builder()
-                .name(walletName)
-                        .hash(UUID.randomUUID().toString())
-                        .description(registration.getDescription())
-                        .type(Wallet.Type.INTERNAL)
-                        .balance(BigDecimal.ZERO)
-                        .status(Wallet.Status.ACTIVE)
-                        .build();
+        final Wallet inWallet = toWalletTO(registration.getName(), Wallet.Type.INTERNAL, registration.getDescription(), null);
         Wallet exWallet = null;
         if (StringUtils.isNotBlank(registration.getHash())) {
-            walletName = registration.getFirstName()+"'s External Wallet";
-            exWallet = WalletTO.builder()
-                    .name(walletName)
-                    .hash(registration.getHash())
-                    .type(Wallet.Type.EXTERNAL)
-                    .status(Wallet.Status.ACTIVE)
-                    .balance(BigDecimal.ZERO)
-                    .build();
+            final String walletDescription = registration.getFirstName()+"'s External Wallet";
+            exWallet = toWalletTO(registration.getFirstName(), Wallet.Type.EXTERNAL, walletDescription, registration.getHash());
         }
         final Account savedAccount = accountService.create(account, inWallet, exWallet);
         securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
@@ -86,18 +71,30 @@ public class AccountHelper {
     }
 
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException {
-        final WalletTO toSave =  WalletTO.builder().
-                name(wallet.getName()).
-                status(Wallet.Status.PENDING).
-                type(wallet.getType()).
-                balance(wallet.getBalance()).
-                description(wallet.getDescription())
-                .hash(UUID.randomUUID().toString())
-                .build();
+        Wallet.Type type = Wallet.Type.INTERNAL;
+        final String hash = StringUtils.defaultIfBlank(wallet.getHash(), null);
+        if (StringUtils.isNotBlank(wallet.getHash())) {
+            type = Wallet.Type.EXTERNAL;
+        }
+        final WalletTO toSave = toWalletTO(wallet.getName(), type, wallet.getDescription(), hash);
         final Wallet saved = walletService.create(toSave);
         account.getWallets().add(saved);
         accountService.update(account.getId(), account);
         return saved;
+    }
+
+    private WalletTO toWalletTO(final String name,
+            final Wallet.Type type,
+            final String description,
+            final String hash) {
+        return WalletTO.builder()
+        .name(name)
+        .status(Wallet.Status.PENDING)
+        .type(type)
+        .balance(BigDecimal.ZERO)
+        .description(description)
+        .hash(hash)
+        .build();
     }
 
     private AccountTO toAccounTO(final Account account) {

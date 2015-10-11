@@ -34,7 +34,6 @@ public class Neo4JWallet implements Wallet {
     @Indexed
     private String name;
 
-    @Indexed(unique = true)
     private String hash;
 
     private BigDecimal balance;

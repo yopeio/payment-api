@@ -41,6 +41,11 @@ public interface Transaction {
         IN
     }
 
+    public enum Type {
+        INTERNAL,
+        EXTERNAL
+    }
+
     Long getId();
 
     Wallet getSource();
@@ -63,5 +68,5 @@ public interface Transaction {
 
     Long getCompletedDate();
 
-
+    Type getType();
 }

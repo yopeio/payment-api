@@ -36,6 +36,14 @@ public interface WalletService {
     Wallet getByHash(String hash);
 
     /**
+     * retrieves a wallet by the name for a given wallet.
+     * it assumes that a wallet has a unique name for a given account.
+     * @param hash the hash of the wallet
+     * @return a wallet or {@literal null} if none found
+     */
+    Wallet getByName(Long accountId, String name);
+
+    /**
      * update a wallet.
      * @param wallet the wallet modifications
      * @param id the id of the wallet
