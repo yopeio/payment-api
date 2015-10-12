@@ -12,8 +12,11 @@ import org.springframework.data.neo4j.annotation.RelationshipEntity;
 import org.springframework.data.neo4j.annotation.StartNode;
 
 import io.yope.payment.domain.Transaction;
+import io.yope.payment.domain.Wallet;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
@@ -22,36 +25,38 @@ import lombok.ToString;
  */
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @ToString(of = {"reference", "status"}, includeFieldNames = true)
 @RelationshipEntity(type="PAY")
 public class Neo4JTransaction implements Transaction {
 
     @GraphId
-    private final Long id;
+    private Long id;
 
     @Fetch
     @StartNode
-    private final Neo4JWallet source;
+    private Neo4JWallet source;
 
     @Fetch
     @EndNode
-    private final Neo4JWallet destination;
+    private Neo4JWallet destination;
 
-    private final String reference;
+    private String reference;
 
-    private final Status status;
+    private Status status;
 
-    private final String description;
+    private String description;
 
-    private final BigDecimal amount;
+    private BigDecimal amount;
 
-    private final Long creationDate;
+    private Long creationDate;
 
-    private final Long acceptedDate;
+    private Long acceptedDate;
 
-    private final Long deniedDate;
+    private Long deniedDate;
 
-    private final Long completedDate;
+    private Long completedDate;
 
     public static Neo4JTransaction.Neo4JTransactionBuilder from(final Transaction transaction) {
         return Neo4JTransaction.builder()
@@ -66,6 +71,15 @@ public class Neo4JTransaction implements Transaction {
                 .acceptedDate(transaction.getAcceptedDate())
                 .deniedDate(transaction.getDeniedDate())
                 .completedDate(transaction.getCompletedDate());
+    }
+
+    @Override
+    public Type getType() {
+        if (Wallet.Type.INTERNAL.equals(source.getType()) &&
+            Wallet.Type.INTERNAL.equals(destination.getType())) {
+            return Type.INTERNAL;
+        }
+        return Type.EXTERNAL;
     }
 
 }

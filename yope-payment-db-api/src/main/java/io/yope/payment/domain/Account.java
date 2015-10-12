@@ -20,8 +20,7 @@ public interface Account {
     }
 
     public enum Type {
-        PLAYER,
-        DEVELOPER;
+        SELLER, BUYER, ADMIN;
     }
 
     Long getId();

@@ -28,3 +28,5 @@ mods/
 .DS_Store
 local.*
 
+centralwallet
+*.jpg

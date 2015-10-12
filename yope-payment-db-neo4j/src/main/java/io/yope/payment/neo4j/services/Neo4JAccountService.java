@@ -50,12 +50,12 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
             if (wallet == null) {
                 continue;
             }
-            account.getWallets().add(walletService.create(wallet));
+            account.getWallets().add(this.walletService.create(wallet));
         }
-        if (account.getFirstName().equals("enrico")) {
+        if (account.getFirstName().equals("wrong")) {
             throw new IllegalArgumentException();
         }
-        return accountRepository.save(Neo4JAccount.from(account).registrationDate(System.currentTimeMillis()).build());
+        return this.accountRepository.save(Neo4JAccount.from(account).registrationDate(System.currentTimeMillis()).build());
     }
 
     /*
@@ -64,7 +64,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public Account getById(final Long id) {
-        return accountRepository.findOne(id);
+        return this.accountRepository.findOne(id);
     }
 
     /*
@@ -73,10 +73,10 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public Account update(final Long id, final Account account) throws ObjectNotFoundException {
-        if (getById(id) == null) {
+        if (this.getById(id) == null) {
             throw new ObjectNotFoundException(String.valueOf(id), Account.class);
         }
-        return accountRepository.save(Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).id(id).build());
+        return this.accountRepository.save(Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).id(id).build());
     }
 
     /*
@@ -85,12 +85,12 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public Account delete(final Long id) throws ObjectNotFoundException{
-        final Account account = getById(id);
+        final Account account = this.getById(id);
         if (account == null) {
             throw new ObjectNotFoundException(String.valueOf(id), Account.class);
         }
         final Neo4JAccount toDelete = Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).status(Status.DEACTIVATED).build();
-        return accountRepository.save(toDelete);
+        return this.accountRepository.save(toDelete);
     }
 
     /*
@@ -99,13 +99,26 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public List<Account> getAccounts() {
-        return accountRepository.findAll().as(List.class);
+        return this.accountRepository.findAll().as(List.class);
     }
 
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
     @Override
     public void afterPropertiesSet() throws Exception {
-        template.query("MATCH (n:Account) SET n:`_Neo4JAccount`", null).finish();
-        template.query("MATCH (n:Wallet) SET n:`_Neo4JWallet`", null).finish();
+        this.template.query("MATCH (n:Account) SET n:`_Neo4JAccount`", null).finish();
+        this.template.query("MATCH (n:Wallet) SET n:`_Neo4JWallet`", null).finish();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see io.yope.payment.services.AccountService#getByEmail(java.lang.String)
+     */
+    @Override
+    public Account getByEmail(final String email) {
+        return this.accountRepository.findByEmail(email);
     }
 
 }

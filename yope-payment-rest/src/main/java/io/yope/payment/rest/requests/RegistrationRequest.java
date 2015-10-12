@@ -6,6 +6,7 @@ package io.yope.payment.rest.requests;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
+import io.yope.payment.domain.Account.Type;
 import lombok.Getter;
 
 /**
@@ -26,6 +27,10 @@ public class RegistrationRequest {
 
     @NotBlank
     private String password;
+
+    @NotBlank
+    private Type type = Type.SELLER;
+
     /*
      * Wallet details
      */

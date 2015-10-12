@@ -82,4 +82,13 @@ public class Neo4JWalletService implements WalletService {
         return new ArrayList<Wallet>(repository.findAllByOwner(accountId));
     }
 
+    /*
+     * (non-Javadoc)
+     * @see io.yope.payment.services.WalletService#getByName(java.lang.Long, java.lang.String)
+     */
+    @Override
+    public Wallet getByName(final Long accountId, final String name) {
+        return repository.findByName(accountId, name);
+    }
+
 }

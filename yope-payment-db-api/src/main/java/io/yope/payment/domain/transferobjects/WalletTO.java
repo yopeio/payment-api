@@ -3,14 +3,14 @@
  */
 package io.yope.payment.domain.transferobjects;
 
+import java.math.BigDecimal;
+
 import io.yope.payment.domain.Wallet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
-
-import java.math.BigDecimal;
 
 /**
  * @author mgerardi
@@ -43,5 +43,20 @@ public class WalletTO implements Wallet {
     @Wither private byte[] content;
 
     @Wither private String privateKey;
+
+    public static WalletTO.WalletTOBuilder from(final Wallet wallet) {
+        return WalletTO.builder()
+                .balance(wallet.getBalance())
+                .type(wallet.getType())
+                .creationDate(wallet.getCreationDate())
+                .modificationDate(wallet.getModificationDate())
+                .description(wallet.getDescription())
+                .hash(wallet.getHash())
+                .id(wallet.getId())
+                .status(wallet.getStatus())
+                .name(wallet.getName())
+                .privateKey(wallet.getPrivateKey())
+                .content(wallet.getContent());
+    }
 
 }

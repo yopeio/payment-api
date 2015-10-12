@@ -50,33 +50,39 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(final WebSecurity web) throws Exception {
 		web.debug(true)
 				.ignoring()
-				.antMatchers("/webjars/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/wallets/**")
+				.antMatchers("/webjars/**", 
+						"/oauth/uncache_approvals", 
+						"/oauth/cache_approvals", 
+						"/wallets/**")
 				.and()
 				.ignoring()
 				.antMatchers(HttpMethod.OPTIONS, "/**")
 				.antMatchers(HttpMethod.GET, "/wallets");
 	}
 
-	@Bean
-	public PasswordEncoder passwordEncoder() { // no enconding for the time being
+    @Bean
+    public PasswordEncoder passwordEncoder() { // no enconding for the time
+                                               // being
         return new PasswordEncoder() {
 
-			@Override
-			public boolean matches(final CharSequence rawPassword, final String encodedPassword) {
-				return true;
-			}
+            @Override
+            public boolean matches(final CharSequence rawPassword,
+                    final String encodedPassword) {
+                return true;
+            }
 
-			@Override
-			public String encode(final CharSequence rawPassword) {
-				return rawPassword.toString();
-			}
-		};
+            @Override
+            public String encode(final CharSequence rawPassword) {
+                return rawPassword.toString();
+            }
+        };
     }
 
-	@Bean
-	public UserService userService() {
+    @Bean
+    public UserService userService() {
         return new UserServiceNoSqlImpl();
     }
+
 
 	@Override
 	@Bean

@@ -7,11 +7,19 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import lombok.*;
-import org.springframework.data.neo4j.annotation.*;
+import org.springframework.data.neo4j.annotation.Fetch;
+import org.springframework.data.neo4j.annotation.GraphId;
+import org.springframework.data.neo4j.annotation.Indexed;
+import org.springframework.data.neo4j.annotation.NodeEntity;
+import org.springframework.data.neo4j.annotation.RelatedTo;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Wallet;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * @author mgerardi
@@ -48,12 +56,13 @@ public class Neo4JAccount implements Account {
     private Long modificationDate;
 
     public static Neo4JAccount.Neo4JAccountBuilder from(final Account account) {
-        Neo4JAccountBuilder builder = Neo4JAccount.builder()
+        final Neo4JAccountBuilder builder = Neo4JAccount.builder()
                 .email(account.getEmail())
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
                 .id(account.getId())
                 .status(account.getStatus())
+                .type(account.getType())
                 .modificationDate(account.getModificationDate())
                 .registrationDate(account.getRegistrationDate());
         if (account.getWallets() != null) {
@@ -64,6 +73,6 @@ public class Neo4JAccount implements Account {
 
     @Override
     public Set<Wallet> getWallets() {
-        return new HashSet<Wallet>(wallets);
+        return new HashSet<Wallet>(this.wallets);
     }
 }
