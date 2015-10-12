@@ -31,4 +31,15 @@
 
     </dependencies>
 
+    <build>
+        <resources>
+            <resource>
+                <directory>classpath:/blockstores</directory>
+            </resource>
+            <resource>
+                <directory>classpath:/wallets</directory>
+            </resource>
+        </resources>
+    </build>
+
 </project>

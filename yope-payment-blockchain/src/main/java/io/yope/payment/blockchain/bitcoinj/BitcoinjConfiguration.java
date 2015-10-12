@@ -43,8 +43,6 @@ public class BitcoinjConfiguration {
     @Autowired
     private Environment environment;
 
-    private static final String DEFAULT_LOCATION = "yope-payment-blockchain/src/main/resources/blockstores";
-
     @Bean
     public Context getContext(final NetworkParameters params ) {
         return new Context(params);
@@ -64,12 +62,9 @@ public class BitcoinjConfiguration {
         final String blockstore = params instanceof TestNet3Params ? "tbtc_blockstore" : "main_blockstore";
 
         return new SPVBlockStore(params,
-                new File(getBlockstoresLocation(), blockstore));
+                new File(blockstore));
     }
 
-    private String getBlockstoresLocation() {
-        return environment.getProperty("yope.blockstores.location", DEFAULT_LOCATION);
-    }
 
     @Bean
     public PeerGroup getPeers(final NetworkParameters params,final BlockChain chain) {
@@ -147,17 +142,19 @@ public class BitcoinjConfiguration {
             fos.write(inBlockChain.getContent());
             fos.close();
         } catch (IOException e) {
-            log.error("error during content file generation", e);
+            log.error("error during central wallet generation", e);
         }
     }
 
     private byte[] readCentralWallet() {
         byte[] data = null;
+        this.getClass().getClassLoader()
+                .getResourceAsStream(CENTRAL_WALLET_PATH);
         Path path = Paths.get(CENTRAL_WALLET_PATH);
         try {
             data = Files.readAllBytes(path);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("error during central wallet reading: {}", e.getMessage());
         }
         return data;
     }

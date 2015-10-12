@@ -28,8 +28,8 @@ import java.math.BigDecimal;
  * @author massi
  *
  */
-@Service
 @Slf4j
+@Service
 public class WalletHelper {
 
     private static final int QR_WIDTH = 300;
@@ -45,7 +45,7 @@ public class WalletHelper {
     public QRImage getQRImage(final Long accountId, final String name, final String reference, final String description, final BigDecimal amount) throws ObjectNotFoundException, BlockchainException {
         Wallet wallet = walletService.getByName(accountId, name);
         if (StringUtils.isBlank(wallet.getHash())) {
-            final String hash = getHashForWallet(wallet);
+            final String hash = getHashForWallet(wallet.getContent());
             wallet = walletService.update(wallet.getId(), WalletTO.from(wallet).hash(hash).modificationDate(System.currentTimeMillis()).status(Wallet.Status.ACTIVE).build());
         }
         final Image image = generateImage(wallet.getHash(), name, reference, description, amount);
@@ -75,8 +75,8 @@ public class WalletHelper {
         return "bitcoin:" + hash + "?amount=" + amount.floatValue() + "&label=" + reference + "&message=" + description ;
     }
 
-    private String getHashForWallet(final Wallet wallet) throws BlockchainException {
-        return blockChainService.generateHash(wallet);
+    private String getHashForWallet(byte[] content) throws BlockchainException {
+        return blockChainService.generateHash(content);
     }
 
 
