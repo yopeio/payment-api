@@ -1,5 +1,8 @@
 package io.yope.payment.rest;
 
+import io.yope.payment.blockchain.bitcoinj.BitcoinjConfiguration;
+import io.yope.payment.blockchain.bitcoinj.BitcoinjMainNetConfiguration;
+import io.yope.payment.blockchain.bitcoinj.BitcoinjTestNetConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -20,10 +23,10 @@ import io.yope.payment.neo4j.config.YopeNeo4jConfiguration;
         RestDataConfiguration.class,
         YopeNeo4jConfiguration.class,
         OAuth2ServerConfig.class,
-        SecurityConfig.class
-//        BitcoinjConfiguration.class,
-//        BitcoinjMainNetConfiguration.class,
-//        BitcoinjTestNetConfiguration.class,
+        SecurityConfig.class,
+        BitcoinjConfiguration.class,
+        BitcoinjMainNetConfiguration.class,
+        BitcoinjTestNetConfiguration.class
 })
 
 public class YopePaymentApplication {

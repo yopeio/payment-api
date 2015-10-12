@@ -1,30 +1,25 @@
 package io.yope.payment.blockchain.bitcoinj;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.BlockChain;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.PeerGroup;
-import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.net.discovery.DnsDiscovery;
-import org.bitcoinj.store.UnreadableWalletException;
-
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.domain.transferobjects.WalletTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.net.discovery.DnsDiscovery;
+import org.bitcoinj.store.UnreadableWalletException;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Bitcoinj client implementation.
@@ -39,22 +34,22 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
     PeerGroup peerGroup;
 
-    public void init(final List<Wallet> wallets) {
-        final ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.execute(() -> {
-            peerGroup.addPeerDiscovery(new DnsDiscovery(params));
-            peerGroup.setBloomFilterFalsePositiveRate(0.00001);
 
-            for (final Wallet wallet : wallets) {
+    public void init(Wallet wallet, byte[] content) {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(new Runnable() {
+            public void run() {
+                peerGroup.addPeerDiscovery(new DnsDiscovery(params));
+                peerGroup.setBloomFilterFalsePositiveRate(0.00001);
                 try {
                     registerInBlockchain(org.bitcoinj.core.Wallet.loadFromFileStream(
-                            new ByteArrayInputStream(wallet.getContent())));
-                } catch (final UnreadableWalletException e) {
+                            new ByteArrayInputStream(content)));
+                    peerGroup.startAsync();
+                    peerGroup.downloadBlockChain();
+                } catch (UnreadableWalletException e) {
                     log.error("wallet {} cannot be registered to the chain", wallet.getHash());
                 }
             }
-            peerGroup.startAsync();
-            peerGroup.downloadBlockChain();
         });
     }
 
@@ -83,7 +78,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             final Coin value = Coin.valueOf(transaction.getAmount().longValue());
             final org.bitcoinj.core.Wallet sender =
                     org.bitcoinj.core.Wallet.loadFromFileStream(
-                            new ByteArrayInputStream(transaction.getSource().getContent()));
+                            new ByteArrayInputStream((byte[])transaction.getSource().getContent()));
             sender.allowSpendingUnconfirmedTransactions();
             registerInBlockchain(sender);
             final Address receiver = new Address(params, transaction.getDestination().getHash());
@@ -98,8 +93,33 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     }
 
     private void registerInBlockchain(final org.bitcoinj.core.Wallet wallet) {
+        log.info("******** register {} in blockchain", wallet.toString());
         chain.addWallet(wallet);
         peerGroup.addWallet(wallet);
+        WalletEventListener listener = new AbstractWalletEventListener() {
+            @Override
+            public synchronized void onCoinsReceived(org.bitcoinj.core.Wallet btcjDepositWallet,
+                                                     org.bitcoinj.core.Transaction tx, Coin prevBalance,
+                                                     Coin newBalance) {
+                super.onCoinsReceived(wallet, tx, prevBalance, newBalance);
+                Coin valueSentToMe = tx.getValueSentToMe(btcjDepositWallet);
+                Coin valueSentFromMe = tx.getValueSentFromMe(btcjDepositWallet);
+
+                log.info("******** Coins on central wallet to me {} from me {}",  valueSentToMe, valueSentFromMe);
+
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                try {
+                    peerGroup.broadcastTransaction(tx);
+                    btcjDepositWallet.saveToFileStream(outputStream);
+                } catch (Exception e) {
+                    log.error("error adding wallet {}", e);
+                }
+                Transaction deposit = TransactionTO.builder()
+                        .amount(new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()))
+                        .build();
+            }
+        };
+        wallet.addEventListener(listener);
     }
 
     @Override
