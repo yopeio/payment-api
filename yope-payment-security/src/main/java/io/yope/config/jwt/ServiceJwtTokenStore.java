@@ -41,9 +41,7 @@ public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 		log.info("Logged User  {}", loggedUser);
 		log.info("Registered User  {}", u);
 		log.info("------------------------------------");
-		//
-
-		// does it have any sense?
+		
 		if(!u.getUsername().equals(loggedUser.getUsername())) {
 			throw new InvalidTokenException("Invalid access token");
 		}

@@ -8,8 +8,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,20 +21,17 @@ public class LocaleFilter extends OncePerRequestFilter {
 	@Override
 	protected void initFilterBean() throws ServletException {
 		super.initFilterBean();
-
-		logger.info("Locale Filter Started");
+		log.info("Locale Filter Started");
 	}
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+	protected void doFilterInternal(final HttpServletRequest request, 
+			final HttpServletResponse response, final FilterChain chain)
 			throws ServletException, IOException {
 		
 		final Locale locale = request.getLocale();
-		logger.debug("setting locale based on request: " + locale);
-		
 		LocaleContextHolder.setLocale(locale);
 		ThreadLocalUtils.currentRequest.set(request);
-		
 		chain.doFilter(request, response);
 	}
 }

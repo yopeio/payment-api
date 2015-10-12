@@ -50,7 +50,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public void configure(final WebSecurity web) throws Exception {
 		web.debug(true)
 				.ignoring()
-				.antMatchers("/webjars/**", "/images/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/wallets/**")
+				.antMatchers("/webjars/**", "/oauth/uncache_approvals", "/oauth/cache_approvals", "/wallets/**")
 				.and()
 				.ignoring()
 				.antMatchers(HttpMethod.OPTIONS, "/**")
@@ -111,8 +111,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.and()
 				.exceptionHandling()
 				.accessDeniedHandler(accessDeniedHandler)
-				// handle access denied in general (for example comming from
-				// @PreAuthorization
+				// handle access denied in general (for example comming from @PreAuthorization
 				.authenticationEntryPoint(authenticationEntryPoint)
 				// handle authentication exceptions for unauthorized calls.
 				.defaultAuthenticationEntryPointFor(authenticationEntryPoint, preferredMatcher)
@@ -120,8 +119,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.requestMatchers()
 				// SECURE IT
 				.antMatchers("/users/**", "/cards/**", "/accounts/**",
-						"/postident/**", "/idnow/**", "/webid/**", "/me/**",
-						"/api/version",
 						"/secured/route/oauth")
 				.and()
 				.headers()
@@ -138,10 +135,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.fullyAuthenticated()
 				.antMatchers(HttpMethod.OPTIONS, "/**")
 				.permitAll()
-				.antMatchers(HttpMethod.POST, "/api/users/shadow")
-				.permitAll()
-				.antMatchers(HttpMethod.GET,
-						"/secured/route/oauth").fullyAuthenticated();
+				.antMatchers(HttpMethod.GET, "/secured/route/oauth").fullyAuthenticated();
 	}
 
 	@Bean

@@ -32,9 +32,6 @@ import io.yope.config.jwt.ServiceJwtTokenStore;
 public class OAuth2ServerConfig {
 
 	public static final String WEB_APP_CLIENT = "my-trusted-wdpClient";
-	public static final String IPHONE_CLIENT = "iphone";
-	public static final String ANDROID_CLIENT = "android";
-
 	private static final String API_RESOURCE = "oauth2-resource";
 
 	@Configuration
@@ -44,9 +41,8 @@ public class OAuth2ServerConfig {
 
 		@Autowired private AuthenticationManager authenticationManager;
 
-		private final static Integer accessTokenValiditySeconds = 300;
+		private final static Integer accessTokenValiditySeconds = 500;
 		private final static Integer refreshTokenValiditySeconds = 300;
-		private final static Integer webappOAuthExpiresInSeconds = 500;
 
 		// OAuth2 security configurer
 		@Override
@@ -79,24 +75,6 @@ public class OAuth2ServerConfig {
 		public void configure(final ClientDetailsServiceConfigurer clients) throws Exception {
 		 	clients.inMemory()
 		        .withClient(WEB_APP_CLIENT)
-		        .resourceIds(API_RESOURCE)
-		            .authorizedGrantTypes("password", "authorization_code", "refresh_token")
-		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
-		            .scopes("read", "write", "trust", "update")
-		            .accessTokenValiditySeconds(webappOAuthExpiresInSeconds) // globalConfigs.advancedProps.integer("webAPP.oauth.token.access.expiresInSeconds");
-		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds)
-		            .secret("secret")
-		     .and()
-		        .withClient(IPHONE_CLIENT)
-		        .resourceIds(API_RESOURCE)
-		            .authorizedGrantTypes("password", "authorization_code", "refresh_token", "implicit")
-		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
-		            .scopes("read", "write", "trust", "update")
-		            .accessTokenValiditySeconds(accessTokenValiditySeconds)
-		            .refreshTokenValiditySeconds(refreshTokenValiditySeconds)
-		            .secret("secret")
-		     .and()
-		        .withClient(ANDROID_CLIENT)
 		        .resourceIds(API_RESOURCE)
 		            .authorizedGrantTypes("password", "authorization_code", "refresh_token", "implicit")
 		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
