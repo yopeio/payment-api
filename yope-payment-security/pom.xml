@@ -27,7 +27,6 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-tx</artifactId>
-
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
@@ -117,6 +116,12 @@
 			<groupId>io.yope.payment</groupId>
 			<artifactId>yope-payment-db-api</artifactId>
 		</dependency>
+
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+        </dependency>
 	</dependencies>
+
 
 </project>

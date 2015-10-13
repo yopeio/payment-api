@@ -18,7 +18,12 @@ import com.google.common.collect.Maps;
  * @author massi
  *
  */
-@Service
+
+/**
+ * Substituted by RedisUserRepository.
+ */
+//@Service
+@Deprecated
 public class MockUserRepository implements UserRepository {
 
     Map<String, User> users = Maps.newHashMap();
