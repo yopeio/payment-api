@@ -24,6 +24,8 @@ public class TransactionTO implements Transaction {
 
     private Long id;
 
+    private String hash;
+
     private WalletTO source;
 
     private WalletTO destination;
@@ -63,6 +65,7 @@ public class TransactionTO implements Transaction {
                 .status(transaction.getStatus())
                 .reference(transaction.getReference())
                 .id(transaction.getId())
+                .hash(transaction.getHash())
                 .acceptedDate(transaction.getAcceptedDate())
                 .deniedDate(transaction.getDeniedDate())
                 .completedDate(transaction.getCompletedDate());

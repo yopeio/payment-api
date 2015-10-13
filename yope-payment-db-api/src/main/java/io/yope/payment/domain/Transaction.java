@@ -22,6 +22,10 @@ public interface Transaction {
          */
         PENDING,
         /**
+         * transaction expired as not completed after a given time interval.
+         */
+        EXPIRED,
+        /**
          * transaction rejected either by external or by internal blockchain.
          */
         DENIED,
@@ -47,6 +51,8 @@ public interface Transaction {
     }
 
     Long getId();
+
+    String getHash();
 
     Wallet getSource();
 

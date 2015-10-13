@@ -1,8 +1,5 @@
 package io.yope.config;
 
-import io.yope.oauth.model.YopeUser;
-import io.yope.payment.security.repositories.RedisUserRepository;
-import io.yope.payment.security.repositories.UserRepository;
 import org.redisson.Redisson;
 import org.redisson.core.RMap;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +27,9 @@ import org.springframework.web.client.RestTemplate;
 
 import io.yope.auth.AccessDeniedExceptionHandler;
 import io.yope.auth.UnauthorizedEntryPoint;
+import io.yope.oauth.model.YopeUser;
+import io.yope.payment.security.repositories.RedisUserRepository;
+import io.yope.payment.security.repositories.UserRepository;
 import io.yope.repository.IOAuthAccessToken;
 import io.yope.repository.IOAuthRefreshToken;
 import io.yope.repository.OAuthAccessTokenStore;
@@ -48,31 +48,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired private AccessDeniedHandler accessDeniedHandler;
     @Autowired private PasswordEncoder passEncoder;
 
-    @Autowired private UserService userService;
+    @Autowired
+    private UserService userService;
 
     @Override
-    /** This is the configuration for the OAuth module*/
+    /** This is the configuration for the OAuth module */
     public void configure(final WebSecurity web) throws Exception {
-        web.debug(true)
-                .ignoring()
-                .antMatchers("/webjars/**",
-                        "/oauth/uncache_approvals",
-                        "/oauth/cache_approvals",
-                        "/wallets/**")
-                .and()
-                .ignoring()
-                .antMatchers(HttpMethod.OPTIONS, "/**")
-                .antMatchers(HttpMethod.GET, "/wallets");
+        web.debug(true).ignoring()
+                .antMatchers(HttpMethod.POST, "/accounts/**")
+                .antMatchers("/webjars/**", "/images/**", "/registration/**",
+                        "/oauth/uncache_approvals", "/oauth/cache_approvals")
+                .and().ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() { // no enconding for the time
-        // being
+                                               // being
         return new PasswordEncoder() {
 
             @Override
             public boolean matches(final CharSequence rawPassword,
-                                   final String encodedPassword) {
+                    final String encodedPassword) {
                 return true;
             }
 
@@ -88,7 +84,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new UserServiceNoSqlImpl();
     }
 
-
     @Override
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
@@ -98,12 +93,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(final AuthenticationManagerBuilder auth)
             throws Exception {
-
         auth.userDetailsService(userService).passwordEncoder(passEncoder);
     }
 
     @Override
-    /** This is the configuration for the security module itself*/
+    /** This is the configuration for the security module itself */
     protected void configure(final HttpSecurity http) throws Exception {
 
         ContentNegotiationStrategy contentNegotiationStrategy = http
@@ -116,37 +110,31 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 MediaType.APPLICATION_FORM_URLENCODED,
                 MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA);
 
-        http.anonymous()
-                .disable()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .exceptionHandling()
-                .accessDeniedHandler(accessDeniedHandler)
-                        // handle access denied in general (for example comming from @PreAuthorization
+        http.anonymous().disable().sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+                .exceptionHandling().accessDeniedHandler(accessDeniedHandler)
+                // handle access denied in general (for example comming from
+                // @PreAuthorization
                 .authenticationEntryPoint(authenticationEntryPoint)
-                        // handle authentication exceptions for unauthorized calls.
-                .defaultAuthenticationEntryPointFor(authenticationEntryPoint, preferredMatcher)
-                .and()
-                .requestMatchers()
-                        // SECURE IT
-                .antMatchers("/users/**", "/cards/**", "/accounts/**",
-                        "/secured/route/oauth")
-                .and()
-                .headers()
-                .contentTypeOptions()
-                .cacheControl()
-                .frameOptions()
-                .httpStrictTransportSecurity()
-                .xssProtection()
+                // handle authentication exceptions for unauthorized calls.
+                .defaultAuthenticationEntryPointFor(authenticationEntryPoint,
+                        preferredMatcher)
+                .and().requestMatchers()
+                // SECURE IT
+                .antMatchers("/accounts/**", "/wallets/**",
+                        "/postident/**", "/idnow/**", "/webid/**", "/me/**",
+                        "/api/version", "/secured/route/oauth")
+                .and().headers().contentTypeOptions().cacheControl()
+                .frameOptions().httpStrictTransportSecurity().xssProtection()
                 .and()
                 .authorizeRequests()
-                .antMatchers("/accounts/**")
-                .fullyAuthenticated()
-                .antMatchers("/transactions/**")
-                .fullyAuthenticated()
-                .antMatchers(HttpMethod.OPTIONS, "/**")
-                .permitAll()
+                .antMatchers(HttpMethod.GET, "/accounts/**").fullyAuthenticated()
+                .antMatchers(HttpMethod.PUT, "/accounts/**").fullyAuthenticated()
+                .antMatchers(HttpMethod.DELETE, "/accounts/**").fullyAuthenticated()
+                .antMatchers("/wallets/**").fullyAuthenticated()
+                .antMatchers("/transactions/**").fullyAuthenticated()
+                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/users/shadow").permitAll()
                 .antMatchers(HttpMethod.GET, "/secured/route/oauth").fullyAuthenticated();
     }
 
@@ -155,19 +143,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new RestTemplate();
     }
 
-    @Bean AccessDeniedHandler accessDeniedHandler() {
+    @Bean
+    AccessDeniedHandler accessDeniedHandler() {
         return new AccessDeniedExceptionHandler();
     }
 
-    @Bean AuthenticationEntryPoint entryPointBean() {
+    @Bean
+    AuthenticationEntryPoint entryPointBean() {
         return new UnauthorizedEntryPoint();
     }
 
-    @Bean IOAuthAccessToken ioAuthAccessToken() {
+    @Bean
+    IOAuthAccessToken ioAuthAccessToken() {
         return new OAuthAccessTokenStore();
     }
 
-    @Bean IOAuthRefreshToken iOAuthRefreshToken() {
+    @Bean
+    IOAuthRefreshToken iOAuthRefreshToken() {
         return new OAuthRefreshTokenStore();
     }
 
@@ -177,8 +169,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public UserRepository redisUserRepository(Redisson redisson) {
-        RMap<String, YopeUser> users = redisson.getMap("users");
+    public UserRepository redisUserRepository(final Redisson redisson) {
+        final RMap<String, YopeUser> users = redisson.getMap("users");
         return new RedisUserRepository(users);
     }
 }

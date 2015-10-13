@@ -25,6 +25,9 @@ public class TransactionHelper {
     private BlockChainService blockChainService;
 
     public Transaction register(final Transaction transaction) throws BlockchainException, ObjectNotFoundException {
+
+
+
         final Transaction pendingTransaction = transactionService.create(transaction);
         if (Transaction.Type.EXTERNAL.equals(pendingTransaction.getType())) {
             blockChainService.send(pendingTransaction);

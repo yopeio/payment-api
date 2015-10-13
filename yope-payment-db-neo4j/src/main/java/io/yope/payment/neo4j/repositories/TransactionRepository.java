@@ -17,23 +17,23 @@ import io.yope.payment.neo4j.domain.Neo4JTransaction;
  */
 public interface TransactionRepository extends GraphRepository<Neo4JTransaction> {
 
-    @Query("MATCH (s {hash:{hash}})-[t:PAY]->(d) return t")
-    List<Neo4JTransaction> findWalletTransactionsOut(@Param("hash") String hash);
+    @Query("MATCH (s {name:{name}})-[t:PAY]->(d) return t")
+    List<Neo4JTransaction> findWalletTransactionsOut(@Param("name") String name);
 
-    @Query("MATCH (s)-[t:PAY]->(d {hash:{hash}}) return t")
-    List<Neo4JTransaction> findWalletTransactionsIn(@Param("hash") String hash);
+    @Query("MATCH (s)-[t:PAY]->(d {name:{name}}) return t")
+    List<Neo4JTransaction> findWalletTransactionsIn(@Param("name") String name);
 
-    @Query("MATCH (s)-[t:PAY]->(d) where s.hash = {hash} or d.hash = {hash} return t")
-    List<Neo4JTransaction> findWalletTransactions(@Param("hash") String hash);
+    @Query("MATCH (s)-[t:PAY]->(d) where s.name = {name} or d.name = {name} return t")
+    List<Neo4JTransaction> findWalletTransactions(@Param("name") String name);
 
-    @Query("MATCH (s {hash:{hash}})-[t:PAY {reference:{reference}}]->(d) return t")
-    List<Neo4JTransaction> findWalletTransactionsOut(@Param("hash") String hash, @Param("reference") String reference);
+    @Query("MATCH (s {name:{name}})-[t:PAY {reference:{reference}}]->(d) return t")
+    List<Neo4JTransaction> findWalletTransactionsOut(@Param("name") String name, @Param("reference") String reference);
 
-    @Query("MATCH (s)-[t:PAY {reference:{reference}}]->(d {hash:{hash}}) return t")
-    List<Neo4JTransaction> findWalletTransactionsIn(@Param("hash") String hash, @Param("reference") String reference);
+    @Query("MATCH (s)-[t:PAY {reference:{reference}}]->(d {name:{name}}) return t")
+    List<Neo4JTransaction> findWalletTransactionsIn(@Param("name") String name, @Param("reference") String reference);
 
-    @Query("MATCH (s)-[t:PAY {reference:{reference}}]->(d) where s.hash = {hash} or d.hash = {hash} return t")
-    List<Neo4JTransaction> findWalletTransactions(@Param("hash") String hash, @Param("reference") String reference);
+    @Query("MATCH (s)-[t:PAY {reference:{reference}}]->(d) where s.name = {name} or d.name = {name} return t")
+    List<Neo4JTransaction> findWalletTransactions(@Param("name") String name, @Param("reference") String reference);
 
     @Query("MATCH (a)-[:OWN]->(b)-[t:PAY]->(d)<-[:OWN]-(e)  where id(e)={accountId} return t")
     List<Neo4JTransaction> findAccountTransactionsIn(@Param("accountId") Long accountId);

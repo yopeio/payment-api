@@ -3,14 +3,13 @@
  */
 package io.yope.payment.neo4j.repositories;
 
-import io.yope.payment.domain.Account;
+import java.util.List;
+
 import org.springframework.data.neo4j.repository.GraphRepository;
 import org.springframework.data.repository.query.Param;
 
+import io.yope.payment.domain.Account;
 import io.yope.payment.neo4j.domain.Neo4JAccount;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author massi
