@@ -43,8 +43,6 @@ public class BitcoinjConfiguration {
     @Autowired
     private Environment environment;
 
-    private static final String DEFAULT_LOCATION = "yope-payment-blockchain/src/main/resources/blockstores";
-
     @Bean
     public Context getContext(final NetworkParameters params ) {
         return new Context(params);
@@ -64,12 +62,9 @@ public class BitcoinjConfiguration {
         final String blockstore = params instanceof TestNet3Params ? "tbtc_blockstore" : "main_blockstore";
 
         return new SPVBlockStore(params,
-                new File(getBlockstoresLocation(), blockstore));
+                new File(blockstore));
     }
 
-    private String getBlockstoresLocation() {
-        return environment.getProperty("yope.blockstores.location", DEFAULT_LOCATION);
-    }
 
     @Bean
     public PeerGroup getPeers(final NetworkParameters params,final BlockChain chain) {
@@ -87,32 +82,13 @@ public class BitcoinjConfiguration {
         final BitcoinjBlockchainServiceImpl blockChainService =
                 new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup);
 
-        /*
-         * TODO
-         * remove code
-         * we do not need to init the wallets for the users.
-         * if external, they have been already initialized into blockchain
-         * if internal, they will not be seen by the blockchain
-         *
-        List<Account> accounts = accountService.getAccounts();
-        List<Wallet> wallets = new ArrayList<Wallet>();
-        for (Account account : accounts) {
-            wallets.addAll(walletService.get(account.getId()));
-        }
-
-        blockChainService.init(wallets);
-        */
-
-
         Wallet central = null;
-        byte[] content;
         Account admin = accountService.getByEmail(ADMIN_EMAIL);
         if (admin == null) {
             try {
                 Wallet inBlockChain = blockChainService.register();
-                writeCentralWallet(inBlockChain);
                 central = WalletTO.builder()
-//                        .writeCentralWallet(inBlockChain.getContent())
+                        .content(inBlockChain.getContent())
                         .hash(inBlockChain.getHash())
                         .type(Wallet.Type.EXTERNAL)
                         .status(Wallet.Status.ACTIVE)
@@ -135,32 +111,9 @@ public class BitcoinjConfiguration {
         } else {
             central = admin.getWallets().iterator().next();
         }
-        content = readCentralWallet();
-        blockChainService.init(central, content);
+        blockChainService.init(central);
         log.info("central wallet hash: {}", central.getHash());
         return blockChainService;
     }
-
-    private void writeCentralWallet(Wallet inBlockChain) {
-        try {
-            FileOutputStream fos = new FileOutputStream(CENTRAL_WALLET_PATH);
-            fos.write(inBlockChain.getContent());
-            fos.close();
-        } catch (IOException e) {
-            log.error("error during content file generation", e);
-        }
-    }
-
-    private byte[] readCentralWallet() {
-        byte[] data = null;
-        Path path = Paths.get(CENTRAL_WALLET_PATH);
-        try {
-            data = Files.readAllBytes(path);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return data;
-    }
-
 
 }

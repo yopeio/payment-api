@@ -6,6 +6,7 @@ package io.yope.payment.neo4j.domain;
 import java.math.BigDecimal;
 
 import org.springframework.data.neo4j.annotation.GraphId;
+import org.springframework.data.neo4j.annotation.GraphProperty;
 import org.springframework.data.neo4j.annotation.Indexed;
 import org.springframework.data.neo4j.annotation.NodeEntity;
 
@@ -48,7 +49,7 @@ public class Neo4JWallet implements Wallet {
 
     private Type type;
 
-    private byte[] content;
+    private String content;
 
     private String privateKey;
 

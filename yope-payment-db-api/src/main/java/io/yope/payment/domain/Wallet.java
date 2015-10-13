@@ -40,7 +40,7 @@ public interface Wallet {
 
     Type getType();
 
-    byte[] getContent();
+    String getContent();
 
     String getPrivateKey();
 

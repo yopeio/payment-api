@@ -14,9 +14,11 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.store.UnreadableWalletException;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,7 +37,8 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     PeerGroup peerGroup;
 
 
-    public void init(Wallet wallet, byte[] content) {
+
+    public void init(Wallet wallet) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
             public void run() {
@@ -43,11 +46,11 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
                 peerGroup.setBloomFilterFalsePositiveRate(0.00001);
                 try {
                     registerInBlockchain(org.bitcoinj.core.Wallet.loadFromFileStream(
-                            new ByteArrayInputStream(content)));
+                            new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(wallet.getContent()))));
                     peerGroup.startAsync();
                     peerGroup.downloadBlockChain();
                 } catch (UnreadableWalletException e) {
-                    log.error("wallet {} cannot be registered to the chain", wallet.getHash());
+                    log.error("wallet {} cannot be registered to the chain", wallet.getHash(), e);
                 }
             }
         });
@@ -66,8 +69,9 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             throw new BlockchainException(e);
         }
         registerInBlockchain(btcjWallet);
+
         final WalletTO wallet = WalletTO.builder().hash(freshKey.toAddress(params).toString()).
-                content(outputStream.toByteArray()).
+                content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).
                 privateKey(freshKey.getPrivateKeyEncoded(params).toString()).build();
         return wallet;
     }
@@ -78,7 +82,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             final Coin value = Coin.valueOf(transaction.getAmount().longValue());
             final org.bitcoinj.core.Wallet sender =
                     org.bitcoinj.core.Wallet.loadFromFileStream(
-                            new ByteArrayInputStream((byte[])transaction.getSource().getContent()));
+                            new ByteArrayInputStream(transaction.getSource().getContent().getBytes()));
             sender.allowSpendingUnconfirmedTransactions();
             registerInBlockchain(sender);
             final Address receiver = new Address(params, transaction.getDestination().getHash());
@@ -107,6 +111,9 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
                 log.info("******** Coins on central wallet to me {} from me {}",  valueSentToMe, valueSentFromMe);
 
+                final DeterministicKey freshKey = wallet.freshReceiveKey();
+                String freshHash = freshKey.toAddress(params).toString();
+                log.info("******** fresh hash: {}", freshHash);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 try {
                     peerGroup.broadcastTransaction(tx);
@@ -123,7 +130,16 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     }
 
     @Override
-    public String generateHash(final Wallet wallet) throws BlockchainException {
+    public String generateHash(final byte[] content) throws BlockchainException {
+        try {
+            final org.bitcoinj.core.Wallet receiver =
+                    org.bitcoinj.core.Wallet.loadFromFileStream(
+                            new ByteArrayInputStream(content));
+            final DeterministicKey freshKey = receiver.freshReceiveKey();
+            return freshKey.toAddress(params).toString();
+        } catch (UnreadableWalletException e) {
+            log.error("error during hash generation", e);
+        }
         return null;
     }
 

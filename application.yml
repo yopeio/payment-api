@@ -1,8 +1,0 @@
-logging:
-    level:
-        org.bitcoinj: ERROR
-
-neo4j:
-    neo4jUrl: http://localhost:7474/db/data
-    neo4jUsername: neo4j
-    neo4jPassword: neo4j1

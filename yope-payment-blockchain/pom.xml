@@ -31,4 +31,12 @@
 
     </dependencies>
 
+    <build>
+        <resources>
+            <resource>
+                <directory>classpath:/blockstores</directory>
+            </resource>
+        </resources>
+    </build>
+
 </project>
