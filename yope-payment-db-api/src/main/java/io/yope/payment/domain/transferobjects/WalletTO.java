@@ -40,7 +40,7 @@ public class WalletTO implements Wallet {
 
     private Type type;
 
-    @Wither private byte[] content;
+    @Wither private String content;
 
     @Wither private String privateKey;
 

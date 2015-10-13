@@ -82,32 +82,13 @@ public class BitcoinjConfiguration {
         final BitcoinjBlockchainServiceImpl blockChainService =
                 new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup);
 
-        /*
-         * TODO
-         * remove code
-         * we do not need to init the wallets for the users.
-         * if external, they have been already initialized into blockchain
-         * if internal, they will not be seen by the blockchain
-         *
-        List<Account> accounts = accountService.getAccounts();
-        List<Wallet> wallets = new ArrayList<Wallet>();
-        for (Account account : accounts) {
-            wallets.addAll(walletService.get(account.getId()));
-        }
-
-        blockChainService.init(wallets);
-        */
-
-
         Wallet central = null;
-        byte[] content;
         Account admin = accountService.getByEmail(ADMIN_EMAIL);
         if (admin == null) {
             try {
                 Wallet inBlockChain = blockChainService.register();
-                writeCentralWallet(inBlockChain);
                 central = WalletTO.builder()
-//                        .writeCentralWallet(inBlockChain.getContent())
+                        .content(inBlockChain.getContent())
                         .hash(inBlockChain.getHash())
                         .type(Wallet.Type.EXTERNAL)
                         .status(Wallet.Status.ACTIVE)
@@ -130,34 +111,9 @@ public class BitcoinjConfiguration {
         } else {
             central = admin.getWallets().iterator().next();
         }
-        content = readCentralWallet();
-        blockChainService.init(central, content);
+        blockChainService.init(central);
         log.info("central wallet hash: {}", central.getHash());
         return blockChainService;
     }
-
-    private void writeCentralWallet(Wallet inBlockChain) {
-        try {
-            FileOutputStream fos = new FileOutputStream(CENTRAL_WALLET_PATH);
-            fos.write(inBlockChain.getContent());
-            fos.close();
-        } catch (IOException e) {
-            log.error("error during central wallet generation", e);
-        }
-    }
-
-    private byte[] readCentralWallet() {
-        byte[] data = null;
-        this.getClass().getClassLoader()
-                .getResourceAsStream(CENTRAL_WALLET_PATH);
-        Path path = Paths.get(CENTRAL_WALLET_PATH);
-        try {
-            data = Files.readAllBytes(path);
-        } catch (IOException e) {
-            log.error("error during central wallet reading: {}", e.getMessage());
-        }
-        return data;
-    }
-
 
 }

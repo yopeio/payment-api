@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.xml.bind.DatatypeConverter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
@@ -45,7 +46,7 @@ public class WalletHelper {
     public QRImage getQRImage(final Long accountId, final String name, final String reference, final String description, final BigDecimal amount) throws ObjectNotFoundException, BlockchainException {
         Wallet wallet = walletService.getByName(accountId, name);
         if (StringUtils.isBlank(wallet.getHash())) {
-            final String hash = getHashForWallet(wallet.getContent());
+            final String hash = getHashForWallet(DatatypeConverter.parseBase64Binary(wallet.getContent()));
             wallet = walletService.update(wallet.getId(), WalletTO.from(wallet).hash(hash).modificationDate(System.currentTimeMillis()).status(Wallet.Status.ACTIVE).build());
         }
         final Image image = generateImage(wallet.getHash(), name, reference, description, amount);
