@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.yope.oauth.model.JWTCommon;
@@ -17,7 +18,7 @@ import io.yope.utils.BasicAuth;
 import io.yope.utils.ThreadLocalUtils;
 import lombok.extern.slf4j.Slf4j;
 
-@Transactional(value="neo4jTransactionManager", rollbackFor = Exception.class) @Slf4j
+@Transactional(rollbackFor = Exception.class) @Slf4j
 public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 
 	@Autowired private IOAuthAccessToken accessTokenRepository;
@@ -75,7 +76,7 @@ public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 
 
 	@Override
-	@Transactional(value="neo4jTransactionManager", readOnly=false, rollbackFor = Exception.class)
+	@Transactional(readOnly=false, rollbackFor = Exception.class)
 	public void removeAccessToken(final OAuth2AccessToken paramOAuth2AccessToken) {
 		final JWTCommon common = extractJtiFromRefreshToken(paramOAuth2AccessToken.getValue());
 		final OAuthAccessToken storedObject = (OAuthAccessToken) getAccessDao().findByTokenId(common.getJti());
@@ -85,7 +86,7 @@ public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 	}
 
 	@Override
-	@Transactional(value="neo4jTransactionManager", readOnly=false, rollbackFor = Exception.class)
+	@Transactional(readOnly=false, rollbackFor = Exception.class)
 	public void removeRefreshToken(final OAuth2RefreshToken paramOAuth2RefreshToken) {
 		if(paramOAuth2RefreshToken == null) {
             return;
@@ -100,9 +101,9 @@ public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 	}
 
 	@Override
-	@Transactional(value="neo4jTransactionManager", readOnly=false, rollbackFor = Exception.class)
+	@Transactional(readOnly=false, rollbackFor = Exception.class)
 	public void removeAccessTokenUsingRefreshToken(final OAuth2RefreshToken paramOAuth2RefreshToken) {
-		if(paramOAuth2RefreshToken == null) {
+		if (paramOAuth2RefreshToken == null) {
             return;
         }
 

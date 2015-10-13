@@ -89,10 +89,10 @@ public abstract class AbstractJwtTokenStore implements TokenStore {
 		return SerializationUtils.deserialize(storedObject.getAuthentication());
 	}
 	
-	protected OAuthEntity<?> readAuthenticationFromDB(String value) {
+	protected OAuthEntity readAuthenticationFromDB(String value) {
 		JWTCommon common = extractJtiFromRefreshToken(value);
 		
-		OAuthEntity<?> storedObject = (OAuthEntity<?>) getAccessDao().findByTokenId(common.getJti());
+		OAuthEntity storedObject = (OAuthEntity) getAccessDao().findByTokenId(common.getJti());
 		
 		if(storedObject == null) {
 			log.info("Stored OAuthEntity NOT FOUND" );
@@ -104,7 +104,7 @@ public abstract class AbstractJwtTokenStore implements TokenStore {
 	
 	@Override
 	public OAuth2Authentication readAuthentication(String paramString) {
-		OAuthEntity<?> storedObject = readAuthenticationFromDB(paramString);
+		OAuthEntity storedObject = readAuthenticationFromDB(paramString);
 		
 		return SerializationUtils.deserialize(storedObject.getAuthentication());
 	}
@@ -113,7 +113,7 @@ public abstract class AbstractJwtTokenStore implements TokenStore {
 	@Override
 	public OAuth2AccessToken readAccessToken(final String paramString) {
 		JWTCommon common = extractJtiFromRefreshToken(paramString);
-		OAuthEntity<?> storedObject = (OAuthEntity<?>) getAccessDao().findByTokenId(common.getJti());
+		OAuthEntity storedObject = (OAuthEntity) getAccessDao().findByTokenId(common.getJti());
 		if(storedObject == null)
 			return null;
 		Object authentication = SerializationUtils.deserialize(storedObject.getToken());
@@ -123,7 +123,7 @@ public abstract class AbstractJwtTokenStore implements TokenStore {
 
 	@Override
 	public OAuth2AccessToken getAccessToken(OAuth2Authentication paramOAuth2Authentication) {
-		List<OAuthEntity<?>> storedObject = getAccessDao().findByAuthenticationId(authenticationKeyGenerator.extractKey(paramOAuth2Authentication));
+		List<OAuthEntity> storedObject = getAccessDao().findByAuthenticationId(authenticationKeyGenerator.extractKey(paramOAuth2Authentication));
 		if(storedObject == null || storedObject.isEmpty()) {
 			log.info("access Token is null ");
 			return null;
@@ -138,25 +138,25 @@ public abstract class AbstractJwtTokenStore implements TokenStore {
 
 	@Override
 	public Collection<OAuth2AccessToken> findTokensByClientIdAndUserName(String clientID, String userName) {
-		List<OAuthEntity<?>> result = getAccessDao().findByClientIdAndUserName(clientID, userName);
+		List<OAuthEntity> result = getAccessDao().findByClientIdAndUserName(clientID, userName);
 		List<OAuth2AccessToken> oauthAccTokens = new ArrayList<>();
-		for(OAuthEntity<?> token : result) {
-			oauthAccTokens.add((OAuth2AccessToken) org.springframework.security.oauth2.common.util.SerializationUtils.deserialize(token.getoAuth2AccessToken()));
+		for(OAuthEntity token : result) {
+			oauthAccTokens.add((OAuth2AccessToken) org.springframework.security.oauth2.common.util.SerializationUtils.deserialize(token.getOAuth2AccessToken()));
 		}
 		return oauthAccTokens;
 	}
 
 	@Override
 	public Collection<OAuth2AccessToken> findTokensByClientId(String paramString) {
-		List<OAuthEntity<?>> result = getAccessDao().findByClientId(paramString);
+		List<OAuthEntity> result = getAccessDao().findByClientId(paramString);
 		List<OAuth2AccessToken> oauthAccTokens = new ArrayList<>();
-		for(OAuthEntity<?> token : result) {
-			oauthAccTokens.add((OAuth2AccessToken) SerializationUtils.deserialize(token.getoAuth2AccessToken()));
+		for(OAuthEntity token : result) {
+			oauthAccTokens.add((OAuth2AccessToken) SerializationUtils.deserialize(token.getOAuth2AccessToken()));
 		}
 		return oauthAccTokens;
 	}
 	
-	public void updateLastLogin(OAuthEntity<?> storedOAuthEntity) {
+	public void updateLastLogin(OAuthEntity storedOAuthEntity) {
 		storedOAuthEntity.setLastLogin(System.currentTimeMillis());
 		getAccessDao().saveOrUpdate(storedOAuthEntity);
 	}

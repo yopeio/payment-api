@@ -25,21 +25,21 @@ public class OAuthAccessTokenStore implements IOAuthAccessToken {
 	}
 	
 	// this contains the accessTokens indexed by TokenId and refreshTokens and AuthId!
-	private static final Map<String, OAuthEntity<?>> tokenMap = new ConcurrentHashMap<String, OAuthEntity<?>>();
+	private static final Map<String, OAuthEntity> tokenMap = new ConcurrentHashMap<String, OAuthEntity>();
 
 	@Override
-	public io.yope.oauth.model.OAuthEntity<?> findByTokenId(final String tokenId) {
-		OAuthEntity<?> res = tokenMap.get(tokenId);
+	public io.yope.oauth.model.OAuthEntity findByTokenId(final String tokenId) {
+		OAuthEntity res = tokenMap.get(tokenId);
 		return res;
 	}
 
 	@Override
-	public io.yope.oauth.model.OAuthEntity<?> findByRefreshToken(final String refreshToken) {
+	public io.yope.oauth.model.OAuthEntity findByRefreshToken(final String refreshToken) {
 		return tokenMap.get(refreshToken);
 	}
 	
 	@Override
-	public List<io.yope.oauth.model.OAuthEntity<?>> findByAuthenticationId(final String authenticationId) {
+	public List<io.yope.oauth.model.OAuthEntity> findByAuthenticationId(final String authenticationId) {
 		return tokenMap.values().stream().filter(t -> t.getAuthenticationId() != authenticationId).collect(Collectors.toList());
 	}
 
@@ -52,7 +52,7 @@ public class OAuthAccessTokenStore implements IOAuthAccessToken {
 
 	@Override
 	public void saveOrUpdate(
-			final io.yope.oauth.model.OAuthEntity<?> storedOAuthEntity) {
+			final io.yope.oauth.model.OAuthEntity storedOAuthEntity) {
 		final String tokenId = storedOAuthEntity.getTokenId();
 		tokenMap.put(tokenId, storedOAuthEntity);
 		
@@ -70,17 +70,17 @@ public class OAuthAccessTokenStore implements IOAuthAccessToken {
 	}
 
 	@Override
-	public List<io.yope.oauth.model.OAuthEntity<?>> findByUserName(final String userName) {
+	public List<io.yope.oauth.model.OAuthEntity> findByUserName(final String userName) {
 		return tokenMap.values().stream().filter(t -> t.getUserName() == userName).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<io.yope.oauth.model.OAuthEntity<?>> findByClientId(final String clientId) {
+	public List<io.yope.oauth.model.OAuthEntity> findByClientId(final String clientId) {
 		return tokenMap.values().stream().filter(t -> t.getClientId() == clientId).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<io.yope.oauth.model.OAuthEntity<?>> findByClientIdAndUserName(
+	public List<io.yope.oauth.model.OAuthEntity> findByClientIdAndUserName(
 			final String clientId, final String userName) {
 		log.info("*** Get it findByClientIdAndUserName " + clientId + " " + userName);
 		return tokenMap.values().stream().filter(
