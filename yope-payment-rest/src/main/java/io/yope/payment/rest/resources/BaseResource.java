@@ -10,8 +10,8 @@ import org.springframework.security.core.userdetails.User;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.rest.helpers.AccountHelper;
-import io.yope.payment.services.UserSecurityService;
 import io.yope.payment.services.TransactionService;
+import io.yope.payment.services.UserSecurityService;
 import io.yope.payment.services.WalletService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,8 +36,9 @@ public abstract class BaseResource {
 
     protected Account getLoggedAccount() {
         final User user = this.securityService.getCurrentUser();
-        log.info("logged as {}", user.getUsername());
-        return this.accountHelper.getByEmail(user.getUsername());
+        final Account account = this.accountHelper.getByEmail(user.getUsername());
+        log.info("logged as {}", account);
+        return account;
     }
 
     protected <T> PaymentResponse<T> unauthorized(final T object) {

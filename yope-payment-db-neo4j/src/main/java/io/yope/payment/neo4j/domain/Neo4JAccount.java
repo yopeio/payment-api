@@ -29,9 +29,11 @@ import lombok.ToString;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(of= {"email", "id"}, includeFieldNames = false)
+@ToString(of= {"type", "email"}, includeFieldNames = false)
 @NodeEntity
 public class Neo4JAccount implements Account {
+
+    private Type type;
 
     @GraphId
     private Long id;
@@ -48,8 +50,6 @@ public class Neo4JAccount implements Account {
     private String lastName;
 
     private Status status;
-
-    private Type type;
 
     private Long registrationDate;
 

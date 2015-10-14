@@ -10,6 +10,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.support.Neo4jTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.yope.payment.domain.Account;
@@ -26,7 +27,7 @@ import io.yope.payment.services.WalletService;
  *
  */
 @Service
-@Transactional("neo4jTransactionManager")
+@Transactional(value="neo4jTransactionManager", propagation = Propagation.REQUIRED)
 public class Neo4JAccountService implements AccountService, InitializingBean {
 
     @Autowired
@@ -44,7 +45,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      * @see io.yope.payment.services.AccountService#create(io.yope.payment.domain.Account)
      */
     @Override
-    @Transactional("neo4jTransactionManager")
+    @Transactional(value="neo4jTransactionManager", propagation = Propagation.REQUIRED)
     public Account create(final Account account, final Wallet... wallets) {
         for (final Wallet wallet: wallets) {
             if (wallet == null) {

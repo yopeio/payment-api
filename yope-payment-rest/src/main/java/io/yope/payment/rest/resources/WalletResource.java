@@ -30,6 +30,8 @@ import io.yope.payment.exceptions.ObjectNotFoundException;
 @RequestMapping("/wallets")
 public class WalletResource extends BaseResource {
 
+    private static final String WALLET_NOT_FOUND = "Wallet with id {0} not found";
+
     /**
      * Creates a new wallet. New wallet is pending until confirmation.
      * @param wallet
@@ -65,7 +67,7 @@ public class WalletResource extends BaseResource {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         if (!this.walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return this.notFound(null, MessageFormat.format("Wallet with id {0} not found", walletId));
+            return this.notFound(null, MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         final Account loggedAccount = this.getLoggedAccount();
         if (this.accountHelper.owns(loggedAccount, walletId)) {
@@ -109,12 +111,12 @@ public class WalletResource extends BaseResource {
 
         if (!this.walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return this.notFound(null, MessageFormat.format("Wallet with id {0} not found", walletId));
+            return this.notFound(null, MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         final Account loggedAccount = this.getLoggedAccount();
         if (this.accountHelper.owns(loggedAccount, walletId)) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
-            return new PaymentResponse<Wallet>(header.success(false).status(Response.Status.UNAUTHORIZED.getStatusCode()).errorCode(Response.Status.UNAUTHORIZED.toString()), null);
+            return this.unauthorized(null);
         }
 
         final Wallet wallet = this.walletService.getById(walletId);
@@ -137,11 +139,11 @@ public class WalletResource extends BaseResource {
         final Account loggedAccount = this.getLoggedAccount();
         if (!this.walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return this.notFound(null, MessageFormat.format("Wallet with id {0} not found", walletId));
+            return this.notFound(null, MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         if (!this.accountHelper.owns(loggedAccount, walletId)) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
-            return new PaymentResponse<List<Transaction>>(header.success(false).status(Response.Status.UNAUTHORIZED.getStatusCode()).errorCode(Response.Status.UNAUTHORIZED.toString()), null);
+            return this.unauthorized(null);
         }
         List<Transaction> transactions = null;
         try {
@@ -167,7 +169,7 @@ public class WalletResource extends BaseResource {
         final Account loggedAccount = this.getLoggedAccount();
         if (!this.walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return this.notFound(null, MessageFormat.format("Wallet with id {0} not found", walletId));
+            return this.notFound(null, MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         if (this.accountHelper.owns(loggedAccount, walletId)
             || loggedAccount.getType().equals(Type.ADMIN)) {

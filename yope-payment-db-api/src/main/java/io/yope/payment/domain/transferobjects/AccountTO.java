@@ -21,8 +21,10 @@ import lombok.ToString;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(of= {"email", "type"})
+@ToString(of= {"type", "email"}, includeFieldNames = false)
 public class AccountTO implements Account {
+
+    private Type type;
 
     private Long id;
 
@@ -35,8 +37,6 @@ public class AccountTO implements Account {
     private String lastName;
 
     private Status status;
-
-    private Type type;
 
     private Long registrationDate;
 
