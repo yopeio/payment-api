@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
  * @author mgerardi
  *
  */
-@Builder
+@Builder(builderClassName = "Builder")
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -46,16 +46,18 @@ public class TransactionTO implements Transaction {
 
     private Long completedDate;
 
+    private QRImage QR;
+
     @Override
     public Type getType() {
-        if (Wallet.Type.INTERNAL.equals(source.getType()) &&
-            Wallet.Type.INTERNAL.equals(destination.getType())) {
+        if (Wallet.Type.INTERNAL.equals(this.source.getType()) &&
+            Wallet.Type.INTERNAL.equals(this.destination.getType())) {
             return Type.INTERNAL;
         }
         return Type.EXTERNAL;
     }
 
-    public static TransactionTO.TransactionTOBuilder from(final Transaction transaction) {
+    public static TransactionTO.Builder from(final Transaction transaction) {
         return TransactionTO.builder()
                 .amount(transaction.getAmount())
                 .creationDate(transaction.getCreationDate())

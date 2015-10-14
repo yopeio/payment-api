@@ -13,6 +13,7 @@ import org.springframework.data.neo4j.annotation.StartNode;
 
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.domain.transferobjects.QRImage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -60,6 +61,8 @@ public class Neo4JTransaction implements Transaction {
 
     private Long completedDate;
 
+    private QRImage QR;
+
     public static Neo4JTransaction.Neo4JTransactionBuilder from(final Transaction transaction) {
         return Neo4JTransaction.builder()
                 .amount(transaction.getAmount())
@@ -78,8 +81,8 @@ public class Neo4JTransaction implements Transaction {
 
     @Override
     public Type getType() {
-        if (Wallet.Type.INTERNAL.equals(source.getType()) &&
-            Wallet.Type.INTERNAL.equals(destination.getType())) {
+        if (Wallet.Type.INTERNAL.equals(this.source.getType()) &&
+            Wallet.Type.INTERNAL.equals(this.destination.getType())) {
             return Type.INTERNAL;
         }
         return Type.EXTERNAL;

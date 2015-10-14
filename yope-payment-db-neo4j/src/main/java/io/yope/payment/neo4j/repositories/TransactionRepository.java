@@ -17,7 +17,7 @@ import io.yope.payment.neo4j.domain.Neo4JTransaction;
  */
 public interface TransactionRepository extends GraphRepository<Neo4JTransaction> {
 
-    @Query("MATCH (s {name:{name}})-[t:PAY]->(d) return t")
+    @Query("MATCH (s)-[t:PAY]->(d) where id(s) = {id} return t")
     List<Neo4JTransaction> findWalletTransactionsOut(@Param("name") String name);
 
     @Query("MATCH (s)-[t:PAY]->(d {name:{name}}) return t")

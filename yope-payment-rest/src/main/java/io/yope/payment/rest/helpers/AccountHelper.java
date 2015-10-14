@@ -58,15 +58,15 @@ public class AccountHelper {
         if (StringUtils.isEmpty(walletName)) {
             walletName = registration.getFirstName()+"'s Internal Wallet";
         }
-        final Wallet inWallet = toWalletTO(registration.getName(), Wallet.Type.INTERNAL, registration.getDescription(), null);
+        final Wallet inWallet = this.toWalletTO(registration.getName(), Wallet.Type.INTERNAL, registration.getDescription(), null);
         Wallet exWallet = null;
         if (StringUtils.isNotBlank(registration.getHash())) {
             final String walletDescription = registration.getFirstName()+"'s External Wallet";
-            exWallet = toWalletTO(registration.getFirstName(), Wallet.Type.EXTERNAL, walletDescription, registration.getHash());
+            exWallet = this.toWalletTO(registration.getFirstName(), Wallet.Type.EXTERNAL, walletDescription, registration.getHash());
         }
-        final Account savedAccount = accountService.create(account, inWallet, exWallet);
-        securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
-        return toAccounTO(savedAccount);
+        final Account savedAccount = this.accountService.create(account, inWallet, exWallet);
+        this.securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
+        return this.toAccounTO(savedAccount);
 
     }
 
@@ -76,10 +76,10 @@ public class AccountHelper {
         if (StringUtils.isNotBlank(wallet.getHash())) {
             type = Wallet.Type.EXTERNAL;
         }
-        final WalletTO toSave = toWalletTO(wallet.getName(), type, wallet.getDescription(), hash);
-        final Wallet saved = walletService.create(toSave);
+        final WalletTO toSave = this.toWalletTO(wallet.getName(), type, wallet.getDescription(), hash);
+        final Wallet saved = this.walletService.create(toSave);
         account.getWallets().add(saved);
-        accountService.update(account.getId(), account);
+        this.accountService.update(account.getId(), account);
         return saved;
     }
 
@@ -112,28 +112,28 @@ public class AccountHelper {
     }
 
     public AccountTO update(final Long accountId, final AccountTO account) throws ObjectNotFoundException {
-        return toAccounTO(accountService.update(accountId, account));
+        return this.toAccounTO(this.accountService.update(accountId, account));
     }
 
     public AccountTO getById(final Long accountId) {
-        return toAccounTO(accountService.getById(accountId));
+        return this.toAccounTO(this.accountService.getById(accountId));
     }
 
     public List<AccountTO> getAccounts() {
         final List<AccountTO> accountTOs = Lists.newArrayList();
-        final List<Account> accounts = accountService.getAccounts();
+        final List<Account> accounts = this.accountService.getAccounts();
         for (final Account account : accounts) {
-            accountTOs.add(toAccounTO(account));
+            accountTOs.add(this.toAccounTO(account));
         }
         return accountTOs;
     }
 
     public AccountTO delete(final Long accountId) throws ObjectNotFoundException {
-        return toAccounTO(accountService.delete(accountId));
+        return this.toAccounTO(this.accountService.delete(accountId));
     }
 
     public AccountTO getByEmail(final String email) {
-        return toAccounTO(accountService.getByEmail(email));
+        return this.toAccounTO(this.accountService.getByEmail(email));
     }
 
     public boolean owns(final Account account, final Long walletId) {

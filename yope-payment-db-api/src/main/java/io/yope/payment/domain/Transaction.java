@@ -5,6 +5,8 @@ package io.yope.payment.domain;
 
 import java.math.BigDecimal;
 
+import io.yope.payment.domain.transferobjects.QRImage;
+
 /**
  * @author mgerardi
  *
@@ -75,4 +77,6 @@ public interface Transaction {
     Long getCompletedDate();
 
     Type getType();
+
+    QRImage getQR();
 }
