@@ -22,6 +22,14 @@ public interface WalletService {
     Wallet create(Wallet wallet);
 
     /**
+     * checks if a wallet exists.
+     * @param id the id of the wallet
+     * @return true if the wallet exists, false otherwise
+     */
+    boolean exists(Long id);
+
+
+    /**
      * retrieves a wallet by id
      * @param id the id of the wallet
      * @return a wallet or {@literal null} if none found

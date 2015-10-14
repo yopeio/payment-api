@@ -43,7 +43,7 @@ public interface TransactionService {
      * @return a list of transactions from/to the given wallet
      * @throws ObjectNotFoundException if no wallet with {@code walletHash} found
      */
-    List<Transaction> getForWallet(String walletHash, String reference, Direction direction) throws ObjectNotFoundException;
+    List<Transaction> getForWallet(Long walledId, String reference, Direction direction) throws ObjectNotFoundException;
 
     /**
      * retrieves a list of transactions from all the wallets owned by an account, according to different filters.

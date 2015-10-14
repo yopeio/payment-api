@@ -107,24 +107,24 @@ public class Neo4JTransactionService implements TransactionService {
      * @see io.yope.payment.services.TransactionService#getForWallet(java.lang.String, java.lang.String, io.yope.payment.domain.Transaction.Direction)
      */
     @Override
-    public List<Transaction> getForWallet(final String walletHash, final String reference, final Direction direction)
+    public List<Transaction> getForWallet(final Long walledId, final String reference, final Direction direction)
             throws ObjectNotFoundException {
         if (Direction.IN.equals(direction)) {
             if (Strings.isNullOrEmpty(reference)) {
-                return new ArrayList<Transaction>(this.repository.findWalletTransactionsIn(walletHash));
+                return new ArrayList<Transaction>(this.repository.findWalletTransactionsIn(walledId));
             }
-            return new ArrayList<Transaction>(this.repository.findWalletTransactionsIn(walletHash, reference));
+            return new ArrayList<Transaction>(this.repository.findWalletTransactionsIn(walledId, reference));
         }
         if (Direction.OUT.equals(direction)) {
             if (Strings.isNullOrEmpty(reference)) {
-                return new ArrayList<Transaction>(this.repository.findWalletTransactionsOut(walletHash));
+                return new ArrayList<Transaction>(this.repository.findWalletTransactionsOut(walledId));
             }
-            return new ArrayList<Transaction>(this.repository.findWalletTransactionsOut(walletHash, reference));
+            return new ArrayList<Transaction>(this.repository.findWalletTransactionsOut(walledId, reference));
         }
         if (Strings.isNullOrEmpty(reference)) {
-            return new ArrayList<Transaction>(this.repository.findWalletTransactions(walletHash));
+            return new ArrayList<Transaction>(this.repository.findWalletTransactions(walledId));
         }
-        return new ArrayList<Transaction>(this.repository.findWalletTransactions(walletHash, reference));
+        return new ArrayList<Transaction>(this.repository.findWalletTransactions(walledId, reference));
     }
 
     /* (non-Javadoc)
