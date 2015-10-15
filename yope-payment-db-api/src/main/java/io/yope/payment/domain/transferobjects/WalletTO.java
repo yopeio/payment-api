@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.Wither;
 
 /**
@@ -20,17 +21,20 @@ import lombok.experimental.Wither;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(of = {"name", "balance", "availableBalance"})
 public class WalletTO implements Wallet {
 
     private Long id;
 
     private String hash;
 
+    private String name;
+
     private BigDecimal balance;
 
-    private Status status;
+    private BigDecimal availableBalance;
 
-    private String name;
+    private Status status;
 
     private String description;
 
@@ -47,6 +51,7 @@ public class WalletTO implements Wallet {
     public static WalletTO.WalletTOBuilder from(final Wallet wallet) {
         return WalletTO.builder()
                 .balance(wallet.getBalance())
+                .availableBalance(wallet.getAvailableBalance())
                 .type(wallet.getType())
                 .creationDate(wallet.getCreationDate())
                 .modificationDate(wallet.getModificationDate())

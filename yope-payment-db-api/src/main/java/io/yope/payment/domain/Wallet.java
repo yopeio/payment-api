@@ -28,6 +28,8 @@ public interface Wallet {
 
     BigDecimal getBalance();
 
+    BigDecimal getAvailableBalance();
+
     Status getStatus();
 
     String getName();

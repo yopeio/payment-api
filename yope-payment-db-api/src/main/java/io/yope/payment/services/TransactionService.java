@@ -5,6 +5,7 @@ import java.util.List;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
+import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 
 public interface TransactionService {
@@ -22,8 +23,18 @@ public interface TransactionService {
      * @param transaction the transaction to be created; it has to contains the wallets from and to which to perform the transaction.
      * @return the new transaction with an id
      * @throws ObjectNotFoundException if no walllet with the hash provided is found
+     * @throws InsufficientFundsException
      */
-    Transaction save(Long transactionId, Status status) throws ObjectNotFoundException;
+    Transaction save(Long transactionId, Transaction transaction) throws ObjectNotFoundException, InsufficientFundsException;
+
+    /**
+     * updates a transaction.
+     * @param transaction the transaction to be created; it has to contains the wallets from and to which to perform the transaction.
+     * @return the new transaction with an id
+     * @throws ObjectNotFoundException if no walllet with the hash provided is found
+     * @throws InsufficientFundsException
+     */
+    Transaction transition(Long transactionId, Status status) throws ObjectNotFoundException, InsufficientFundsException;
 
     /**
      * retrieves a transaction with the given id.

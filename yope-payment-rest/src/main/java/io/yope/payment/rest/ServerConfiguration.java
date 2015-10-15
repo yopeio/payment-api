@@ -6,6 +6,7 @@ package io.yope.payment.rest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * @author massi
@@ -20,6 +21,7 @@ public class ServerConfiguration {
     String imagePath;
 
     @Getter
+    @Setter
     String imageFolder;
 
     public void setUrl(final String url) {

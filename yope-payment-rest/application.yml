@@ -1,6 +1,6 @@
 logging:
     level:
-        org.bitcoinj: DEBUG
+        org.bitcoinj: ERROR
 
 neo4j:
     neo4jUrl: "http://localhost:7474/db/data/"  

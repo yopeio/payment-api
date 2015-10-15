@@ -12,6 +12,7 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -28,6 +29,8 @@ import io.yope.payment.domain.transferobjects.QRImage;
 import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
+import io.yope.payment.neo4j.domain.Neo4JWallet;
+import io.yope.payment.rest.BadRequestException;
 import io.yope.payment.rest.ServerConfiguration;
 import io.yope.payment.services.TransactionService;
 import io.yope.payment.services.WalletService;
@@ -38,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
+@Service
 public class TransactionHelper {
 
     private static final int QR_WIDTH = 300;
@@ -59,22 +63,80 @@ public class TransactionHelper {
     @Autowired
     private BlockChainService blockChainService;
 
+    public Transaction create(final TransactionTO transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, BlockchainException {
+        switch (transaction.getType()) {
+            case DEPOSIT:
+                return deposit(transaction, accountId);
+            case TRANSFER:
+                return deposit(transaction, accountId);
+            case WITHDRAW:
+                return withdraw(transaction, accountId);
+            default:
+                break;
+        }
+        throw new BadRequestException("Transaction type not recognized "+transaction.getType());
+    }
 
 
-    public Transaction register(final Transaction transaction, final Long accountId) throws BlockchainException, ObjectNotFoundException {
+    /**
+     * Transfers funds between 2 internal wallets belonging to the same seller.
+     * @param transaction the transaction details
+     * @param accountId the id of the seller
+     * @return the pending transaction
+     * @throws ObjectNotFoundException if the seller is not found
+     * @throws BadRequestException if the wallets are not found or if the balance is low
+     */
+    public Transaction transfer(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException {
         final Account seller = accountHelper.getById(accountId);
-        final WalletTO source = getWallet(seller, transaction.getSource());
-        final WalletTO destination = getWallet(seller, transaction.getDestination());
+        final WalletTO source = getWallet(seller, transaction.getSource(), false, null);
+        if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
+            throw new BadRequestException("not enough funds in the wallet with name "+source.getName());
+        }
+        walletService.update(source.getId(), Neo4JWallet.from(source).availableBalance(source.getAvailableBalance().subtract(transaction.getAmount())).build());
+        final WalletTO destination = getWallet(seller, transaction.getDestination(), false, null);
         final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).source(source).destination(destination);
-        if (Wallet.Type.INTERNAL.equals(source.getType()) &&
-            Wallet.Type.INTERNAL.equals(destination.getType())) {
-            final QRImage qr = getQRImage(transaction.getAmount());
-            pendingTransactionBuilder.QR(qr).hash(qr.getHash());
-        }
         final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
-        if (Transaction.Type.EXTERNAL.equals(pendingTransaction.getType())) {
-            blockChainService.send(pendingTransaction);
+        return pendingTransaction;
+    }
+
+    /**
+     * Transfers funds between an external wallet and an internal wallet belonging to the same seller.
+     * @param transaction the transaction details
+     * @param accountId the id of the seller
+     * @return the pending transaction
+     * @throws ObjectNotFoundException if the seller is not found
+     * @throws BadRequestException if the internal wallet is not found
+     */
+    public Transaction deposit(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, BlockchainException {
+        final Account seller = accountHelper.getById(accountId);
+        final WalletTO source = getWallet(seller, transaction.getSource(), true, transaction.getAmount());
+        final WalletTO destination = getWallet(seller, transaction.getDestination(), false, null);
+        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).source(source).destination(destination);
+        final QRImage qr = getQRImage(transaction.getAmount());
+        pendingTransactionBuilder.QR(qr).senderHash(qr.getHash());
+        final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
+        return pendingTransaction;
+    }
+
+    /**
+     * Transfers funds between an internal wallet and an external wallet belonging to the same seller.
+     * @param transaction the transaction details
+     * @param accountId the id of the seller
+     * @return the pending transaction
+     * @throws ObjectNotFoundException if the seller is not found
+     * @throws BadRequestException if the internal wallet is not found or if the balance is low
+     */
+    public Transaction withdraw(final Transaction transaction, final Long accountId) throws BlockchainException, ObjectNotFoundException, BadRequestException {
+        final Account seller = accountHelper.getById(accountId);
+        final WalletTO source = getWallet(seller, transaction.getSource(), false, null);
+        if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
+            throw new BadRequestException("not enough funds in the wallet with name "+source.getName());
         }
+        walletService.update(source.getId(), Neo4JWallet.from(source).availableBalance(source.getAvailableBalance().subtract(transaction.getAmount())).build());
+        final WalletTO destination = getWallet(seller, transaction.getDestination(), true, BigDecimal.ZERO);
+        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).source(source).destination(destination);
+        final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
+        blockChainService.send(pendingTransaction);
         return pendingTransaction;
     }
 
@@ -122,14 +184,15 @@ public class TransactionHelper {
         return UUID.randomUUID().toString();//this.blockChainService.generateHash();
     }
 
-    private WalletTO getWallet(final Account seller, final Wallet source) throws ObjectNotFoundException {
+    private WalletTO getWallet(final Account seller, final Wallet source, final Boolean create, final BigDecimal amount) throws ObjectNotFoundException, BadRequestException {
         final Wallet wallet = walletService.getByName(seller.getId(), source.getName());
         if (wallet == null) {
-            return WalletTO.from(accountHelper.createWallet(seller, WalletTO.from(wallet).build())).build();
+            if (create) {
+                return WalletTO.from(accountHelper.createWallet(seller, WalletTO.from(source).availableBalance(BigDecimal.ZERO).balance(amount).build())).build();
+            }
+            throw new BadRequestException("Wallet with name "+source.getName()+" does not exists");
         }
         return WalletTO.from(wallet).build();
     }
-
-
 
 }
