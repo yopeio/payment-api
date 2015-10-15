@@ -56,7 +56,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(final WebSecurity web) throws Exception {
         web.debug(true).ignoring()
                 .antMatchers(HttpMethod.POST, "/accounts/**")
-                .antMatchers("/webjars/**", "/images/**", "/registration/**",
+                .antMatchers("/webjars/**", "/images/**", "/qr/**", "/registration/**",
                         "/oauth/uncache_approvals", "/oauth/cache_approvals")
                 .and().ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
     }
