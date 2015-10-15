@@ -9,16 +9,12 @@ import java.util.concurrent.Executors;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.bitcoinj.core.AbstractWalletEventListener;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.BlockChain;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.PeerGroup;
-import org.bitcoinj.core.WalletEventListener;
+import io.yope.payment.exceptions.ObjectNotFoundException;
+import io.yope.payment.services.TransactionService;
+import io.yope.payment.services.WalletService;
+import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.jni.NativeTransactionConfidenceListener;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.store.UnreadableWalletException;
 
@@ -38,12 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
+    /**
+     * Minimum number of confirmations before to change the status of a transaction to COMPLETED.
+     */
+    private static final int CONFIRMATIONS = 3;
+
     NetworkParameters params;
 
     BlockChain chain;
 
     PeerGroup peerGroup;
-
 
 
     public void init(final Wallet wallet) {
@@ -106,6 +106,8 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         log.info("******** register {} in blockchain", wallet.toString());
         chain.addWallet(wallet);
         peerGroup.addWallet(wallet);
+
+        final Transaction[] transaction = {null};
         final WalletEventListener listener = new AbstractWalletEventListener() {
             @Override
             public synchronized void onCoinsReceived(final org.bitcoinj.core.Wallet btcjDepositWallet,
@@ -126,12 +128,29 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
                 } catch (final Exception e) {
                     log.error("error adding wallet {}", e);
                 }
-                TransactionTO.builder()
+                transaction[0] = TransactionTO.builder()
                         .amount(new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()))
                         .build();
             }
+
+            @Override
+            public void onTransactionConfidenceChanged(org.bitcoinj.core.Wallet wallet, org.bitcoinj.core.Transaction tx) {
+                log.info("-----> confidence changed: {}", tx.getHashAsString());
+                TransactionConfidence confidence = tx.getConfidence();
+                log.info("new block depth: {} ", confidence.getDepthInBlocks());
+                if (confidence.getDepthInBlocks() >= CONFIRMATIONS) {
+//                    try {
+//                        transactionService.save(transaction[0].getId(), Transaction.Status.COMPLETED);
+//                    } catch (ObjectNotFoundException e) {
+//                        e.printStackTrace();
+//                    }
+                }
+            }
+
+
         };
         wallet.addEventListener(listener);
+
     }
 
     @Override
