@@ -6,6 +6,7 @@ package io.yope.payment.neo4j.services;
 
 import java.util.List;
 
+import io.yope.payment.domain.Transaction;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.support.Neo4jTemplate;
@@ -120,6 +121,12 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
     @Override
     public Account getByEmail(final String email) {
         return accountRepository.findByEmail(email);
+    }
+
+
+    @Override
+    public List<Account> getByType(final Account.Type type) {
+        return this.accountRepository.findByType(type.name());
     }
 
 }

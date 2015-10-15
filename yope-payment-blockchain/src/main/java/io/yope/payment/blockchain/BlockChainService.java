@@ -13,11 +13,10 @@ public interface BlockChainService {
     void send(Transaction transaction) throws BlockchainException;
 
     /**
-     * generated a new hash value for a given wallet content.
-     * @param content
+     * generated a new hash value from the central wallet.
      * @return
      * @throws BlockchainException
      */
-    String generateHash(byte[] content) throws BlockchainException;
+    String generateCentralWalletHash() throws BlockchainException;
 
 }

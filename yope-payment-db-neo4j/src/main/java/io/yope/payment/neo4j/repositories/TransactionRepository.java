@@ -5,6 +5,7 @@ package io.yope.payment.neo4j.repositories;
 
 import java.util.List;
 
+import io.yope.payment.domain.Account;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.GraphRepository;
 import org.springframework.data.repository.query.Param;
@@ -58,5 +59,7 @@ public interface TransactionRepository extends GraphRepository<Neo4JTransaction>
 
     @Query("MATCH (a)-[:OWN]->(s)-[t:PAY {reference:{reference}}]-(d) where id(a)={accountId} return t")
     List<Neo4JTransaction> findAccountTransactions(@Param("accountId") Long accountId, @Param("reference") String reference);
+
+    Neo4JTransaction findByHash(@Param("0") String hash);
 
 }

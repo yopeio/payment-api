@@ -9,7 +9,7 @@ import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.AccountTO;
 import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.services.AccountService;
-import io.yope.payment.services.WalletService;
+import io.yope.payment.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Context;
@@ -19,23 +19,16 @@ import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 
 @Slf4j
 @Configuration
-@EnableAutoConfiguration
 public class BitcoinjConfiguration {
 
     private static final String ADMIN_EMAIL = "wallet@yope.io";
@@ -75,12 +68,12 @@ public class BitcoinjConfiguration {
     public BlockChainService getBlockchainService(final NetworkParameters params,
                                                   final BlockChain blockChain,
                                                   final PeerGroup peerGroup,
-                                                  final WalletService walletService,
+                                                  final TransactionService transactionService,
                                                   final AccountService accountService
                                                   ){
 
         final BitcoinjBlockchainServiceImpl blockChainService =
-                new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup);
+                new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup, transactionService, accountService);
 
         Wallet central = null;
         Account admin = accountService.getByEmail(ADMIN_EMAIL);

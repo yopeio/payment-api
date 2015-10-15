@@ -72,6 +72,10 @@ public interface TransactionService {
      */
     List<Transaction> getForAccount(Long accountId, String reference, Direction direction) throws ObjectNotFoundException;
 
-
-
+    /**
+     * Retrieves a transaction by its hash
+     * @param hash
+     * @return
+     */
+    Transaction getForHash(String hash);
 }
