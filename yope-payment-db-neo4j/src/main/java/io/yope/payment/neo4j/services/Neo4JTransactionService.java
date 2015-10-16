@@ -88,6 +88,9 @@ public class Neo4JTransactionService implements TransactionService {
                     next.deniedDate(System.currentTimeMillis());
                     makeFundsAvailable(current.getSource(), current.getAmount());
                     break;
+                case EXPIRED:
+                    next.deniedDate(System.currentTimeMillis());
+                    makeFundsAvailable(current.getSource(), current.getAmount());
                 case COMPLETED:
                     next.completedDate(System.currentTimeMillis());
                     makeFundsAvailable(current.getDestination(), current.getAmount());
@@ -242,6 +245,11 @@ public class Neo4JTransactionService implements TransactionService {
     @Override
     public Transaction getForHash(final String hash) {
         return repository.findBySenderHash(hash);
+    }
+
+    @Override
+    public List<Transaction> getTransaction(final int delay, final Transaction.Status status) {
+        return new ArrayList<Transaction>(repository.findOlderThan(delay, status.name()));
     }
 
 }

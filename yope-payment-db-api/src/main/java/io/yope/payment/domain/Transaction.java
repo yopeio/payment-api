@@ -75,6 +75,8 @@ public interface Transaction {
 
     Long getDeniedDate();
 
+    Long getExpiredDate();
+
     Long getCompletedDate();
 
     Type getType();

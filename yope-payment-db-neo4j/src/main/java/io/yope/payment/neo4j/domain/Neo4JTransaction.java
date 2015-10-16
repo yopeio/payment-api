@@ -11,6 +11,8 @@ import org.springframework.data.neo4j.annotation.GraphId;
 import org.springframework.data.neo4j.annotation.RelationshipEntity;
 import org.springframework.data.neo4j.annotation.StartNode;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.yope.payment.domain.Transaction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,10 +35,12 @@ public class Neo4JTransaction implements Transaction {
     @GraphId
     private Long id;
 
+    @JsonProperty
     @Fetch
     @StartNode
     private Neo4JWallet source;
 
+    @JsonProperty
     @Fetch
     @EndNode
     private Neo4JWallet destination;
@@ -61,6 +65,8 @@ public class Neo4JTransaction implements Transaction {
 
     private Long deniedDate;
 
+    private Long expiredDate;
+
     private Long completedDate;
 
     private String QR;
@@ -80,6 +86,7 @@ public class Neo4JTransaction implements Transaction {
                 .hash(transaction.getHash())
                 .senderHash(transaction.getSenderHash())
                 .acceptedDate(transaction.getAcceptedDate())
+                .expiredDate(transaction.getExpiredDate())
                 .deniedDate(transaction.getDeniedDate())
                 .completedDate(transaction.getCompletedDate());
     }

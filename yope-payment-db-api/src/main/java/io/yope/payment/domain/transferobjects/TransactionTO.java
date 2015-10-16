@@ -53,6 +53,8 @@ public class TransactionTO implements Transaction {
 
     private Long deniedDate;
 
+    private Long expiredDate;
+
     private Long completedDate;
 
     private String QR;
@@ -73,6 +75,7 @@ public class TransactionTO implements Transaction {
                 .senderHash(transaction.getSenderHash())
                 .acceptedDate(transaction.getAcceptedDate())
                 .deniedDate(transaction.getDeniedDate())
+                .expiredDate(transaction.getExpiredDate())
                 .completedDate(transaction.getCompletedDate());
     }
 

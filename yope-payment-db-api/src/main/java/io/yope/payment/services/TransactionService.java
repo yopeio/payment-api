@@ -78,4 +78,6 @@ public interface TransactionService {
      * @return
      */
     Transaction getForHash(String hash);
+
+    List<Transaction> getTransaction(int delay, Transaction.Status status);
 }

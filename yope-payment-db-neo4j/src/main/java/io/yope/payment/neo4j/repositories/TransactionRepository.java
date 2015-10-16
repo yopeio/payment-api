@@ -61,4 +61,7 @@ public interface TransactionRepository extends GraphRepository<Neo4JTransaction>
 
     Neo4JTransaction findBySenderHash(@Param("0") String hash);
 
+    @Query("MATCH (a)-[t:PAY {status: {status}}]->(b) where timestamp() - t.creationDate > {delay} return t ")
+    List<Neo4JTransaction> findOlderThan(@Param("delay") int delay, @Param("status") String status);
+
 }
