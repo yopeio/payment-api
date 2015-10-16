@@ -20,6 +20,7 @@ import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.transferobjects.TransactionTO;
+import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.BadRequestException;
@@ -73,7 +74,6 @@ public class TransactionResource extends BaseResource {
             @PathVariable final Long transactionId,
             @RequestParam(value="status", required=true) final Status status) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
-        getLoggedAccount();
         try {
             final Transaction saved = transactionService.transition(transactionId, status);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
@@ -82,6 +82,9 @@ public class TransactionResource extends BaseResource {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, e.getMessage());
         } catch (final InsufficientFundsException e) {
+            response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
+            return this.badRequest(null, e.getMessage());
+        } catch (final IllegalTransactionStateException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
             return this.badRequest(null, e.getMessage());
         }

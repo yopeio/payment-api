@@ -19,7 +19,7 @@ public interface WalletService {
      * @param wallet the wallet to be created
      * @return a wallet with a proper id
      */
-    Wallet create(Wallet wallet);
+    Wallet save(Wallet wallet);
 
     /**
      * checks if a wallet exists.

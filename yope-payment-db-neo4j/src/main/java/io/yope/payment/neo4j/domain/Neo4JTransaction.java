@@ -12,7 +12,6 @@ import org.springframework.data.neo4j.annotation.RelationshipEntity;
 import org.springframework.data.neo4j.annotation.StartNode;
 
 import io.yope.payment.domain.Transaction;
-import io.yope.payment.domain.transferobjects.QRImage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -64,7 +63,7 @@ public class Neo4JTransaction implements Transaction {
 
     private Long completedDate;
 
-    private QRImage QR;
+    private String QR;
 
     public static Neo4JTransaction.Neo4JTransactionBuilder from(final Transaction transaction) {
         return Neo4JTransaction.builder()

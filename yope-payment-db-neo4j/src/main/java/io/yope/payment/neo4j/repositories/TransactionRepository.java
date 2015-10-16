@@ -29,7 +29,7 @@ public interface TransactionRepository extends GraphRepository<Neo4JTransaction>
     @Query("MATCH (s)-[t:PAY]->(d) where id(d) = {id} return t")
     List<Neo4JTransaction> findWalletTransactionsIn(@Param("id") Long id);
 
-    @Query("MATCH (s)-[t:PAY]->(d) where id(d) = {id} or id(s) = {id} return t")
+    @Query("MATCH (s)-[t:PAY]-(d) where id(d) = {id} return t")
     List<Neo4JTransaction> findWalletTransactions(@Param("id") Long id);
 
     @Query("MATCH (s)-[t:PAY {reference:{reference}}]->(d) where id(s) = {id} return t")
@@ -38,25 +38,25 @@ public interface TransactionRepository extends GraphRepository<Neo4JTransaction>
     @Query("MATCH (s)-[t:PAY {reference:{reference}}]->(d) where id(d) = {id} return t")
     List<Neo4JTransaction> findWalletTransactionsIn(@Param("id") Long id, @Param("reference") String reference);
 
-    @Query("MATCH (s)-[t:PAY {reference:{reference}}]->(d) where id(d) = {id} or id(s) = {id} return t")
+    @Query("MATCH (s)-[t:PAY {reference:{reference}}]-(d) where id(d) = {id} return t")
     List<Neo4JTransaction> findWalletTransactions(@Param("id") Long id, @Param("reference") String reference);
 
-    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]->(d)<-[:OWN]-(e)  where id(e)={accountId} return t")
+    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]->(d)<-[:OWN]-(e) where id(e)={accountId} return t")
     List<Neo4JTransaction> findAccountTransactionsIn(@Param("accountId") Long accountId);
 
-    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]->(d)<-[:OWN]-(e)  where id(a)={accountId} return t")
+    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]->(d)<-[:OWN]-(e) where id(a)={accountId} return t")
     List<Neo4JTransaction> findAccountTransactionsOut(@Param("accountId") Long accountId);
 
-    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]->(d)<-[:OWN]-(e)  where id(a)={accountId} or id(e)={accountId} return t")
+    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]-(d) where id(a)={accountId} return t")
     List<Neo4JTransaction> findAccountTransactions(@Param("accountId") Long accountId);
 
-    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]->(d)<-[:OWN]-(e)  where id(e)={accountId} and t.reference={reference} return t")
+    @Query("MATCH (a)-[:OWN]->(s)<-[t:PAY {reference:{reference}}]-(d) where id(a)={accountId} return t")
     List<Neo4JTransaction> findAccountTransactionsIn(@Param("accountId") Long accountId, @Param("reference") String reference);
 
-    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]->(d)<-[:OWN]-(e)  where id(a)={accountId} and t.reference={reference} return t")
+    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY {reference:{reference}}]->(d) where id(a)={accountId} return t")
     List<Neo4JTransaction> findAccountTransactionsOut(@Param("accountId") Long accountId, @Param("reference") String reference);
 
-    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]->(d)<-[:OWN]-(e)  where id(a)={accountId} and t.reference={reference} or id(e)={accountId} return t")
+    @Query("MATCH (a)-[:OWN]->(s)-[t:PAY {reference:{reference}}]-(d) where id(a)={accountId} return t")
     List<Neo4JTransaction> findAccountTransactions(@Param("accountId") Long accountId, @Param("reference") String reference);
 
 }

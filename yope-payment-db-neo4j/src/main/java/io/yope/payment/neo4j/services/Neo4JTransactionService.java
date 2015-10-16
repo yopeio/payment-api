@@ -18,6 +18,7 @@ import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.neo4j.domain.Neo4JTransaction;
@@ -54,7 +55,7 @@ public class Neo4JTransactionService implements TransactionService {
     }
 
     @Override
-    public Transaction save(final Long transactionId, final Transaction transaction) throws ObjectNotFoundException, InsufficientFundsException {
+    public Transaction save(final Long transactionId, final Transaction transaction) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
         if (!repository.exists(transactionId)) {
             throw new ObjectNotFoundException("No transaction with id " + transactionId, Transaction.class);
         }
@@ -64,7 +65,7 @@ public class Neo4JTransactionService implements TransactionService {
     }
 
     @Override
-    public Transaction transition(final Long transactionId, final Status status) throws ObjectNotFoundException, InsufficientFundsException {
+    public Transaction transition(final Long transactionId, final Status status) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
         if (!repository.exists(transactionId)) {
             throw new ObjectNotFoundException(MessageFormat.format("transaction with id {} not found", transactionId),
                     Transaction.class);
@@ -74,7 +75,7 @@ public class Neo4JTransactionService implements TransactionService {
         return doSave(current, next);
     }
 
-    public Transaction doSave(final Neo4JTransaction current, final Neo4JTransaction transaction) throws ObjectNotFoundException, InsufficientFundsException {
+    private Transaction doSave(final Neo4JTransaction current, final Neo4JTransaction transaction) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
         final Neo4JTransaction.Neo4JTransactionBuilder next = Neo4JTransaction.from(transaction);
         if (!current.getStatus().equals(transaction.getStatus())) {
             checkStatus(current.getStatus(), transaction.getStatus());
@@ -111,10 +112,11 @@ public class Neo4JTransactionService implements TransactionService {
      *            the next status
      * @param current
      *            the current status
+     * @throws IllegalTransactionStateException
      * @throws IllegalArgumentException
      *             if the check fails
      */
-    private void checkStatus(final Status current, final Status next) {
+    private void checkStatus(final Status current, final Status next) throws IllegalTransactionStateException {
         switch (current) {
             case PENDING:
                 if (!Status.COMPLETED.equals(next)) {
@@ -127,7 +129,7 @@ public class Neo4JTransactionService implements TransactionService {
                 }
                 break;
             default:
-                throw new IllegalArgumentException("Illegal transition from " + current + " to " + next);
+                throw new IllegalTransactionStateException(current, next);
         }
     }
 

@@ -59,86 +59,80 @@ public class AccountHelper {
         if (StringUtils.isEmpty(walletName)) {
             walletName = registration.getFirstName()+"'s Internal Wallet";
         }
-        final Wallet inWallet = toWalletTO(registration.getName(), Wallet.Type.INTERNAL, registration.getDescription(), null);
+        final Wallet inWallet = WalletTO.builder()
+                .availableBalance(BigDecimal.ZERO)
+                .balance(BigDecimal.ZERO)
+                .type(Wallet.Type.INTERNAL)
+                .description(walletName)
+                .name(walletName)
+                .status(Wallet.Status.PENDING)
+                .build();
         Wallet exWallet = null;
         if (StringUtils.isNotBlank(registration.getHash())) {
             final String walletDescription = registration.getFirstName()+"'s External Wallet";
-            exWallet = toWalletTO(registration.getFirstName(), Wallet.Type.EXTERNAL, walletDescription, registration.getHash());
+            exWallet = WalletTO.builder()
+                    .availableBalance(BigDecimal.ZERO)
+                    .balance(BigDecimal.ZERO)
+                    .type(Wallet.Type.EXTERNAL)
+                    .description(walletDescription)
+                    .name(registration.getFirstName())
+                    .status(Wallet.Status.PENDING)
+                    .build();
         }
         final Account savedAccount = accountService.create(account, inWallet, exWallet);
         securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
-        return toAccounTO(savedAccount);
+        return AccountTO.from(savedAccount).build();
 
     }
 
-    public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        Wallet.Type type = Wallet.Type.INTERNAL;
-        final String hash = StringUtils.defaultIfBlank(wallet.getHash(), null);
-        if (StringUtils.isNotBlank(wallet.getHash())) {
-            type = Wallet.Type.EXTERNAL;
-        }
-        if (walletService.getByName(account.getId(), wallet.getName()) != null) {
-            throw new BadRequestException("Wallet with name "+wallet.getName()+" does exists");
-        }
-        final WalletTO toSave = toWalletTO(wallet.getName(), type, wallet.getDescription(), hash);
-        final Wallet saved = walletService.create(toSave);
+    public Wallet saveWallet(final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
+        return walletService.save(wallet);
+    }
+
+    public Wallet saveWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
+        final Wallet saved = walletService.save(wallet);
         account.getWallets().add(saved);
         accountService.update(account.getId(), account);
         return saved;
     }
 
-    private WalletTO toWalletTO(final String name,
-            final Wallet.Type type,
-            final String description,
-            final String hash) {
-        return WalletTO.builder()
-        .name(name)
-        .status(Wallet.Status.PENDING)
-        .type(type)
-        .balance(BigDecimal.ZERO)
-        .availableBalance(BigDecimal.ZERO)
-        .description(description)
-        .hash(hash)
-        .build();
+    public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
+        if (walletService.getByName(account.getId(), wallet.getName()) != null) {
+            throw new BadRequestException("Wallet with name "+wallet.getName()+" does exists");
+        }
+        final WalletTO newWallet = WalletTO.from(wallet)
+                .availableBalance(BigDecimal.ZERO)
+                .balance(BigDecimal.ZERO)
+                .type(StringUtils.isBlank(wallet.getHash())? Wallet.Type.INTERNAL : Wallet.Type.EXTERNAL)
+                .status(Wallet.Status.PENDING)
+                .build();
+        return saveWallet(account, newWallet);
     }
 
-    private AccountTO toAccounTO(final Account account) {
-        return AccountTO.builder()
-                .email(account.getEmail())
-                .firstName(account.getFirstName())
-                .id(account.getId())
-                .lastName(account.getLastName())
-                .modificationDate(account.getModificationDate())
-                .registrationDate(account.getRegistrationDate())
-                .wallets(account.getWallets())
-                .type(account.getType())
-                .status(account.getStatus())
-                .build();
-    }
 
     public AccountTO update(final Long accountId, final AccountTO account) throws ObjectNotFoundException {
-        return toAccounTO(accountService.update(accountId, account));
+        return AccountTO.from(accountService.update(accountId, account)).build();
     }
 
     public AccountTO getById(final Long accountId) {
-        return toAccounTO(accountService.getById(accountId));
+        return AccountTO.from(accountService.getById(accountId)).build();
     }
 
     public List<AccountTO> getAccounts() {
         final List<AccountTO> accountTOs = Lists.newArrayList();
         final List<Account> accounts = accountService.getAccounts();
         for (final Account account : accounts) {
-            accountTOs.add(toAccounTO(account));
+            accountTOs.add(AccountTO.from(account).build());
         }
         return accountTOs;
     }
 
     public AccountTO delete(final Long accountId) throws ObjectNotFoundException {
-        return toAccounTO(accountService.delete(accountId));
+        return AccountTO.from(accountService.delete(accountId)).build();
     }
 
     public AccountTO getByEmail(final String email) {
-        return toAccounTO(accountService.getByEmail(email));
+        return AccountTO.from(accountService.getByEmail(email)).build();
     }
 
     public boolean owns(final Account account, final Long walletId) {

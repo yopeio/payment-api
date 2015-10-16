@@ -68,7 +68,7 @@ public class TransactionHelper {
             case DEPOSIT:
                 return deposit(transaction, accountId);
             case TRANSFER:
-                return deposit(transaction, accountId);
+                return transfer(transaction, accountId);
             case WITHDRAW:
                 return withdraw(transaction, accountId);
             default:
@@ -113,7 +113,7 @@ public class TransactionHelper {
         final WalletTO destination = getWallet(seller, transaction.getDestination(), false, null);
         final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).source(source).destination(destination);
         final QRImage qr = getQRImage(transaction.getAmount());
-        pendingTransactionBuilder.QR(qr).senderHash(qr.getHash());
+        pendingTransactionBuilder.QR(qr.getImageUrl()).senderHash(qr.getHash());
         final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
         return pendingTransaction;
     }
@@ -184,13 +184,19 @@ public class TransactionHelper {
         return UUID.randomUUID().toString();//this.blockChainService.generateHash();
     }
 
-    private WalletTO getWallet(final Account seller, final Wallet source, final Boolean create, final BigDecimal amount) throws ObjectNotFoundException, BadRequestException {
+    private WalletTO getWallet(final Account seller, final Wallet source, final Boolean save, final BigDecimal amount) throws ObjectNotFoundException, BadRequestException {
         final Wallet wallet = walletService.getByName(seller.getId(), source.getName());
         if (wallet == null) {
-            if (create) {
-                return WalletTO.from(accountHelper.createWallet(seller, WalletTO.from(source).availableBalance(BigDecimal.ZERO).balance(amount).build())).build();
+            if (save) {
+                return WalletTO.from(accountHelper.saveWallet(WalletTO.from(source).availableBalance(BigDecimal.ZERO).balance(amount).build())).build();
             }
             throw new BadRequestException("Wallet with name "+source.getName()+" does not exists");
+        }
+        if (save) {
+            return WalletTO.from(accountHelper.saveWallet(WalletTO.from(wallet)
+                    .availableBalance(BigDecimal.ZERO)
+                    .balance(wallet.getAvailableBalance().add(amount))
+                    .build())).build();
         }
         return WalletTO.from(wallet).build();
     }

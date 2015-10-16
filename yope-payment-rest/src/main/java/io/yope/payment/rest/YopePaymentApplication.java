@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import;
 @EnableAutoConfiguration
 @ComponentScan({"io.yope.payment.rest.resources", "io.yope.payment.rest.helpers", "io.yope.payment.security.services", "io.yope.payment.security.repositories"})
 @Import({
-        YopePaymentConfiguration.class
+        YopePaymentConfiguration.class,
 })
 
 public class YopePaymentApplication {

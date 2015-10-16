@@ -55,7 +55,7 @@ public class TransactionTO implements Transaction {
 
     private Long completedDate;
 
-    private QRImage QR;
+    private String QR;
 
     public static TransactionTO.Builder from(final Transaction transaction) {
         return TransactionTO.builder()
