@@ -6,6 +6,7 @@ package io.yope.payment.services;
 import java.util.List;
 
 import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 
@@ -31,7 +32,7 @@ public interface AccountService {
 
     /**
      * retrieves an account by their id.
-     * @param id
+     * @param email
      * @return the requested user or {@literal null} if none found;
      */
     Account getByEmail(String email);
@@ -59,4 +60,10 @@ public interface AccountService {
      */
     List<Account> getAccounts();
 
+    /**
+     * retrieves a list of users by type.
+     * @param type
+     * @return
+     */
+    List<Account> getByType(Account.Type type);
 }

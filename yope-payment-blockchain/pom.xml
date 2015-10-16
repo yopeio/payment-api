@@ -17,10 +17,6 @@
             <artifactId>yope-payment-db-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.yope.payment</groupId>
-            <artifactId>yope-payment-mock</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
         </dependency>

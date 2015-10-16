@@ -239,4 +239,9 @@ public class Neo4JTransactionService implements TransactionService {
         return new ArrayList<Transaction>(repository.findAccountTransactions(accountId, reference));
     }
 
+    @Override
+    public Transaction getForHash(final String hash) {
+        return repository.findByHash(hash);
+    }
+
 }
