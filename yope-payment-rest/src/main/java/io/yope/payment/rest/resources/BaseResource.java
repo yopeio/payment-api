@@ -10,9 +10,7 @@ import org.springframework.security.core.userdetails.User;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.rest.helpers.AccountHelper;
-import io.yope.payment.services.TransactionService;
 import io.yope.payment.services.UserSecurityService;
-import io.yope.payment.services.WalletService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,12 +25,6 @@ public abstract class BaseResource {
 
     @Autowired
     protected UserSecurityService securityService;
-
-    @Autowired
-    protected WalletService walletService;
-
-    @Autowired
-    protected TransactionService transactionService;
 
     protected Account getLoggedAccount() {
         final User user = securityService.getCurrentUser();

@@ -1,5 +1,24 @@
 package io.yope.payment.blockchain.bitcoinj;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.xml.bind.DatatypeConverter;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.BlockChain;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.net.discovery.DnsDiscovery;
+import org.bitcoinj.store.UnreadableWalletException;
+
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Account;
@@ -10,17 +29,6 @@ import io.yope.payment.services.AccountService;
 import io.yope.payment.services.TransactionService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.*;
-import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.net.discovery.DnsDiscovery;
-import org.bitcoinj.store.UnreadableWalletException;
-
-import javax.xml.bind.DatatypeConverter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Bitcoinj client implementation.
@@ -30,17 +38,15 @@ import java.util.concurrent.Executors;
 public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
 
-    private NetworkParameters params;
+    private final NetworkParameters params;
 
-    private BlockChain chain;
+    private final BlockChain chain;
 
-    private PeerGroup peerGroup;
+    private final PeerGroup peerGroup;
 
-    private TransactionService transactionService;
+    private final TransactionService transactionService;
 
-    private AccountService accountService;
-
-
+    private final AccountService accountService;
 
     public void init(final Wallet wallet) {
         final ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -100,7 +106,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         log.info("******** register {} in blockchain", wallet.toString());
         chain.addWallet(wallet);
         peerGroup.addWallet(wallet);
-        WalletEventListener walletEventListener = new WalletEventListener(peerGroup,params,transactionService);
+        final WalletEventListener walletEventListener = new WalletEventListener(peerGroup,params,transactionService);
         wallet.addEventListener(walletEventListener);
     }
 
@@ -120,8 +126,8 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     }
 
     private org.bitcoinj.core.Wallet centralWallet() throws UnreadableWalletException {
-        Account admin = accountService.getByType(Account.Type.ADMIN).iterator().next();
-        Wallet centralWallet = admin.getWallets().iterator().next();
+        final Account admin = accountService.getByEmail(BitcoinjConfiguration.ADMIN_EMAIL);
+        final Wallet centralWallet = admin.getWallets().iterator().next();
         return org.bitcoinj.core.Wallet.loadFromFileStream(
                 new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(centralWallet.getContent())));
     }

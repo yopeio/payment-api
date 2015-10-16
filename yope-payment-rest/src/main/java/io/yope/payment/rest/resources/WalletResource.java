@@ -6,6 +6,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,11 +18,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Type;
-import io.yope.payment.domain.Transaction;
+import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.BadRequestException;
+import io.yope.payment.rest.helpers.TransactionHelper;
+import io.yope.payment.rest.helpers.WalletHelper;
 
 /**
  * Wallet Resource.
@@ -30,6 +34,12 @@ import io.yope.payment.rest.BadRequestException;
 @EnableAutoConfiguration
 @RequestMapping("/wallets")
 public class WalletResource extends BaseResource {
+
+    @Autowired
+    private TransactionHelper transactionHelper;
+
+    @Autowired
+    private WalletHelper walletHelper;
 
     private static final String WALLET_NOT_FOUND = "Wallet with id {0} not found";
 
@@ -69,17 +79,17 @@ public class WalletResource extends BaseResource {
             @RequestBody(required=false) final WalletTO wallet,
             final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
-        if (!walletService.exists(walletId)) {
+        if (!walletHelper.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         final Account loggedAccount = getLoggedAccount();
-        if (accountHelper.owns(loggedAccount, walletId)) {
+        if (!accountHelper.owns(loggedAccount, walletId)) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
             return this.unauthorized(wallet);
         }
         try {
-            final Wallet saved = walletService.update(walletId, wallet);
+            final Wallet saved = walletHelper.update(walletId, wallet);
             return new PaymentResponse<Wallet>(header, saved);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
@@ -97,7 +107,7 @@ public class WalletResource extends BaseResource {
     public @ResponseBody PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
         final Account loggedAccount = getLoggedAccount();
-        final List<Wallet> wallets = walletService.get(loggedAccount.getId());
+        final List<Wallet> wallets = walletHelper.get(loggedAccount.getId());
         return new PaymentResponse<List<Wallet>>(header, wallets);
     }
 
@@ -108,22 +118,22 @@ public class WalletResource extends BaseResource {
      * @param response
      * @return
      */
-    @RequestMapping(value="/{walletId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public PaymentResponse<Wallet> getWallet(@PathVariable final long walletId,
+    @RequestMapping(value="/{walletId}", method = RequestMethod.GET, produces = "application/json")
+    public PaymentResponse<Wallet> getWallet(@PathVariable final Long walletId,
                                              final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
 
-        if (!walletService.exists(walletId)) {
+        if (!walletHelper.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         final Account loggedAccount = getLoggedAccount();
-        if (accountHelper.owns(loggedAccount, walletId)) {
+        if (!accountHelper.owns(loggedAccount, walletId)) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
             return this.unauthorized(null);
         }
 
-        final Wallet wallet = walletService.getById(walletId);
+        final Wallet wallet = walletHelper.getById(walletId);
         return new PaymentResponse<Wallet>(header, wallet);
     }
 
@@ -135,13 +145,14 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{walletId}/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<List<Transaction>> getForWallet(@PathVariable final Long walletId,
+    public @ResponseBody PaymentResponse<List<TransactionTO>> getTransactions(@PathVariable final Long walletId,
            @RequestParam(value="reference", required=false) final String reference,
+           @RequestParam(value="dir", required=false) final Direction direction,
            final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
 
         final Account loggedAccount = getLoggedAccount();
-        if (!walletService.exists(walletId)) {
+        if (!walletHelper.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
@@ -149,10 +160,9 @@ public class WalletResource extends BaseResource {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
             return this.unauthorized(null);
         }
-        List<Transaction> transactions = null;
         try {
-            transactions = transactionService.getForWallet(walletId, reference, Transaction.Direction.BOTH);
-            return new PaymentResponse<List<Transaction>>(header, transactions);
+            final List<TransactionTO> transactions = transactionHelper.getTransactionsForWallet(walletId, reference, direction);
+            return new PaymentResponse<List<TransactionTO>>(header, transactions);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, e.getMessage());
@@ -171,7 +181,7 @@ public class WalletResource extends BaseResource {
                                                     final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         final Account loggedAccount = getLoggedAccount();
-        if (!walletService.exists(walletId)) {
+        if (!walletHelper.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
@@ -179,7 +189,7 @@ public class WalletResource extends BaseResource {
             || loggedAccount.getType().equals(Type.ADMIN)) {
             try {
                 response.setStatus(Response.Status.ACCEPTED.getStatusCode());
-                return new PaymentResponse<Wallet>(header, walletService.delete(walletId));
+                return new PaymentResponse<Wallet>(header, walletHelper.delete(walletId));
             } catch (final ObjectNotFoundException e) {
                 response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
                 return this.notFound(null, e.getMessage());

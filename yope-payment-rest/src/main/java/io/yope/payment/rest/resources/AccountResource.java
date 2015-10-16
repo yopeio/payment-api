@@ -134,7 +134,7 @@ public class AccountResource extends BaseResource {
     }
 
     /**
-     * Delete Personal Account.
+     * Delete Account.
      * @return
      */
     @RequestMapping(value="/{accountId}", method = RequestMethod.DELETE, produces = "application/json")

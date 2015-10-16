@@ -170,7 +170,7 @@ public class Neo4JTransactionService implements TransactionService {
             }
             throw new ObjectNotFoundException(msg.toString(), Wallet.class);
         }
-        return Neo4JTransaction.from(transaction).source(source).destination(destination).status(Status.PENDING)
+        return Neo4JTransaction.from(transaction).source(source).destination(destination)
                 .creationDate(System.currentTimeMillis()).build();
     }
 
@@ -241,7 +241,7 @@ public class Neo4JTransactionService implements TransactionService {
 
     @Override
     public Transaction getForHash(final String hash) {
-        return repository.findByHash(hash);
+        return repository.findBySenderHash(hash);
     }
 
 }

@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Account.Type;
 import io.yope.payment.domain.Transaction;
+import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
@@ -68,14 +70,26 @@ public class TransactionResource extends BaseResource {
         }
     }
 
+    /**
+     * set a new status  for a transaction.
+     * it is open only to administrator.
+     * @param response
+     * @param transactionId
+     * @param status
+     * @return
+     */
     @RequestMapping(value="/{transactionId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Transaction> modify(
             final HttpServletResponse response,
             @PathVariable final Long transactionId,
             @RequestParam(value="status", required=true) final Status status) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
+        final Account loggedAccount = getLoggedAccount();
+        if (!Type.ADMIN.equals(loggedAccount.getType())) {
+            return this.unauthorized(null);
+        }
         try {
-            final Transaction saved = transactionService.transition(transactionId, status);
+            final Transaction saved = transactionHelper.transition(transactionId, status);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Transaction>(header, TransactionTO.from(saved).build());
         } catch (final ObjectNotFoundException e) {
@@ -93,7 +107,7 @@ public class TransactionResource extends BaseResource {
     @RequestMapping(value="/{transactionId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Transaction> get(@PathVariable final long transactionId) {
         final Account loggedAccount = getLoggedAccount();
-        final Transaction transaction = transactionService.get(transactionId);
+        final Transaction transaction = transactionHelper.get(transactionId);
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
         if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
          || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
@@ -108,20 +122,21 @@ public class TransactionResource extends BaseResource {
      * @return
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public @ResponseBody PaymentResponse<List<Transaction>> getTransactions(final HttpServletResponse response,
-           @RequestParam(value="reference", required=false) final String reference) {
+    public @ResponseBody PaymentResponse<List<TransactionTO>> getTransactions(final HttpServletResponse response,
+           @RequestParam(value="reference", required=false) final String reference,
+           @RequestParam(value="dir", required=false) final Direction direction) {
 
         final Account loggedAccount = getLoggedAccount();
         final Long accountId = loggedAccount.getId();
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
-        List<Transaction> transactions = null;
+        List<TransactionTO> transactions = null;
         try {
-            transactions = transactionService.getForAccount(accountId, reference, Transaction.Direction.BOTH);
+            transactions = transactionHelper.getTransactionsForAccount(accountId, reference, direction);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, e.getMessage());
         }
-        return new PaymentResponse<List<Transaction>>(header, transactions);
+        return new PaymentResponse<List<TransactionTO>>(header, transactions);
     }
 
 }

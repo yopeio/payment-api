@@ -5,6 +5,10 @@ package io.yope.payment.domain.transferobjects;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.yope.payment.domain.Wallet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +25,7 @@ import lombok.experimental.Wither;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(Include.NON_NULL)
 @ToString(of = {"name", "balance", "availableBalance"})
 public class WalletTO implements Wallet {
 
@@ -34,6 +39,7 @@ public class WalletTO implements Wallet {
 
     private BigDecimal availableBalance;
 
+    @JsonIgnore
     private Status status;
 
     private String description;
@@ -42,10 +48,13 @@ public class WalletTO implements Wallet {
 
     private Long modificationDate;
 
+    @JsonIgnore
     private Type type;
 
+    @JsonIgnore
     @Wither private String content;
 
+    @JsonIgnore
     @Wither private String privateKey;
 
     public static WalletTO.WalletTOBuilder from(final Wallet wallet) {

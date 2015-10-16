@@ -1,16 +1,9 @@
 package io.yope.payment.blockchain.bitcoinj;
 
 
-import com.google.common.collect.Sets;
-import io.yope.payment.blockchain.BlockChainService;
-import io.yope.payment.blockchain.BlockchainException;
-import io.yope.payment.domain.Account;
-import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.AccountTO;
-import io.yope.payment.domain.transferobjects.WalletTO;
-import io.yope.payment.services.AccountService;
-import io.yope.payment.services.TransactionService;
-import lombok.extern.slf4j.Slf4j;
+import java.io.File;
+import java.math.BigDecimal;
+
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
@@ -23,15 +16,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-import java.io.File;
-import java.math.BigDecimal;
+import com.google.common.collect.Sets;
+
+import io.yope.payment.blockchain.BlockChainService;
+import io.yope.payment.blockchain.BlockchainException;
+import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Wallet;
+import io.yope.payment.domain.transferobjects.AccountTO;
+import io.yope.payment.domain.transferobjects.WalletTO;
+import io.yope.payment.services.AccountService;
+import io.yope.payment.services.TransactionService;
+import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
 @Configuration
 public class BitcoinjConfiguration {
 
-    private static final String ADMIN_EMAIL = "wallet@yope.io";
+    protected static final String ADMIN_EMAIL = "wallet@yope.io";
     private static final String CENTRAL_WALLET_PATH = "centralwallet";
     @Autowired
     private Environment environment;
@@ -76,10 +78,10 @@ public class BitcoinjConfiguration {
                 new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup, transactionService, accountService);
 
         Wallet central = null;
-        Account admin = accountService.getByEmail(ADMIN_EMAIL);
+        final Account admin = accountService.getByEmail(ADMIN_EMAIL);
         if (admin == null) {
             try {
-                Wallet inBlockChain = blockChainService.register();
+                final Wallet inBlockChain = blockChainService.register();
                 central = WalletTO.builder()
                         .content(inBlockChain.getContent())
                         .hash(inBlockChain.getHash())
@@ -89,7 +91,7 @@ public class BitcoinjConfiguration {
                         .description("central")
                         .balance(BigDecimal.ZERO)
                         .build();
-                Account adm = AccountTO.builder()
+                final Account adm = AccountTO.builder()
                         .email(ADMIN_EMAIL)
                         .firstName("admin")
                         .lastName("admin")
@@ -98,7 +100,7 @@ public class BitcoinjConfiguration {
                         .build();
                 accountService.create(adm, central);
 
-            } catch (BlockchainException e) {
+            } catch (final BlockchainException e) {
                 log.error("error during blockchain registration", e);
             }
         } else {

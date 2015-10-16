@@ -41,8 +41,8 @@ public class OAuth2ServerConfig {
 
 		@Autowired private AuthenticationManager authenticationManager;
 
-		private final static Integer accessTokenValiditySeconds = 500;
-		private final static Integer refreshTokenValiditySeconds = 300;
+		private final static Integer accessTokenValiditySeconds = 1800;
+		private final static Integer refreshTokenValiditySeconds = 1500;
 
 		// OAuth2 security configurer
 		@Override

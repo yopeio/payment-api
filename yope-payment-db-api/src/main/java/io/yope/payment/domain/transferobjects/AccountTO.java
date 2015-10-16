@@ -4,6 +4,7 @@
 package io.yope.payment.domain.transferobjects;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Wallet;
@@ -50,7 +51,7 @@ public class AccountTO implements Account {
                 .lastName(account.getLastName())
                 .modificationDate(account.getModificationDate())
                 .registrationDate(account.getRegistrationDate())
-                .wallets(account.getWallets())
+                .wallets(account.getWallets().stream().map(w -> WalletTO.from(w).build()).collect(Collectors.toSet()))
                 .type(account.getType())
                 .status(account.getStatus());
     }

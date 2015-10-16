@@ -5,6 +5,7 @@ package io.yope.payment.rest.helpers;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,34 +56,40 @@ public class AccountHelper {
                 .status(Status.ACTIVE)
                 .wallets(Sets.newLinkedHashSet())
                 .build();
+        Wallet[] wallets = new Wallet[0];
+        if (!Type.ADMIN.equals(account.getType())) {
+            wallets = createWallets(registration);
+        }
+        final Account savedAccount = accountService.create(account, wallets);
+        securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
+        return AccountTO.from(savedAccount).build();
+
+    }
+
+    private Wallet[] createWallets(final RegistrationRequest registration) {
+        final List<Wallet> wallets = Lists.newArrayList();
         String walletName = registration.getName();
         if (StringUtils.isEmpty(walletName)) {
             walletName = registration.getFirstName()+"'s Internal Wallet";
         }
-        final Wallet inWallet = WalletTO.builder()
+        wallets.add(WalletTO.builder()
                 .availableBalance(BigDecimal.ZERO)
                 .balance(BigDecimal.ZERO)
                 .type(Wallet.Type.INTERNAL)
                 .description(walletName)
                 .name(walletName)
-                .status(Wallet.Status.PENDING)
-                .build();
-        Wallet exWallet = null;
+                .build());
         if (StringUtils.isNotBlank(registration.getHash())) {
             final String walletDescription = registration.getFirstName()+"'s External Wallet";
-            exWallet = WalletTO.builder()
+            wallets.add(WalletTO.builder()
                     .availableBalance(BigDecimal.ZERO)
                     .balance(BigDecimal.ZERO)
                     .type(Wallet.Type.EXTERNAL)
                     .description(walletDescription)
                     .name(registration.getFirstName())
-                    .status(Wallet.Status.PENDING)
-                    .build();
+                    .build());
         }
-        final Account savedAccount = accountService.create(account, inWallet, exWallet);
-        securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
-        return AccountTO.from(savedAccount).build();
-
+        return wallets.toArray(new Wallet[] {});
     }
 
     public Wallet saveWallet(final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
@@ -100,11 +107,11 @@ public class AccountHelper {
         if (walletService.getByName(account.getId(), wallet.getName()) != null) {
             throw new BadRequestException("Wallet with name "+wallet.getName()+" does exists");
         }
+
         final WalletTO newWallet = WalletTO.from(wallet)
                 .availableBalance(BigDecimal.ZERO)
                 .balance(BigDecimal.ZERO)
                 .type(StringUtils.isBlank(wallet.getHash())? Wallet.Type.INTERNAL : Wallet.Type.EXTERNAL)
-                .status(Wallet.Status.PENDING)
                 .build();
         return saveWallet(account, newWallet);
     }
@@ -119,12 +126,7 @@ public class AccountHelper {
     }
 
     public List<AccountTO> getAccounts() {
-        final List<AccountTO> accountTOs = Lists.newArrayList();
-        final List<Account> accounts = accountService.getAccounts();
-        for (final Account account : accounts) {
-            accountTOs.add(AccountTO.from(account).build());
-        }
-        return accountTOs;
+        return accountService.getAccounts().stream().map(a -> AccountTO.from(a).build()).collect(Collectors.toList());
     }
 
     public AccountTO delete(final Long accountId) throws ObjectNotFoundException {
@@ -136,9 +138,7 @@ public class AccountHelper {
     }
 
     public boolean owns(final Account account, final Long walletId) {
-        return account.getWallets().stream()
-                .filter(o -> o.getId().equals(walletId))
-                .findFirst().isPresent();
+        return account.getWallets().stream().anyMatch(w -> w.getId().equals(walletId));
     }
 
 
