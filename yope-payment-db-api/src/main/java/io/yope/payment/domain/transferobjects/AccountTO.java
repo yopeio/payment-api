@@ -17,12 +17,14 @@ import lombok.ToString;
  * @author mgerardi
  *
  */
-@Builder
+@Builder(builderClassName="Builder")
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(of= {"email", "type"})
+@ToString(of= {"type", "email"}, includeFieldNames = false)
 public class AccountTO implements Account {
+
+    private Type type;
 
     private Long id;
 
@@ -36,9 +38,21 @@ public class AccountTO implements Account {
 
     private Status status;
 
-    private Type type;
-
     private Long registrationDate;
 
     private Long modificationDate;
+
+    public static AccountTO.Builder from(final Account account) {
+        return AccountTO.builder()
+                .email(account.getEmail())
+                .firstName(account.getFirstName())
+                .id(account.getId())
+                .lastName(account.getLastName())
+                .modificationDate(account.getModificationDate())
+                .registrationDate(account.getRegistrationDate())
+                .wallets(account.getWallets())
+                .type(account.getType())
+                .status(account.getStatus());
+    }
+
 }

@@ -6,7 +6,6 @@ package io.yope.payment.neo4j.domain;
 import java.math.BigDecimal;
 
 import org.springframework.data.neo4j.annotation.GraphId;
-import org.springframework.data.neo4j.annotation.GraphProperty;
 import org.springframework.data.neo4j.annotation.Indexed;
 import org.springframework.data.neo4j.annotation.NodeEntity;
 
@@ -25,7 +24,7 @@ import lombok.ToString;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(of = {"name", "balance"}, includeFieldNames = false)
+@ToString(of = {"name", "balance", "availableBalance"})
 @NodeEntity
 public class Neo4JWallet implements Wallet {
 
@@ -38,6 +37,8 @@ public class Neo4JWallet implements Wallet {
     private String hash;
 
     private BigDecimal balance;
+
+    private BigDecimal availableBalance;
 
     private Status status;
 
@@ -56,6 +57,7 @@ public class Neo4JWallet implements Wallet {
     public static Neo4JWallet.Neo4JWalletBuilder from(final Wallet wallet) {
         return Neo4JWallet.builder()
                 .balance(wallet.getBalance())
+                .availableBalance(wallet.getAvailableBalance())
                 .type(wallet.getType())
                 .creationDate(wallet.getCreationDate())
                 .modificationDate(wallet.getModificationDate())

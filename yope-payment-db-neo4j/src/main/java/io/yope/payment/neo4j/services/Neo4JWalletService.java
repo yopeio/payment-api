@@ -26,7 +26,7 @@ public class Neo4JWalletService implements WalletService {
      * @see io.yope.payment.services.WalletService#create(io.yope.payment.domain.Wallet)
      */
     @Override
-    public Wallet create(final Wallet wallet) {
+    public Wallet save(final Wallet wallet) {
         return repository.save(Neo4JWallet.from(wallet).creationDate(System.currentTimeMillis()).build());
     }
 
@@ -54,7 +54,7 @@ public class Neo4JWalletService implements WalletService {
      */
     @Override
     public Wallet update(final Long id, final Wallet wallet) throws ObjectNotFoundException {
-        if (getById(id) == null) {
+        if (!repository.exists(id)) {
             throw new ObjectNotFoundException(String.valueOf(id), Wallet.class);
         }
         return repository.save(Neo4JWallet.from(wallet).modificationDate(System.currentTimeMillis()).build());
@@ -89,6 +89,11 @@ public class Neo4JWalletService implements WalletService {
     @Override
     public Wallet getByName(final Long accountId, final String name) {
         return repository.findByName(accountId, name);
+    }
+
+    @Override
+    public boolean exists(final Long id) {
+        return repository.exists(id);
     }
 
 }

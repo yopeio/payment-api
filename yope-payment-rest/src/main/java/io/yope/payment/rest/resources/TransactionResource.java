@@ -15,12 +15,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.transferobjects.TransactionTO;
+import io.yope.payment.exceptions.IllegalTransactionStateException;
+import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
+import io.yope.payment.rest.BadRequestException;
 import io.yope.payment.rest.helpers.AccountHelper;
+import io.yope.payment.rest.helpers.TransactionHelper;
 
 /**
  * Wallet Resource.
@@ -33,6 +38,9 @@ public class TransactionResource extends BaseResource {
     @Autowired
     private AccountHelper accountHelper;
 
+    @Autowired
+    private TransactionHelper transactionHelper;
+
     /**
      * Create Transaction.
      * @param transaction
@@ -43,11 +51,18 @@ public class TransactionResource extends BaseResource {
             final HttpServletResponse response,
             @RequestBody(required=true) final TransactionTO transaction) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.CREATED.getStatusCode());
+        final Account loggedAccount = getLoggedAccount();
         try {
-            final Transaction saved = transactionService.create(transaction);
+            final Transaction saved = transactionHelper.create(transaction, loggedAccount.getId());
             response.setStatus(Response.Status.CREATED.getStatusCode());
             return new PaymentResponse<Transaction>(header, saved);
         } catch (final ObjectNotFoundException e) {
+            response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
+            return this.badRequest(transaction, e.getMessage());
+        } catch (final BlockchainException e) {
+            response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+            return this.badRequest(transaction, e.getMessage());
+        } catch (final BadRequestException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
             return this.badRequest(transaction, e.getMessage());
         }
@@ -60,12 +75,18 @@ public class TransactionResource extends BaseResource {
             @RequestParam(value="status", required=true) final Status status) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Transaction saved = transactionService.save(transactionId, status);
+            final Transaction saved = transactionService.transition(transactionId, status);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Transaction>(header, TransactionTO.from(saved).build());
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, e.getMessage());
+        } catch (final InsufficientFundsException e) {
+            response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
+            return this.badRequest(null, e.getMessage());
+        } catch (final IllegalTransactionStateException e) {
+            response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
+            return this.badRequest(null, e.getMessage());
         }
     }
 

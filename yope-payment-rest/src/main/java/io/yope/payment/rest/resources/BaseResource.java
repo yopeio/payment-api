@@ -10,8 +10,8 @@ import org.springframework.security.core.userdetails.User;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.rest.helpers.AccountHelper;
-import io.yope.payment.services.UserSecurityService;
 import io.yope.payment.services.TransactionService;
+import io.yope.payment.services.UserSecurityService;
 import io.yope.payment.services.WalletService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,24 +35,31 @@ public abstract class BaseResource {
     protected TransactionService transactionService;
 
     protected Account getLoggedAccount() {
-        final User user = this.securityService.getCurrentUser();
-        log.info("logged as {}", user.getUsername());
-        return this.accountHelper.getByEmail(user.getUsername());
+        final User user = securityService.getCurrentUser();
+        final Account account = accountHelper.getByEmail(user.getUsername());
+        log.info("logged as {}", account);
+        return account;
+    }
+
+    private <T> PaymentResponse<T> error(final T object, final String message, final Response.Status status) {
+        final ResponseHeader header = new ResponseHeader(false, message, status.getStatusCode());
+        return new PaymentResponse<T>(header, object);
     }
 
     protected <T> PaymentResponse<T> unauthorized(final T object) {
-        final ResponseHeader header = new ResponseHeader(false, Response.Status.UNAUTHORIZED.toString(), Response.Status.UNAUTHORIZED.getStatusCode());
-        return new PaymentResponse<T>(header, object);
+        return error(object, Response.Status.UNAUTHORIZED.toString(), Response.Status.UNAUTHORIZED);
+    }
+
+    protected <T> PaymentResponse<T> serverError(final T object, final String message) {
+        return error(object, message, Response.Status.INTERNAL_SERVER_ERROR);
     }
 
     protected <T> PaymentResponse<T> badRequest(final T object, final String message) {
-        final ResponseHeader header = new ResponseHeader(false, message, Response.Status.BAD_REQUEST.getStatusCode());
-        return new PaymentResponse<T>(header, object);
+        return error(object, message, Response.Status.BAD_REQUEST);
     }
 
     protected <T> PaymentResponse<T> notFound(final T object, final String message) {
-        final ResponseHeader header = new ResponseHeader(false, message, Response.Status.NOT_FOUND.getStatusCode());
-        return new PaymentResponse<T>(header, object);
+        return error(object, message, Response.Status.NOT_FOUND);
     }
 
 

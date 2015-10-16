@@ -46,13 +46,16 @@ public interface Transaction {
     }
 
     public enum Type {
-        INTERNAL,
-        EXTERNAL
+        DEPOSIT,
+        WITHDRAW,
+        TRANSFER
     }
 
     Long getId();
 
     String getHash();
+
+    String getSenderHash();
 
     Wallet getSource();
 
@@ -75,4 +78,6 @@ public interface Transaction {
     Long getCompletedDate();
 
     Type getType();
+
+    String getQR();
 }

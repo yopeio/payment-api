@@ -12,7 +12,6 @@ import org.springframework.data.neo4j.annotation.RelationshipEntity;
 import org.springframework.data.neo4j.annotation.StartNode;
 
 import io.yope.payment.domain.Transaction;
-import io.yope.payment.domain.Wallet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +26,7 @@ import lombok.ToString;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(of = {"reference", "status"}, includeFieldNames = true)
+@ToString(of = {"type", "reference", "amount"}, includeFieldNames = false)
 @RelationshipEntity(type="PAY")
 public class Neo4JTransaction implements Transaction {
 
@@ -43,6 +42,10 @@ public class Neo4JTransaction implements Transaction {
     private Neo4JWallet destination;
 
     private String hash;
+
+    private String senderHash;
+
+    private Type type;
 
     private String reference;
 
@@ -60,8 +63,11 @@ public class Neo4JTransaction implements Transaction {
 
     private Long completedDate;
 
+    private String QR;
+
     public static Neo4JTransaction.Neo4JTransactionBuilder from(final Transaction transaction) {
         return Neo4JTransaction.builder()
+                .type(transaction.getType())
                 .amount(transaction.getAmount())
                 .creationDate(transaction.getCreationDate())
                 .description(transaction.getDescription())
@@ -70,19 +76,12 @@ public class Neo4JTransaction implements Transaction {
                 .status(transaction.getStatus())
                 .reference(transaction.getReference())
                 .id(transaction.getId())
+                .QR(transaction.getQR())
                 .hash(transaction.getHash())
+                .senderHash(transaction.getSenderHash())
                 .acceptedDate(transaction.getAcceptedDate())
                 .deniedDate(transaction.getDeniedDate())
                 .completedDate(transaction.getCompletedDate());
-    }
-
-    @Override
-    public Type getType() {
-        if (Wallet.Type.INTERNAL.equals(source.getType()) &&
-            Wallet.Type.INTERNAL.equals(destination.getType())) {
-            return Type.INTERNAL;
-        }
-        return Type.EXTERNAL;
     }
 
 }

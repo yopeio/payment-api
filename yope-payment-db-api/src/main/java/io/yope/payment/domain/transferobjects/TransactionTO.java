@@ -5,30 +5,39 @@ package io.yope.payment.domain.transferobjects;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import io.yope.payment.domain.Transaction;
-import io.yope.payment.domain.Wallet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * @author mgerardi
  *
  */
-@Builder
+@Builder(builderClassName = "Builder")
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(Include.NON_NULL)
+@ToString(of = {"type", "reference", "amount"}, includeFieldNames = false)
 public class TransactionTO implements Transaction {
 
     private Long id;
 
     private String hash;
 
+    private String senderHash;
+
     private WalletTO source;
 
     private WalletTO destination;
+
+    private Type type;
 
     private String reference;
 
@@ -46,17 +55,11 @@ public class TransactionTO implements Transaction {
 
     private Long completedDate;
 
-    @Override
-    public Type getType() {
-        if (Wallet.Type.INTERNAL.equals(source.getType()) &&
-            Wallet.Type.INTERNAL.equals(destination.getType())) {
-            return Type.INTERNAL;
-        }
-        return Type.EXTERNAL;
-    }
+    private String QR;
 
-    public static TransactionTO.TransactionTOBuilder from(final Transaction transaction) {
+    public static TransactionTO.Builder from(final Transaction transaction) {
         return TransactionTO.builder()
+                .type(transaction.getType())
                 .amount(transaction.getAmount())
                 .creationDate(transaction.getCreationDate())
                 .description(transaction.getDescription())
@@ -65,7 +68,9 @@ public class TransactionTO implements Transaction {
                 .status(transaction.getStatus())
                 .reference(transaction.getReference())
                 .id(transaction.getId())
+                .QR(transaction.getQR())
                 .hash(transaction.getHash())
+                .senderHash(transaction.getSenderHash())
                 .acceptedDate(transaction.getAcceptedDate())
                 .deniedDate(transaction.getDeniedDate())
                 .completedDate(transaction.getCompletedDate());
