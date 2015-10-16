@@ -66,16 +66,18 @@ public class BitcoinjConfiguration {
         return new PeerGroup(params, chain);
     }
 
+
     @Bean
     public BlockChainService getBlockchainService(final NetworkParameters params,
                                                   final BlockChain blockChain,
                                                   final PeerGroup peerGroup,
                                                   final TransactionService transactionService,
-                                                  final AccountService accountService
+                                                  final AccountService accountService,
+                                                  final BlockchainSettings settings
                                                   ){
 
         final BitcoinjBlockchainServiceImpl blockChainService =
-                new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup, transactionService, accountService);
+                new BitcoinjBlockchainServiceImpl(params, blockChain, peerGroup, transactionService, accountService, settings);
 
         Wallet central = null;
         final Account admin = accountService.getByEmail(ADMIN_EMAIL);

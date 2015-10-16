@@ -22,10 +22,8 @@ public class WalletEventListener extends AbstractWalletEventListener {
     private PeerGroup peerGroup;
     private NetworkParameters params;
     private TransactionService transactionService;
-    /**
-     * Minimum number of confirmations before to change the status of a transaction to COMPLETED.
-     */
-    private static final int CONFIRMATIONS = 3;
+    private BlockchainSettings settings;
+
 
     @Override
     public synchronized void onCoinsReceived(final org.bitcoinj.core.Wallet wallet,
@@ -42,7 +40,6 @@ public class WalletEventListener extends AbstractWalletEventListener {
         log.info("******** Coins on central wallet to me {} from me {}",  valueSentToMe, valueSentFromMe);
         String hash = getHash(tx);
         try {
-            //todo: how to retrieve a transaction for the central wallet hash?
             Transaction pending = transactionService.getForHash(hash);
             if (pending == null) {
                 log.error("transaction hash {} does not exist", hash);
@@ -78,16 +75,23 @@ public class WalletEventListener extends AbstractWalletEventListener {
         log.info("-----> confidence changed: {} hash: {}", tx.getHashAsString(), getHash(tx));
         TransactionConfidence confidence = tx.getConfidence();
         log.info("new block depth: {} ", confidence.getDepthInBlocks());
-        if (confidence.getDepthInBlocks() >= CONFIRMATIONS) {
-            //todo: how to retrieve a transaction for the central wallet hash?
-            //todo: accepted transaction has to be retrieved, updating its status from accepted to completed.
+        if (confidence.getDepthInBlocks() >= settings.getConfirmations()) {
+            Transaction loaded = transactionService.getForHash(getHash(tx));
+            try {
+                transactionService.transition(loaded.getId(), Transaction.Status.ACCEPTED);
+            } catch (ObjectNotFoundException e) {
+                log.error("transaction not found", e);
+            } catch (InsufficientFundsException e) {
+                log.error("Insufficient money", e);
+            } catch (IllegalTransactionStateException e) {
+                log.error("Illegal transaction state", e);
+            }
         }
     }
 
     private String getHash(org.bitcoinj.core.Transaction tx) {
         String hash = null;
         for (TransactionOutput out : tx.getOutputs() ) {
-//                    hash = out.getScriptPubKey().getToAddress(params).toString();
             hash = new Script(out.getScriptBytes()).getToAddress(params).toString();
         }
         return hash;

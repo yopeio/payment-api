@@ -48,6 +48,8 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
     private final AccountService accountService;
 
+    private final BlockchainSettings settings;
+
     public void init(final Wallet wallet) {
         final ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
@@ -68,7 +70,6 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     public Wallet register() throws BlockchainException {
         final org.bitcoinj.core.Wallet btcjWallet = new org.bitcoinj.core.Wallet(params);
         final DeterministicKey freshKey = btcjWallet.freshReceiveKey();
-        //todo: how many confirmations does Yope wait?
         btcjWallet.allowSpendingUnconfirmedTransactions();
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
@@ -106,7 +107,8 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         log.info("******** register {} in blockchain", wallet.toString());
         chain.addWallet(wallet);
         peerGroup.addWallet(wallet);
-        final WalletEventListener walletEventListener = new WalletEventListener(peerGroup,params,transactionService);
+        final WalletEventListener walletEventListener =
+                new WalletEventListener(peerGroup,params, transactionService, settings);
         wallet.addEventListener(walletEventListener);
     }
 
