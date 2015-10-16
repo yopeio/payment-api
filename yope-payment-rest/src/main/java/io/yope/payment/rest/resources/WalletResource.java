@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Type;
+import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
+import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.domain.transferobjects.WalletTO;
@@ -147,7 +149,9 @@ public class WalletResource extends BaseResource {
     @RequestMapping(value="/{walletId}/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<List<TransactionTO>> getTransactions(@PathVariable final Long walletId,
            @RequestParam(value="reference", required=false) final String reference,
-           @RequestParam(value="dir", required=false) final Direction direction,
+           @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
+           @RequestParam(value="status", required=false) final Status status,
+           @RequestParam(value="type", required=false) final Transaction.Type type,
            final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
 
@@ -161,7 +165,7 @@ public class WalletResource extends BaseResource {
             return this.unauthorized(null);
         }
         try {
-            final List<TransactionTO> transactions = transactionHelper.getTransactionsForWallet(walletId, reference, direction);
+            final List<TransactionTO> transactions = transactionHelper.getTransactionsForWallet(walletId, reference, direction, status, type);
             return new PaymentResponse<List<TransactionTO>>(header, transactions);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());

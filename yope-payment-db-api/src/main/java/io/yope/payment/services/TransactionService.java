@@ -5,6 +5,7 @@ import java.util.List;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
+import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
@@ -57,7 +58,7 @@ public interface TransactionService {
      * @return a list of transactions from/to the given wallet
      * @throws ObjectNotFoundException if no wallet with {@code walletHash} found
      */
-    List<Transaction> getForWallet(Long walledId, String reference, Direction direction) throws ObjectNotFoundException;
+    List<Transaction> getForWallet(Long walledId, String reference, Direction direction, Status status, Type type) throws ObjectNotFoundException;
 
     /**
      * retrieves a list of transactions from all the wallets owned by an account, according to different filters.
@@ -70,7 +71,7 @@ public interface TransactionService {
      * @return a list of transactions from/to the given account
      * @throws ObjectNotFoundException if no account with {@code accountId} found
      */
-    List<Transaction> getForAccount(Long accountId, String reference, Direction direction) throws ObjectNotFoundException;
+    List<Transaction> getForAccount(Long accountId, String reference, Direction direction, Status status, Type type) throws ObjectNotFoundException;
 
     /**
      * Retrieves a transaction by its hash

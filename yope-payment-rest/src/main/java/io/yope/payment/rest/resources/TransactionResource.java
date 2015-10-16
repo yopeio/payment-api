@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Account;
-import io.yope.payment.domain.Account.Type;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
+import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
@@ -85,7 +85,7 @@ public class TransactionResource extends BaseResource {
             @RequestParam(value="status", required=true) final Status status) {
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.ACCEPTED.getStatusCode());
         final Account loggedAccount = getLoggedAccount();
-        if (!Type.ADMIN.equals(loggedAccount.getType())) {
+        if (!Account.Type.ADMIN.equals(loggedAccount.getType())) {
             return this.unauthorized(null);
         }
         try {
@@ -124,14 +124,16 @@ public class TransactionResource extends BaseResource {
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<List<TransactionTO>> getTransactions(final HttpServletResponse response,
            @RequestParam(value="reference", required=false) final String reference,
-           @RequestParam(value="dir", required=false) final Direction direction) {
+           @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
+           @RequestParam(value="status", required=false) final Status status,
+           @RequestParam(value="type", required=false) final Type type) {
 
         final Account loggedAccount = getLoggedAccount();
         final Long accountId = loggedAccount.getId();
         final ResponseHeader header = new ResponseHeader(true, "", Response.Status.OK.getStatusCode());
         List<TransactionTO> transactions = null;
         try {
-            transactions = transactionHelper.getTransactionsForAccount(accountId, reference, direction);
+            transactions = transactionHelper.getTransactionsForAccount(accountId, reference, direction, status, type);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(null, e.getMessage());

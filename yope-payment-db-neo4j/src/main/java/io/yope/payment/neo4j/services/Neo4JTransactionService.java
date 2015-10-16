@@ -8,15 +8,15 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.base.Strings;
-
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
+import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
@@ -194,24 +194,20 @@ public class Neo4JTransactionService implements TransactionService {
      * String, java.lang.String, io.yope.payment.domain.Transaction.Direction)
      */
     @Override
-    public List<Transaction> getForWallet(final Long walledId, final String reference, final Direction direction)
+    public List<Transaction> getForWallet(final Long walledId, final String reference, final Direction direction, final Status status, final Type type)
             throws ObjectNotFoundException {
-        if (Direction.IN.equals(direction)) {
-            if (Strings.isNullOrEmpty(reference)) {
-                return new ArrayList<Transaction>(repository.findWalletTransactionsIn(walledId));
-            }
-            return new ArrayList<Transaction>(repository.findWalletTransactionsIn(walledId, reference));
+        final String referenceParam = StringUtils.defaultIfBlank(reference, ".*");
+        final String statusParam = StringUtils.defaultIfBlank(status==null?null:status.name(), ".*");
+        final String typeParam = StringUtils.defaultIfBlank(type==null?null:type.name(), ".*");
+        switch (direction) {
+            case IN:
+                return new ArrayList<Transaction>(repository.findWalletTransactionsIn(walledId, referenceParam, statusParam, typeParam));
+            case OUT:
+                return new ArrayList<Transaction>(repository.findWalletTransactionsOut(walledId, referenceParam, statusParam, typeParam));
+            default:
+                break;
         }
-        if (Direction.OUT.equals(direction)) {
-            if (Strings.isNullOrEmpty(reference)) {
-                return new ArrayList<Transaction>(repository.findWalletTransactionsOut(walledId));
-            }
-            return new ArrayList<Transaction>(repository.findWalletTransactionsOut(walledId, reference));
-        }
-        if (Strings.isNullOrEmpty(reference)) {
-            return new ArrayList<Transaction>(repository.findWalletTransactions(walledId));
-        }
-        return new ArrayList<Transaction>(repository.findWalletTransactions(walledId, reference));
+        return new ArrayList<Transaction>(repository.findWalletTransactions(walledId, referenceParam, statusParam, typeParam));
     }
 
     /*
@@ -222,24 +218,21 @@ public class Neo4JTransactionService implements TransactionService {
      * java.lang.String, io.yope.payment.domain.Transaction.Direction)
      */
     @Override
-    public List<Transaction> getForAccount(final Long accountId, final String reference, final Direction direction)
+    public List<Transaction> getForAccount(final Long accountId, final String reference,
+            final Direction direction, final Status status, final Type type)
             throws ObjectNotFoundException {
-        if (Direction.IN.equals(direction)) {
-            if (Strings.isNullOrEmpty(reference)) {
-                return new ArrayList<Transaction>(repository.findAccountTransactionsIn(accountId));
-            }
-            return new ArrayList<Transaction>(repository.findAccountTransactionsIn(accountId, reference));
+        final String referenceParam = StringUtils.defaultIfBlank(reference, ".*");
+        final String statusParam = StringUtils.defaultIfBlank(status==null?null:status.name(), ".*");
+        final String typeParam = StringUtils.defaultIfBlank(type==null?null:type.name(), ".*");
+        switch (direction) {
+            case IN:
+                return new ArrayList<Transaction>(repository.findAccountTransactionsIn(accountId, referenceParam, statusParam, typeParam));
+            case OUT:
+                return new ArrayList<Transaction>(repository.findAccountTransactionsOut(accountId, referenceParam, statusParam, typeParam));
+            default:
+                break;
         }
-        if (Direction.OUT.equals(direction)) {
-            if (Strings.isNullOrEmpty(reference)) {
-                return new ArrayList<Transaction>(repository.findAccountTransactionsOut(accountId));
-            }
-            return new ArrayList<Transaction>(repository.findAccountTransactionsOut(accountId, reference));
-        }
-        if (Strings.isNullOrEmpty(reference)) {
-            return new ArrayList<Transaction>(repository.findAccountTransactions(accountId));
-        }
-        return new ArrayList<Transaction>(repository.findAccountTransactions(accountId, reference));
+        return new ArrayList<Transaction>(repository.findAccountTransactions(accountId, referenceParam, statusParam, typeParam));
     }
 
     @Override

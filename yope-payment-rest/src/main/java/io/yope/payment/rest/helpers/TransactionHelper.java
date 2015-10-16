@@ -28,6 +28,7 @@ import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
+import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.QRImage;
 import io.yope.payment.domain.transferobjects.TransactionTO;
@@ -215,13 +216,12 @@ public class TransactionHelper {
         return WalletTO.from(wallet).build();
     }
 
-
-    public List<TransactionTO> getTransactionsForWallet(final Long walletId, final String reference, final Direction direction) throws ObjectNotFoundException {
-        return transactionService.getForWallet(walletId, reference, direction).stream().map(t -> TransactionTO.from(t).build()).collect(Collectors.toList());
+    public List<TransactionTO> getTransactionsForWallet(final Long walletId, final String reference, final Direction direction, final Status status, final Type type) throws ObjectNotFoundException {
+        return transactionService.getForWallet(walletId, reference, direction, status, type).stream().map(t -> TransactionTO.from(t).build()).collect(Collectors.toList());
     }
 
-    public List<TransactionTO> getTransactionsForAccount(final Long accountId, final String reference, final Direction direction) throws ObjectNotFoundException {
-        return transactionService.getForAccount(accountId, reference, direction).stream().map(t -> TransactionTO.from(t).build()).collect(Collectors.toList());
+    public List<TransactionTO> getTransactionsForAccount(final Long accountId, final String reference, final Direction direction, final Status status, final Type type) throws ObjectNotFoundException {
+        return transactionService.getForAccount(accountId, reference, direction, status, type).stream().map(t -> TransactionTO.from(t).build()).collect(Collectors.toList());
     }
 
     public Transaction get(final Long transactionId) {
