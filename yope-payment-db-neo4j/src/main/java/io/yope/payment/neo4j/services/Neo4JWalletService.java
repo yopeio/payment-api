@@ -44,8 +44,8 @@ public class Neo4JWalletService implements WalletService {
      * @see io.yope.payment.services.WalletService#getByHash(java.lang.String)
      */
     @Override
-    public Wallet getByHash(final String hash) {
-        return repository.findBySchemaPropertyValue("hash", hash);
+    public Wallet getByWalletHash(final String hash) {
+        return repository.findByWalletHash(hash);
     }
 
     /*

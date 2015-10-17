@@ -520,7 +520,7 @@
 		},
 		{
 			"id": "c90b654d-cc65-8d44-8373-144744ac8f7c",
-			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NDk0OTU0NSwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6IjVkNjNkYzJhLWFhNWQtNDIxYS1hOWJmLWY2NmJiNmQzNDFiMyIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.1ZVBRiYT2LW8_GZ4c2phnMtO300jY773mfh0mPL5Rvk\n",
+			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NTExNzkxNCwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6IjRlOTQxOTEwLTAyOGEtNDg0Mi1hMWU1LWZhM2I0NDllOTZiOCIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.2vMsDZH3MqenUC_zeKiKJzfX8uuos802PyAC488W5z0\n",
 			"url": "http://localhost:8080/transactions",
 			"preRequestScript": "",
 			"pathVariables": {},
@@ -531,13 +531,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444995514802,
+			"time": 1445117588466,
 			"name": "WITHDRAW",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
-			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
-			"rawModeData": "{\n  \"source\":{\"name\":\"VEGA\"},\n  \"destination\":{\"name\":\"John Bull\", \"hash\":\"mfqJTEMVvVbbh55Rg1FBmdjz5GUVdJxrof\"},\n  \"amount\": 0.5,\n  \"reference\": \"withdraw0\",\n  \"description\": \"I pay myself\",\n  \"type\": \"WITHDRAW\"\n}"
+			"rawModeData": "{\n  \"source\":{\n    \"name\":\"VEGA\"\n  },\n  \"destination\":{\n    \"name\":\"Massi\", \n    \"walletHash\":\"mfqJTEMVvVbbh55Rg1FBmdjz5GUVdJxrof\"\n  },\n  \"amount\": 500,\n  \"reference\": \"withdraw0\",\n  \"description\": \"I pay myself\",\n  \"type\": \"WITHDRAW\"\n}"
 		},
 		{
 			"id": "e38eb038-46aa-0987-1573-ac0967c45d8c",

@@ -34,7 +34,7 @@ public class Neo4JWallet implements Wallet {
     @Indexed
     private String name;
 
-    private String hash;
+    private String walletHash;
 
     private BigDecimal balance;
 
@@ -62,7 +62,7 @@ public class Neo4JWallet implements Wallet {
                 .creationDate(wallet.getCreationDate())
                 .modificationDate(wallet.getModificationDate())
                 .description(wallet.getDescription())
-                .hash(wallet.getHash())
+                .walletHash(wallet.getWalletHash())
                 .id(wallet.getId())
                 .status(wallet.getStatus())
                 .name(wallet.getName())

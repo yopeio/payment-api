@@ -29,7 +29,7 @@ public class TransactionTO implements Transaction {
 
     private Long id;
 
-    private String hash;
+    private String transactionHash;
 
     private String senderHash;
 
@@ -71,7 +71,7 @@ public class TransactionTO implements Transaction {
                 .reference(transaction.getReference())
                 .id(transaction.getId())
                 .QR(transaction.getQR())
-                .hash(transaction.getHash())
+                .transactionHash(transaction.getTransactionHash())
                 .senderHash(transaction.getSenderHash())
                 .acceptedDate(transaction.getAcceptedDate())
                 .deniedDate(transaction.getDeniedDate())

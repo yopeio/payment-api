@@ -22,6 +22,10 @@ public interface Transaction {
          */
         PENDING,
         /**
+         * transaction failed.
+         */
+        FAILED,
+        /**
          * transaction expired as not completed after a given time interval.
          */
         EXPIRED,
@@ -53,7 +57,7 @@ public interface Transaction {
 
     Long getId();
 
-    String getHash();
+    String getTransactionHash();
 
     String getSenderHash();
 

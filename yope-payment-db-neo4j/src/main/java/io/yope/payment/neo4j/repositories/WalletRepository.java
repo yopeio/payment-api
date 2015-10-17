@@ -17,15 +17,12 @@ import io.yope.payment.neo4j.domain.Neo4JWallet;
  */
 public interface WalletRepository extends GraphRepository<Neo4JWallet> {
 
-    /**
-     * finds all the wollet for a given account.
-     * @param accountId the account's id
-     * @return a list of wallet
-     */
-    @Query("MATCH (a)-[:OWN]->(w:Neo4JWallet) where id(a) = {accountId} RETURN w")
+    @Query("MATCH (a)-[:OWN]->(w) where id(a) = {accountId} RETURN w")
     List<Neo4JWallet> findAllByOwner(@Param("accountId") Long accountId);
 
-    @Query("MATCH (a)-[:OWN]->(w:Neo4JWallet {name: {name}}) where id(a) = {accountId} RETURN w")
+    @Query("MATCH (a)-[:OWN]->(w {name: {name}}) where id(a) = {accountId} RETURN w")
     Neo4JWallet findByName(@Param("accountId") Long accountId, @Param("name") String name);
+
+    Neo4JWallet findByWalletHash(@Param("0") String hash);
 
 }

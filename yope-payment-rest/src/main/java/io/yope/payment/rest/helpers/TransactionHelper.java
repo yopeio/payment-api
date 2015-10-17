@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -70,7 +71,7 @@ public class TransactionHelper {
     @Autowired
     private BlockChainService blockChainService;
 
-    public Transaction create(final TransactionTO transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, BlockchainException {
+    public Transaction create(final TransactionTO transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, BlockchainException, InsufficientFundsException, IllegalTransactionStateException {
         switch (transaction.getType()) {
             case DEPOSIT:
                 return deposit(transaction, accountId);
@@ -91,19 +92,20 @@ public class TransactionHelper {
      * @param accountId the id of the seller
      * @return the pending transaction
      * @throws ObjectNotFoundException if the seller is not found
-     * @throws BadRequestException if the wallets are not found or if the balance is low
+     * @throws BadRequestException if the wallets are not found
+     * @throws InsufficientFundsException
      */
-    public Transaction transfer(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException {
+    public Transaction transfer(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, InsufficientFundsException {
         final Account seller = accountHelper.getById(accountId);
         final WalletTO source = getWallet(seller, transaction.getSource(), false, null);
+        final WalletTO destination = getWallet(seller, transaction.getDestination(), false, null);
         if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
-            throw new BadRequestException("not enough funds in the wallet with name "+source.getName(), "source.name");
+            throw new InsufficientFundsException("not enough funds in the wallet with name "+source.getName());
         }
         walletService.update(source.getId(), Neo4JWallet.from(source)
                 .balance(source.getBalance().subtract(transaction.getAmount()))
                 .availableBalance(source.getAvailableBalance().subtract(transaction.getAmount()))
                 .build());
-        final WalletTO destination = getWallet(seller, transaction.getDestination(), false, null);
         walletService.update(destination.getId(), Neo4JWallet.from(destination)
                 .balance(destination.getBalance().add(transaction.getAmount()))
                 .availableBalance(destination.getAvailableBalance().add(transaction.getAmount()))
@@ -139,19 +141,27 @@ public class TransactionHelper {
      * @return the pending transaction
      * @throws ObjectNotFoundException if the seller is not found
      * @throws BadRequestException if the internal wallet is not found or if the balance is low
+     * @throws IllegalTransactionStateException
+     * @throws InsufficientFundsException
      */
-    public Transaction withdraw(final Transaction transaction, final Long accountId) throws BlockchainException, ObjectNotFoundException, BadRequestException {
+    public Transaction withdraw(final Transaction transaction, final Long accountId) throws BlockchainException, ObjectNotFoundException, BadRequestException, InsufficientFundsException, IllegalTransactionStateException {
         final Account seller = accountHelper.getById(accountId);
         final WalletTO source = getWallet(seller, transaction.getSource(), false, null);
-        if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
-            throw new BadRequestException("not enough funds in the wallet with name "+source.getName(), "source.name");
-        }
-        walletService.update(source.getId(), Neo4JWallet.from(source)
-                .availableBalance(source.getAvailableBalance().subtract(transaction.getAmount())).build());
         final WalletTO destination = getWallet(seller, transaction.getDestination(), true, BigDecimal.ZERO);
         final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).source(source).destination(destination).status(Status.PENDING);
         final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
-        blockChainService.send(pendingTransaction);
+        if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
+            throw new InsufficientFundsException("not enough funds in the wallet with name "+source.getName());
+        }
+        try {
+            blockChainService.send(pendingTransaction);
+        } catch (final Exception e) {
+            log.error("Transaction "+pendingTransaction.getId(), e);
+            transactionService.transition(pendingTransaction.getId(), Transaction.Status.FAILED);
+            throw e;
+        }
+        walletService.update(source.getId(), Neo4JWallet.from(source)
+                .availableBalance(source.getAvailableBalance().subtract(transaction.getAmount())).build());
         return pendingTransaction;
     }
 
@@ -200,12 +210,12 @@ public class TransactionHelper {
     }
 
     private WalletTO getWallet(final Account seller, final Wallet source, final Boolean save, final BigDecimal amount) throws ObjectNotFoundException, BadRequestException {
-        final Wallet wallet = walletService.getByName(seller.getId(), source.getName());
+        final Wallet wallet = getWallet(source, seller.getId());
         if (wallet == null) {
             if (save) {
                 return WalletTO.from(accountHelper.saveWallet(WalletTO.from(source).type(Wallet.Type.TRANSIT).availableBalance(BigDecimal.ZERO).balance(amount).build())).build();
             }
-            throw new BadRequestException("Wallet with name "+source.getName()+" does not exists", "source.name");
+            throw new BadRequestException("Wallet with name "+source.getName()+" does not exists", null);
         }
         if (save) {
             return WalletTO.from(accountHelper.saveWallet(WalletTO.from(wallet)
@@ -215,6 +225,14 @@ public class TransactionHelper {
         }
         return WalletTO.from(wallet).build();
     }
+
+    private Wallet getWallet(final Wallet source, final Long sellerId) {
+        if (StringUtils.isNotBlank(source.getWalletHash())) {
+            return walletService.getByWalletHash(source.getWalletHash());
+        }
+        return walletService.getByName(sellerId, source.getName());
+    }
+
 
     public List<TransactionTO> getTransactionsForWallet(final Long walletId, final String reference, final Direction direction, final Status status, final Type type) throws ObjectNotFoundException {
         return transactionService.getForWallet(walletId, reference, direction, status, type).stream().map(t -> TransactionTO.from(t).build()).collect(Collectors.toList());

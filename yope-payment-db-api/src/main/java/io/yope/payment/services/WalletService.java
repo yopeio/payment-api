@@ -41,7 +41,7 @@ public interface WalletService {
      * @param hash the hash of the wallet
      * @return a wallet or {@literal null} if none found
      */
-    Wallet getByHash(String hash);
+    Wallet getByWalletHash(String hash);
 
     /**
      * retrieves a wallet by the name for a given wallet.

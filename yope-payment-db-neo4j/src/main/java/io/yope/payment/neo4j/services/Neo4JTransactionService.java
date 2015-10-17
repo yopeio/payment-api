@@ -80,13 +80,16 @@ public class Neo4JTransactionService implements TransactionService {
         if (!current.getStatus().equals(transaction.getStatus())) {
             checkStatus(current.getStatus(), transaction.getStatus());
             switch (transaction.getStatus()) {
+                case DENIED:
+                case FAILED:
+                    next.deniedDate(System.currentTimeMillis());
+                    if (!Status.PENDING.equals(current.getType())) {
+                        makeFundsAvailable(current.getSource(), current.getAmount());
+                    }
+                    break;
                 case ACCEPTED:
                     next.acceptedDate(System.currentTimeMillis());
                     transferFunds(current.getSource(), current.getDestination(), current.getAmount(), transaction.getReference());
-                    break;
-                case DENIED:
-                    next.deniedDate(System.currentTimeMillis());
-                    makeFundsAvailable(current.getSource(), current.getAmount());
                     break;
                 case EXPIRED:
                     next.deniedDate(System.currentTimeMillis());
@@ -106,10 +109,11 @@ public class Neo4JTransactionService implements TransactionService {
 
     /**
      * check valid transition according to following rules:
-     * PENDING -> DENIED - ACCEPTED
-     * ACCEPTED -> COMPLETED
+     * PENDING -> DENIED - ACCEPTED - FAILED - !COMPLETED
+     * ACCEPTED -> COMPLETED - FAILED
      * DENIED -> none
      * COMPLETED -> none
+     * FAILED -> none
      *
      * @param next
      *            the next status
@@ -127,7 +131,8 @@ public class Neo4JTransactionService implements TransactionService {
                 }
                 break;
             case ACCEPTED:
-                if (Status.COMPLETED.equals(next)) {
+                if (Status.COMPLETED.equals(next) ||
+                    Status.FAILED.equals(next)) {
                     return;
                 }
                 break;
@@ -165,10 +170,10 @@ public class Neo4JTransactionService implements TransactionService {
         final StringBuffer msg = new StringBuffer();
         if (source == null || destination == null) {
             if (source == null) {
-                msg.append("source with hash:").append(transaction.getSource().getHash()).append(" not found\n");
+                msg.append("source with hash:").append(transaction.getSource().getWalletHash()).append(" not found\n");
             }
             if (destination == null) {
-                msg.append("destination with hash:").append(transaction.getDestination().getHash())
+                msg.append("destination with hash:").append(transaction.getDestination().getWalletHash())
                         .append(" not found\n");
             }
             throw new ObjectNotFoundException(msg.toString(), Wallet.class);

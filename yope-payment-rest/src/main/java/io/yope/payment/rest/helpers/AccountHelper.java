@@ -117,7 +117,7 @@ public class AccountHelper {
         final WalletTO newWallet = WalletTO.from(wallet)
                 .availableBalance(BigDecimal.ZERO)
                 .balance(BigDecimal.ZERO)
-                .type(StringUtils.isBlank(wallet.getHash())? Wallet.Type.INTERNAL : Wallet.Type.EXTERNAL)
+                .type(StringUtils.isBlank(wallet.getWalletHash())? Wallet.Type.INTERNAL : Wallet.Type.EXTERNAL)
                 .build();
         return saveWallet(account, newWallet);
     }

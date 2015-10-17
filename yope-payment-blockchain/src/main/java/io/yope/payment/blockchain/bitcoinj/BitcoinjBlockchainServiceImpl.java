@@ -3,6 +3,7 @@ package io.yope.payment.blockchain.bitcoinj;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,6 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
 
+    private static final int MILLI_TO_SATOSHI = 100000;
+
     private final NetworkParameters params;
 
     private final BlockChain chain;
@@ -61,7 +64,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
                 peerGroup.startAsync();
                 peerGroup.downloadBlockChain();
             } catch (final UnreadableWalletException e) {
-                log.error("wallet {} cannot be registered to the chain", wallet.getHash(), e);
+                log.error("wallet {} cannot be registered to the chain", wallet.getWalletHash(), e);
             }
         });
     }
@@ -79,7 +82,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         }
         registerInBlockchain(btcjWallet);
 
-        final WalletTO wallet = WalletTO.builder().hash(freshKey.toAddress(params).toString()).
+        final WalletTO wallet = WalletTO.builder().walletHash(freshKey.toAddress(params).toString()).
                 content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).
                 privateKey(freshKey.getPrivateKeyEncoded(params).toString()).build();
         return wallet;
@@ -88,11 +91,12 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     @Override
     public void send(final Transaction transaction) throws BlockchainException {
         try {
-            final Coin value = Coin.valueOf(transaction.getAmount().longValue());
+            final long satoshi = transaction.getAmount().multiply(BigDecimal.valueOf(MILLI_TO_SATOSHI)).longValue();
+            final Coin value = Coin.valueOf(satoshi);
             final org.bitcoinj.core.Wallet sender = centralWallet();
             sender.allowSpendingUnconfirmedTransactions();
             registerInBlockchain(sender);
-            final Address receiver = new Address(params, transaction.getDestination().getHash());
+            final Address receiver = new Address(params, transaction.getDestination().getWalletHash());
             sender.sendCoins(peerGroup, receiver, value);
         } catch (final UnreadableWalletException e) {
             throw new BlockchainException(e);

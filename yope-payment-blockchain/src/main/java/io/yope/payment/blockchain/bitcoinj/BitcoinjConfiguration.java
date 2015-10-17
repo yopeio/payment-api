@@ -86,7 +86,7 @@ public class BitcoinjConfiguration {
                 final Wallet inBlockChain = blockChainService.register();
                 central = WalletTO.builder()
                         .content(inBlockChain.getContent())
-                        .hash(inBlockChain.getHash())
+                        .walletHash(inBlockChain.getWalletHash())
                         .type(Wallet.Type.EXTERNAL)
                         .status(Wallet.Status.ACTIVE)
                         .name("central")
@@ -109,7 +109,7 @@ public class BitcoinjConfiguration {
             central = admin.getWallets().iterator().next();
         }
         blockChainService.init(central);
-        log.info("central wallet hash: {}", central.getHash());
+        log.info("central wallet hash: {}", central.getWalletHash());
         return blockChainService;
     }
 

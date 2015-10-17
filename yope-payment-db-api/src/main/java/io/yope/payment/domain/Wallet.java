@@ -24,7 +24,7 @@ public interface Wallet {
 
     Long getId();
 
-    String getHash();
+    String getWalletHash();
 
     BigDecimal getBalance();
 

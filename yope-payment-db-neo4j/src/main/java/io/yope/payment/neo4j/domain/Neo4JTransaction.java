@@ -45,7 +45,7 @@ public class Neo4JTransaction implements Transaction {
     @EndNode
     private Neo4JWallet destination;
 
-    private String hash;
+    private String transactionHash;
 
     private String senderHash;
 
@@ -83,7 +83,7 @@ public class Neo4JTransaction implements Transaction {
                 .reference(transaction.getReference())
                 .id(transaction.getId())
                 .QR(transaction.getQR())
-                .hash(transaction.getHash())
+                .transactionHash(transaction.getTransactionHash())
                 .senderHash(transaction.getSenderHash())
                 .acceptedDate(transaction.getAcceptedDate())
                 .expiredDate(transaction.getExpiredDate())

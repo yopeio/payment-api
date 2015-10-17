@@ -31,7 +31,7 @@ public class WalletTO implements Wallet {
 
     private Long id;
 
-    private String hash;
+    private String walletHash;
 
     private String name;
 
@@ -65,7 +65,7 @@ public class WalletTO implements Wallet {
                 .creationDate(wallet.getCreationDate())
                 .modificationDate(wallet.getModificationDate())
                 .description(wallet.getDescription())
-                .hash(wallet.getHash())
+                .walletHash(wallet.getWalletHash())
                 .id(wallet.getId())
                 .status(wallet.getStatus())
                 .name(wallet.getName())
