@@ -3,35 +3,55 @@
 	"name": "payment-api",
 	"description": "",
 	"order": [
-		"a13b722b-fcd5-00ee-bfd3-1eebbfc0ed01",
-		"512eb6f8-84e5-eabc-6957-4df6e0af7aa4",
-		"35647cb5-2276-3503-a2c5-dd3b5e21b50b",
-		"7bfedd44-cd54-6ef7-709f-fcd91a39200e",
-		"27bf7c06-f983-2a68-ed55-4430adeb0fbc",
-		"802127e7-7282-cad6-cb74-5ba5b6dfa708",
-		"70f2ddd4-682a-7b13-30d2-881817be4d15",
-		"48cc2544-af3f-9152-0d72-1af723d5aaf1",
-		"80caa141-335c-65e5-7487-180a305bafb7",
-		"e38eb038-46aa-0987-1573-ac0967c45d8c",
-		"6c5b7520-318f-85ab-3f1c-eace49e03ed9",
-		"f03dea8d-98ad-28dd-26f7-53601df8c780",
-		"5aa1fb82-b6ca-0bfd-8700-054c33cc0b1d",
-		"96b41314-d40e-f743-cb20-4bc6eaf64e8c",
-		"0f04bac3-95eb-e05b-7258-6f898253d059",
-		"e69fc420-4532-9d71-9f97-08325d647b39",
-		"c2b67142-ebed-4cfe-ca0c-2e56a48a7c0b",
-		"a22fac18-aeee-6d9c-f128-ad5787ba5d9c",
-		"065fd093-d2ea-d5ed-f3dc-2b62b333fdd9",
-		"9a8a6922-a320-f4ac-56c8-3d40e9609819",
-		"b07911f0-85ad-c345-ea6c-78209e3e13b0",
-		"2fe14697-ac0e-d56f-3f07-39babb43d8ab",
-		"c90b654d-cc65-8d44-8373-144744ac8f7c",
-		"185331c9-610f-dc24-8a2b-5d0adc4f5d8a",
-		"c848e0ad-0f6f-3982-461b-916c17b1bc10",
-		"973dd0d7-affd-062a-5277-fad4d5c78a83",
-		"317ae306-3e30-1715-ba22-4cf5427b4806"
+		"802127e7-7282-cad6-cb74-5ba5b6dfa708"
 	],
-	"folders": [],
+	"folders": [
+		{
+			"id": "6aafe878-d0e9-ba12-1935-85f721110029",
+			"name": "admin",
+			"description": "",
+			"order": [
+				"512eb6f8-84e5-eabc-6957-4df6e0af7aa4",
+				"27bf7c06-f983-2a68-ed55-4430adeb0fbc",
+				"70f2ddd4-682a-7b13-30d2-881817be4d15",
+				"48cc2544-af3f-9152-0d72-1af723d5aaf1",
+				"80caa141-335c-65e5-7487-180a305bafb7",
+				"e38eb038-46aa-0987-1573-ac0967c45d8c",
+				"f0ec1676-2cfc-4276-df14-64e0d59f6012",
+				"c848e0ad-0f6f-3982-461b-916c17b1bc10",
+				"973dd0d7-affd-062a-5277-fad4d5c78a83",
+				"317ae306-3e30-1715-ba22-4cf5427b4806"
+			],
+			"owner": 0,
+			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2"
+		},
+		{
+			"id": "b8adbe8a-ce1a-df97-9595-4189c805622d",
+			"name": "seller",
+			"description": "",
+			"order": [
+				"35647cb5-2276-3503-a2c5-dd3b5e21b50b",
+				"7bfedd44-cd54-6ef7-709f-fcd91a39200e",
+				"a13b722b-fcd5-00ee-bfd3-1eebbfc0ed01",
+				"6c5b7520-318f-85ab-3f1c-eace49e03ed9",
+				"5aa1fb82-b6ca-0bfd-8700-054c33cc0b1d",
+				"065fd093-d2ea-d5ed-f3dc-2b62b333fdd9",
+				"96b41314-d40e-f743-cb20-4bc6eaf64e8c",
+				"0f04bac3-95eb-e05b-7258-6f898253d059",
+				"e69fc420-4532-9d71-9f97-08325d647b39",
+				"c2b67142-ebed-4cfe-ca0c-2e56a48a7c0b",
+				"a22fac18-aeee-6d9c-f128-ad5787ba5d9c",
+				"f03dea8d-98ad-28dd-26f7-53601df8c780",
+				"9a8a6922-a320-f4ac-56c8-3d40e9609819",
+				"b07911f0-85ad-c345-ea6c-78209e3e13b0",
+				"2fe14697-ac0e-d56f-3f07-39babb43d8ab",
+				"c90b654d-cc65-8d44-8373-144744ac8f7c",
+				"185331c9-610f-dc24-8a2b-5d0adc4f5d8a"
+			],
+			"owner": 0,
+			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2"
+		}
+	],
 	"timestamp": 1443195827563,
 	"owner": 0,
 	"remoteLink": "",
@@ -43,14 +63,14 @@
 			"url": "http://localhost:8080/wallets/22",
 			"preRequestScript": "",
 			"pathVariables": {},
-			"method": "POST",
+			"method": "PUT",
 			"data": [],
 			"dataMode": "params",
 			"version": 2,
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444999059649,
+			"time": 1445109412856,
 			"name": "modify account's wallet",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
@@ -73,7 +93,8 @@
 			"name": "personal account's wallets",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d"
 		},
 		{
 			"id": "185331c9-610f-dc24-8a2b-5d0adc4f5d8a",
@@ -93,11 +114,12 @@
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
 			"rawModeData": "{\n  \"source\":{\"name\":\"GEMMA\"},\n  \"destination\":{\"name\":\"John Bull\", \"hash\":\"mfqJTEMVvVbbh55Rg1FBmdjz5GUVdJxrof\"},\n  \"amount\": 11.5,\n  \"reference\": \"withdraw1\",\n  \"description\": \"get my money and run\",\n  \"type\": \"WITHDRAW\"\n}"
 		},
 		{
 			"id": "27bf7c06-f983-2a68-ed55-4430adeb0fbc",
-			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6Im1hc3NpQHlvcGUuaW8iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJ0cnVzdCIsInVwZGF0ZSJdLCJleHAiOjE0NDQyOTg0NjMsImF1dGhvcml0aWVzIjpbIlVTRVIiXSwianRpIjoiZjNlYmY0MGEtNWM3NC00YTgxLTg2MzEtYzY0YTE3YzllMDhiIiwiY2xpZW50X2lkIjoibXktdHJ1c3RlZC13ZHBDbGllbnQifQ.w_L0-_fvTvKlz-c5o8LIUcBPV-LXhbp7vpl4_VREuvM\n",
+			"headers": "Content-Type: application/json\n",
 			"url": "http://localhost:8080/accounts/",
 			"preRequestScript": "",
 			"pathVariables": {},
@@ -108,7 +130,7 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444998426335,
+			"time": 1445103866466,
 			"name": "create account ADMIN",
 			"description": "create an admin account with no wallets",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
@@ -133,12 +155,13 @@
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
 			"rawModeData": "{\n  \"source\":{\"name\":\"GEMMA\"},\n  \"destination\":{\"name\":\"VEGA\"},\n  \"amount\": 10.0,\n  \"reference\": \"transfer0\",\n  \"description\": \"I pay myself\",\n  \"type\": \"TRANSFER\"\n}"
 		},
 		{
 			"id": "317ae306-3e30-1715-ba22-4cf5427b4806",
 			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NDk1MDQ5MCwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6IjBlNzdjOTEwLTNlMDUtNDQxNC1iODQ2LWU5N2FkY2M2ZWU5MSIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.J6LGYTL1XCr4qe-GrwG9QFVbFaDxN6B9TJjrQOr7knQ\n",
-			"url": "http://localhost:8080/transactions/273?status=DENIED",
+			"url": "http://localhost:8080/admin/transactions/273?status=DENIED",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "PUT",
@@ -148,7 +171,7 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444950012552,
+			"time": 1445109487390,
 			"name": "transaction -> DENIED",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
@@ -172,12 +195,13 @@
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
 			"rawModeData": "{\n\"email\": \"sellerA@yope.io\",\n\"firstName\": \"John\",\n\"lastName\": \"Bull\",\n\"name\": \"VEGA\",\n\"password\": \"pwd123\"\n}"
 		},
 		{
 			"id": "48cc2544-af3f-9152-0d72-1af723d5aaf1",
-			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NDk5NzM3MCwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6ImIzYmE3ZGJlLWIyZWMtNGE4MC05Y2RmLWZkMjhhYWJjMGY2MiIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.TAo2SakHtS81OoxWvsvqPW1UFnV3JKPB28FNRcL-PF0\n",
-			"url": "http://localhost:8080/accounts/35",
+			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6ImFkbWluQHlvcGUuaW8iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJ0cnVzdCIsInVwZGF0ZSJdLCJleHAiOjE0NDUxMDU1MzIsImF1dGhvcml0aWVzIjpbIkFETUlOIl0sImp0aSI6IjNjZjdiYmY0LTQwMGYtNDVmYS04NTgyLWNkOTNkNDA4NTdmNyIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.010QmVa0hJ_5sBQLVhA4P2NfJeC44s1ttjk_rRph25o\n",
+			"url": "http://localhost:8080/admin/accounts/35",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "GET",
@@ -187,7 +211,7 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444995956018,
+			"time": 1445103899520,
 			"name": "account",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
@@ -210,7 +234,8 @@
 			"name": "token ADMIN",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "6aafe878-d0e9-ba12-1935-85f721110029"
 		},
 		{
 			"id": "5aa1fb82-b6ca-0bfd-8700-054c33cc0b1d",
@@ -230,6 +255,7 @@
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
 			"rawModeData": "{\n    \"name\": \"GEMMA\",\n    \"description\": \"internal Wallet\"\n}"
 		},
 		{
@@ -249,12 +275,13 @@
 			"name": "personal account",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d"
 		},
 		{
 			"id": "70f2ddd4-682a-7b13-30d2-881817be4d15",
-			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NDk5NzM3MCwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6ImIzYmE3ZGJlLWIyZWMtNGE4MC05Y2RmLWZkMjhhYWJjMGY2MiIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.TAo2SakHtS81OoxWvsvqPW1UFnV3JKPB28FNRcL-PF0\n",
-			"url": "http://localhost:8080/accounts",
+			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6ImFkbWluQHlvcGUuaW8iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJ0cnVzdCIsInVwZGF0ZSJdLCJleHAiOjE0NDUxMDU1MzIsImF1dGhvcml0aWVzIjpbIkFETUlOIl0sImp0aSI6IjNjZjdiYmY0LTQwMGYtNDVmYS04NTgyLWNkOTNkNDA4NTdmNyIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.010QmVa0hJ_5sBQLVhA4P2NfJeC44s1ttjk_rRph25o\n",
+			"url": "http://localhost:8080/admin/accounts",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "GET",
@@ -264,11 +291,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444995933157,
+			"time": 1445103771180,
 			"name": "accounts",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "6aafe878-d0e9-ba12-1935-85f721110029"
 		},
 		{
 			"id": "7bfedd44-cd54-6ef7-709f-fcd91a39200e",
@@ -288,6 +316,7 @@
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
 			"rawModeData": "{\n\"email\": \"sellerB@yope.io\",\n\"firstName\": \"John\",\n\"lastName\": \"Doe\",\n\"name\": \"ASHURA\",\n\"password\": \"pwd123\",\n\"hash\": \"mfqJTEMVvVbbh55Rg1FBmdjz5GUVdJxrof\"\n}"
 		},
 		{
@@ -313,7 +342,7 @@
 		{
 			"id": "80caa141-335c-65e5-7487-180a305bafb7",
 			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NDk5NzM3MCwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6ImIzYmE3ZGJlLWIyZWMtNGE4MC05Y2RmLWZkMjhhYWJjMGY2MiIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.TAo2SakHtS81OoxWvsvqPW1UFnV3JKPB28FNRcL-PF0\n",
-			"url": "http://localhost:8080/accounts/0",
+			"url": "http://localhost:8080/admin/accounts/0",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "DELETE",
@@ -323,7 +352,7 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444996305288,
+			"time": 1445103930007,
 			"name": "account",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
@@ -346,12 +375,13 @@
 			"name": "get account's transactions",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d"
 		},
 		{
 			"id": "973dd0d7-affd-062a-5277-fad4d5c78a83",
 			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NDk1MzI3OCwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6IjJmODcxOGE5LWI2YjctNDBkOS1iNTZkLTBmMzE2MzU0ZDhiMSIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.5dzT5dXFf2_2l98hMWHZPVz5Yy30tn2c-UKUJnNpkHM\n",
-			"url": "http://localhost:8080/transactions/7?status=COMPLETED",
+			"url": "http://localhost:8080/admin/transactions/7?status=COMPLETED",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "PUT",
@@ -361,7 +391,7 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444952917505,
+			"time": 1445109481224,
 			"name": "transaction -> COMPLETED",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
@@ -385,6 +415,7 @@
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
 			"rawModeData": "{\n  \"source\":{\"name\":\"massi\"},\n  \"destination\":{\"name\":\"VEGA\"},\n  \"amount\": 1.5,\n  \"reference\": \"Fire Sword\",\n  \"description\": \"a really big sword\",\n  \"type\": \"DEPOSIT\"\n}"
 		},
 		{
@@ -404,7 +435,8 @@
 			"name": "token seller",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d"
 		},
 		{
 			"id": "a22fac18-aeee-6d9c-f128-ad5787ba5d9c",
@@ -423,7 +455,8 @@
 			"name": "account's wallet's transactions IN",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d"
 		},
 		{
 			"id": "b07911f0-85ad-c345-ea6c-78209e3e13b0",
@@ -443,6 +476,7 @@
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
 			"rawModeData": "{\n  \"source\":{\"name\":\"VEGA\"},\n  \"destination\":{\"name\":\"GEMMA\"},\n  \"amount\": 1.0,\n  \"reference\": \"transfer0\",\n  \"description\": \"I pay myself\",\n  \"type\": \"TRANSFER\"\n}"
 		},
 		{
@@ -462,12 +496,13 @@
 			"name": "account's wallet's transactions OUT",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d"
 		},
 		{
 			"id": "c848e0ad-0f6f-3982-461b-916c17b1bc10",
 			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NTAwMTU2MSwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6ImQzMWJkZDA0LWI0YjItNDJmZS04ZWQ1LTZmMDJiZjM4NzU2MCIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.eVb5WLJ5y_or5T005zqwA7COMISYjEMcBSqyx6LuZDI\n",
-			"url": "http://localhost:8080/transactions/267?status=ACCEPTED",
+			"url": "http://localhost:8080/admin/transactions/267?status=ACCEPTED",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "PUT",
@@ -477,7 +512,7 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1445000091464,
+			"time": 1445109473394,
 			"name": "transaction -> ACCEPTED",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
@@ -501,12 +536,13 @@
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d",
 			"rawModeData": "{\n  \"source\":{\"name\":\"VEGA\"},\n  \"destination\":{\"name\":\"John Bull\", \"hash\":\"mfqJTEMVvVbbh55Rg1FBmdjz5GUVdJxrof\"},\n  \"amount\": 0.5,\n  \"reference\": \"withdraw0\",\n  \"description\": \"I pay myself\",\n  \"type\": \"WITHDRAW\"\n}"
 		},
 		{
 			"id": "e38eb038-46aa-0987-1573-ac0967c45d8c",
-			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NDk5NzM3MCwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6ImIzYmE3ZGJlLWIyZWMtNGE4MC05Y2RmLWZkMjhhYWJjMGY2MiIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.TAo2SakHtS81OoxWvsvqPW1UFnV3JKPB28FNRcL-PF0\n",
-			"url": "http://localhost:8080/accounts/0/wallets",
+			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6ImFkbWluQHlvcGUuaW8iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJ0cnVzdCIsInVwZGF0ZSJdLCJleHAiOjE0NDUxMDU1MzIsImF1dGhvcml0aWVzIjpbIkFETUlOIl0sImp0aSI6IjNjZjdiYmY0LTQwMGYtNDVmYS04NTgyLWNkOTNkNDA4NTdmNyIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.010QmVa0hJ_5sBQLVhA4P2NfJeC44s1ttjk_rRph25o\n",
+			"url": "http://localhost:8080/admin/accounts/194/wallets",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "GET",
@@ -516,8 +552,8 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1444996259183,
-			"name": "account's wallets - NOT IMPLEMENTED",
+			"time": 1445104208544,
+			"name": "account's wallets",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
 			"responses": []
@@ -539,7 +575,8 @@
 			"name": "account's wallet's transactions",
 			"description": "",
 			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
-			"responses": []
+			"responses": [],
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d"
 		},
 		{
 			"id": "f03dea8d-98ad-28dd-26f7-53601df8c780",
@@ -559,7 +596,27 @@
 			"responses": [],
 			"tests": "",
 			"currentHelper": "normal",
-			"helperAttributes": {}
+			"helperAttributes": {},
+			"folder": "b8adbe8a-ce1a-df97-9595-4189c805622d"
+		},
+		{
+			"id": "f0ec1676-2cfc-4276-df14-64e0d59f6012",
+			"headers": "Content-Type: application/json\nAuthorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOlsib2F1dGgyLXJlc291cmNlIl0sInVzZXJfbmFtZSI6InNlbGxlckFAeW9wZS5pbyIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsInRydXN0IiwidXBkYXRlIl0sImV4cCI6MTQ0NDk1MzgxNiwiYXV0aG9yaXRpZXMiOlsiU0VMTEVSIl0sImp0aSI6ImIxMTk3ODEyLTdhOTEtNGVmNC1iZDY0LWQ3Y2U5YTMwOTE0OCIsImNsaWVudF9pZCI6Im15LXRydXN0ZWQtd2RwQ2xpZW50In0.f0dUcNjsZ-ByuUG6rxBbNJbKYhKJ_UFd9-cGqTBw-Ec\n",
+			"url": "http://localhost:8080/admin/accounts/194/transactions",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1445109296536,
+			"name": "account's transactions",
+			"description": "",
+			"collectionId": "150ad32b-8443-60e2-917f-5939148547b2",
+			"responses": []
 		}
 	]
 }

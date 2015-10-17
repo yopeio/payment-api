@@ -3,44 +3,28 @@
  */
 package io.yope.payment.rest;
 
+import lombok.Getter;
+
 /**
  * @author massi
  *
  */
+@Getter
 public class BadRequestException extends Exception {
 
     /**
      *
      */
-    private static final long serialVersionUID = 6869623613558204056L;
+    private static final long serialVersionUID = 2988588413935506115L;
 
-    /**
-     *
-     */
-    public BadRequestException() {
-        // TODO Auto-generated constructor stub
-    }
+    private final String field;
 
     /**
      * @param message
      */
-    public BadRequestException(final String message) {
+    public BadRequestException(final String message, final String field) {
         super(message);
-    }
-
-    /**
-     * @param cause
-     */
-    public BadRequestException(final Throwable cause) {
-        super(cause);
-    }
-
-    /**
-     * @param message
-     * @param cause
-     */
-    public BadRequestException(final String message, final Throwable cause) {
-        super(message, cause);
+        this.field = field;
     }
 
 }

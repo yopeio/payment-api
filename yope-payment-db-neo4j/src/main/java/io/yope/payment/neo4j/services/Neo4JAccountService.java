@@ -6,13 +6,14 @@ package io.yope.payment.neo4j.services;
 
 import java.util.List;
 
-import io.yope.payment.domain.Transaction;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.support.Neo4jTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.collect.Lists;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Status;
@@ -101,7 +102,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public List<Account> getAccounts() {
-        return accountRepository.findAll().as(List.class);
+        return Lists.newArrayList(accountRepository.findAll());
     }
 
     /*
@@ -126,7 +127,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
 
     @Override
     public List<Account> getByType(final Account.Type type) {
-        return this.accountRepository.findByType(type.name());
+        return accountRepository.findByType(type.name());
     }
 
 }

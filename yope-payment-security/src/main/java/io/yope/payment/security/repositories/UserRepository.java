@@ -14,4 +14,6 @@ public interface UserRepository {
     User createUser(User user);
 
     User getUser(String username);
+
+    Boolean deleteUser(String username);
 }

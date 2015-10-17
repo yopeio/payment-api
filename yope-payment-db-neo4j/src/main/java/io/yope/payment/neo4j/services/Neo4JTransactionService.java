@@ -138,7 +138,7 @@ public class Neo4JTransactionService implements TransactionService {
 
     private void transferFunds(final Wallet source, final Wallet destination, final BigDecimal amount, final String transaction) throws ObjectNotFoundException, InsufficientFundsException {
         if (source.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientFundsException("not enough funds to compplete transaction '"+transaction+"'");
+            throw new InsufficientFundsException("not enough funds to complete transaction '"+transaction+"'");
         }
         final Neo4JWallet newSource = Neo4JWallet.from(source)
                 .balance(source.getBalance().subtract(amount))

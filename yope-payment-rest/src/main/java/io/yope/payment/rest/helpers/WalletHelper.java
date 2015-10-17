@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Lists;
+
 import groovy.util.logging.Slf4j;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.WalletTO;
@@ -35,7 +37,7 @@ public class WalletHelper {
     }
 
     public List<Wallet> get(final Long id) {
-        return walletService.get(id).stream().map(w -> WalletTO.from(w).build()).collect(Collectors.toList());
+        return Lists.newArrayList(walletService.get(id).stream().map(w -> WalletTO.from(w).build()).collect(Collectors.toList()));
     }
 
     public Wallet getById(final Long walletId) {

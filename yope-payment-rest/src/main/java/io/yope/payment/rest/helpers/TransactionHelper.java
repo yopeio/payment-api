@@ -81,7 +81,7 @@ public class TransactionHelper {
             default:
                 break;
         }
-        throw new BadRequestException("Transaction type not recognized "+transaction.getType());
+        throw new BadRequestException("Transaction type not recognized "+transaction.getType(), "type");
     }
 
 
@@ -97,7 +97,7 @@ public class TransactionHelper {
         final Account seller = accountHelper.getById(accountId);
         final WalletTO source = getWallet(seller, transaction.getSource(), false, null);
         if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
-            throw new BadRequestException("not enough funds in the wallet with name "+source.getName());
+            throw new BadRequestException("not enough funds in the wallet with name "+source.getName(), "source.name");
         }
         walletService.update(source.getId(), Neo4JWallet.from(source)
                 .balance(source.getBalance().subtract(transaction.getAmount()))
@@ -144,7 +144,7 @@ public class TransactionHelper {
         final Account seller = accountHelper.getById(accountId);
         final WalletTO source = getWallet(seller, transaction.getSource(), false, null);
         if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
-            throw new BadRequestException("not enough funds in the wallet with name "+source.getName());
+            throw new BadRequestException("not enough funds in the wallet with name "+source.getName(), "source.name");
         }
         walletService.update(source.getId(), Neo4JWallet.from(source)
                 .availableBalance(source.getAvailableBalance().subtract(transaction.getAmount())).build());
@@ -203,9 +203,9 @@ public class TransactionHelper {
         final Wallet wallet = walletService.getByName(seller.getId(), source.getName());
         if (wallet == null) {
             if (save) {
-                return WalletTO.from(accountHelper.saveWallet(WalletTO.from(source).availableBalance(BigDecimal.ZERO).balance(amount).build())).build();
+                return WalletTO.from(accountHelper.saveWallet(WalletTO.from(source).type(Wallet.Type.TRANSIT).availableBalance(BigDecimal.ZERO).balance(amount).build())).build();
             }
-            throw new BadRequestException("Wallet with name "+source.getName()+" does not exists");
+            throw new BadRequestException("Wallet with name "+source.getName()+" does not exists", "source.name");
         }
         if (save) {
             return WalletTO.from(accountHelper.saveWallet(WalletTO.from(wallet)

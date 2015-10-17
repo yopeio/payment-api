@@ -15,6 +15,5 @@ import lombok.experimental.Accessors;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ResponseHeader {
     @JsonProperty private boolean success;
-    @JsonProperty private String errorCode;
     @JsonProperty private Integer status;
 }

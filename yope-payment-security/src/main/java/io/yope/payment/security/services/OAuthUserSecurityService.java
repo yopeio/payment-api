@@ -55,4 +55,11 @@ public class OAuthUserSecurityService implements UserSecurityService {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
+    @Override
+    public Boolean deleteUser(final String username) {
+        return userRepository.deleteUser(username);
+    }
+
+
+
 }

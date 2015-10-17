@@ -10,7 +10,6 @@ import java.util.Set;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Maps;
 
@@ -49,6 +48,13 @@ public class MockUserRepository implements UserRepository {
     @Override
     public User getUser(final String username) {
         return users.get(username);
+    }
+
+
+    @Override
+    public Boolean deleteUser(final String username) {
+        users.remove(username);
+        return true;
     }
 
 }

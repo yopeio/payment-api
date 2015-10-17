@@ -18,6 +18,7 @@ public interface Wallet {
 
     public enum Type {
         EXTERNAL,
+        TRANSIT,
         INTERNAL;
     }
 

@@ -20,6 +20,7 @@ import io.yope.payment.domain.Account.Type;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.transferobjects.AccountTO;
 import io.yope.payment.domain.transferobjects.WalletTO;
+import io.yope.payment.exceptions.DuplicateEmailException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.BadRequestException;
 import io.yope.payment.rest.requests.RegistrationRequest;
@@ -43,7 +44,12 @@ public class AccountHelper {
     @Autowired
     private UserSecurityService securityService;
 
-    public AccountTO registerAccount(final RegistrationRequest registration) {
+    public AccountTO registerAccount(final RegistrationRequest registration) throws DuplicateEmailException {
+        if (accountService.getByEmail(registration.getEmail()) != null) {
+            throw new DuplicateEmailException(registration.getEmail());
+        }
+
+
         Type type = registration.getType();
         if (type==null) {
             type = Type.SELLER;
@@ -105,7 +111,7 @@ public class AccountHelper {
 
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
         if (walletService.getByName(account.getId(), wallet.getName()) != null) {
-            throw new BadRequestException("Wallet with name "+wallet.getName()+" does exists");
+            throw new BadRequestException("You already have a wallet with name "+wallet.getName(), "name");
         }
 
         final WalletTO newWallet = WalletTO.from(wallet)
@@ -122,7 +128,11 @@ public class AccountHelper {
     }
 
     public AccountTO getById(final Long accountId) {
-        return AccountTO.from(accountService.getById(accountId)).build();
+        final Account account  = accountService.getById(accountId);
+        if (account == null) {
+            return null;
+        }
+        return AccountTO.from(account).build();
     }
 
     public List<AccountTO> getAccounts() {
@@ -130,11 +140,21 @@ public class AccountHelper {
     }
 
     public AccountTO delete(final Long accountId) throws ObjectNotFoundException {
-        return AccountTO.from(accountService.delete(accountId)).build();
+        final Account account  = accountService.delete(accountId);
+        if (account == null) {
+            return null;
+        }
+        securityService.deleteUser(account.getEmail());
+        return AccountTO.from(account).build();
+
     }
 
     public AccountTO getByEmail(final String email) {
-        return AccountTO.from(accountService.getByEmail(email)).build();
+        final Account account  = accountService.getByEmail(email);
+        if (account == null) {
+            return null;
+        }
+        return AccountTO.from(account).build();
     }
 
     public boolean owns(final Account account, final Long walletId) {
