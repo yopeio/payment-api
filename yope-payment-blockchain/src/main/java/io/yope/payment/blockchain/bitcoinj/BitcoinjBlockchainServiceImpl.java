@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -19,6 +21,8 @@ import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.store.UnreadableWalletException;
+
+import com.google.common.collect.Lists;
 
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
@@ -38,8 +42,9 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
+    public static List<String> HASH_LIST = Lists.newArrayList();
 
-    private static final int MILLI_TO_SATOSHI = 100000;
+    public static Stack<String> HASH_STACK = new Stack<String>();
 
     private final NetworkParameters params;
 
@@ -91,7 +96,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     @Override
     public void send(final Transaction transaction) throws BlockchainException {
         try {
-            final long satoshi = transaction.getAmount().multiply(BigDecimal.valueOf(MILLI_TO_SATOSHI)).longValue();
+            final long satoshi = transaction.getAmount().multiply(BigDecimal.valueOf(Constants.MILLI_TO_SATOSHI)).longValue();
             final Coin value = Coin.valueOf(satoshi);
             final org.bitcoinj.core.Wallet sender = centralWallet();
             sender.allowSpendingUnconfirmedTransactions();
@@ -120,10 +125,15 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     public String generateCentralWalletHash() throws BlockchainException {
         try {
             final org.bitcoinj.core.Wallet receiver = centralWallet();
-
-            final DeterministicKey freshKey = receiver.freshReceiveKey();
-            final String freshHash = freshKey.toAddress(params).toString();
+            String freshHash = null;
+            if (HASH_STACK.isEmpty()) {
+                final DeterministicKey freshKey = receiver.freshReceiveKey();
+                freshHash = freshKey.toAddress(params).toString();
+            } else {
+                freshHash = HASH_STACK.pop();
+            }
             log.info("******** fresh hash: {}", freshHash);
+            HASH_LIST.add(freshHash);
             return freshHash;
         } catch (final UnreadableWalletException e) {
             log.error("error during hash generation", e);

@@ -74,11 +74,20 @@ public interface TransactionService {
     List<Transaction> getForAccount(Long accountId, String reference, Direction direction, Status status, Type type) throws ObjectNotFoundException;
 
     /**
-     * Retrieves a transaction by its hash
+     * Retrieves a transaction by the sender hash
      * @param hash
      * @return
      */
-    Transaction getForHash(String hash);
+    Transaction getByReceiverHash(String hash);
+
+    /**
+     * Retrieves a transaction by the hash generated in blockchain
+     * @param hash
+     * @return
+     */
+    Transaction getByTransactionHash(String hash);
 
     List<Transaction> getTransaction(int delay, Transaction.Status status);
+
+    Transaction getBySenderHash(String hash);
 }

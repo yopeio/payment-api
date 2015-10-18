@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
@@ -25,6 +24,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
+import io.yope.payment.blockchain.bitcoinj.Constants;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
@@ -110,7 +110,9 @@ public class TransactionHelper {
                 .balance(destination.getBalance().add(transaction.getAmount()))
                 .availableBalance(destination.getAvailableBalance().add(transaction.getAmount()))
                 .build());
-        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).source(source).destination(destination).status(Status.COMPLETED);
+        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction)
+                .balance(transaction.getAmount()).blockchainFees(BigDecimal.ZERO).fees(BigDecimal.ZERO)
+                .source(source).destination(destination).status(Status.COMPLETED);
         final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
         return pendingTransaction;
     }
@@ -127,9 +129,9 @@ public class TransactionHelper {
         final Account seller = accountHelper.getById(accountId);
         final WalletTO source = getWallet(seller, transaction.getSource(), true, transaction.getAmount());
         final WalletTO destination = getWallet(seller, transaction.getDestination(), false, null);
-        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).source(source).destination(destination).status(Status.PENDING);
+        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).fees(BigDecimal.ZERO).source(source).destination(destination).status(Status.PENDING);
         final QRImage qr = getQRImage(transaction.getAmount());
-        pendingTransactionBuilder.QR(qr.getImageUrl()).senderHash(qr.getHash());
+        pendingTransactionBuilder.QR(qr.getImageUrl()).receiverHash(qr.getHash());
         final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
         return pendingTransaction;
     }
@@ -148,7 +150,7 @@ public class TransactionHelper {
         final Account seller = accountHelper.getById(accountId);
         final WalletTO source = getWallet(seller, transaction.getSource(), false, null);
         final WalletTO destination = getWallet(seller, transaction.getDestination(), true, BigDecimal.ZERO);
-        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).source(source).destination(destination).status(Status.PENDING);
+        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).fees(BigDecimal.ZERO).source(source).destination(destination).status(Status.PENDING);
         final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
         if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
             throw new InsufficientFundsException("not enough funds in the wallet with name "+source.getName());
@@ -181,7 +183,7 @@ public class TransactionHelper {
         try {
             bitMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, QR_WIDTH, QR_HEIGHT);
             final BufferedImage bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
-            final String imageName = UUID.randomUUID().toString()+".png";
+            final String imageName = hash+".png";
             final File image = new File(getImageFolder(), imageName);
             ImageIO.write(bufferedImage, "png", image);
             return serverConfiguration.getImageAbsolutePath() + imageName;
@@ -202,7 +204,7 @@ public class TransactionHelper {
     }
 
     private String generateCode(final String hash, final BigDecimal amount) {
-        return "bitcoin:" + hash + "?amount=" + amount.floatValue();
+        return "bitcoin:" + hash + "?amount=" + amount.floatValue()/Constants.MILLI_BITCOINS;
     }
 
     private String getHash() throws BlockchainException {
@@ -243,11 +245,38 @@ public class TransactionHelper {
     }
 
     public Transaction get(final Long transactionId) {
-        return TransactionTO.from(transactionService.get(transactionId)).build();
+        final Transaction transaction = transactionService.get(transactionId);
+        if (transaction == null) {
+            return null;
+        }
+        return TransactionTO.from(transaction).build();
     }
-
 
     public Transaction transition(final Long transactionId, final Status status) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
         return TransactionTO.from(transactionService.transition(transactionId, status)).build();
+    }
+
+    public Transaction getByTransactionHash(final String hash) {
+        final Transaction transaction = transactionService.getByTransactionHash(hash);
+        if (transaction == null) {
+            return null;
+        }
+        return TransactionTO.from(transaction).build();
+    }
+
+    public Transaction getBySenderHash(final String hash) {
+        final Transaction transaction = transactionService.getBySenderHash(hash);
+        if (transaction == null) {
+            return null;
+        }
+        return TransactionTO.from(transaction).build();
+    }
+
+    public Transaction getByReceiverHash(final String hash) {
+        final Transaction transaction = transactionService.getByReceiverHash(hash);
+        if (transaction == null) {
+            return null;
+        }
+        return TransactionTO.from(transaction).build();
     }
 }

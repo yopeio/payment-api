@@ -40,9 +40,16 @@ public interface TransactionRepository extends GraphRepository<Neo4JTransaction>
     @Query("MATCH (a)-[:OWN]->(s)-[t:PAY]-(d) where id(a) = {accountId} AND t.reference=~{reference} AND t.status=~{status} AND t.type=~{type} return t")
     List<Neo4JTransaction> findAccountTransactions(@Param("accountId") Long accountId, @Param("reference") String reference, @Param("status") String status, @Param("type") String type);
 
-    Neo4JTransaction findBySenderHash(@Param("0") String hash);
-
     @Query("MATCH (a)-[t:PAY {status: {status}}]->(b) where timestamp() - t.creationDate > {delay} return t ")
     List<Neo4JTransaction> findOlderThan(@Param("delay") int delay, @Param("status") String status);
+
+    @Query("MATCH (a)-[t:PAY {senderHash: {senderHash}}]->(b) return t ")
+    Neo4JTransaction findBySenderHash(@Param("senderHash") String hash);
+
+    @Query("MATCH (a)-[t:PAY {transactionHash: {transactionHash}}]->(b) return t ")
+    Neo4JTransaction findByTransactionHash(@Param("transactionHash") String hash);
+
+    @Query("MATCH (a)-[t:PAY {receiverHash: {receiverHash}}]->(b) return t ")
+    Neo4JTransaction findByReceiverHash(@Param("receiverHash") String hash);
 
 }

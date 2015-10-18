@@ -61,6 +61,8 @@ public interface Transaction {
 
     String getSenderHash();
 
+    String getReceiverHash();
+
     Wallet getSource();
 
     Wallet getDestination();
@@ -72,6 +74,10 @@ public interface Transaction {
     String getDescription();
 
     BigDecimal getAmount();
+
+    BigDecimal getBlockchainFees();
+
+    BigDecimal getFees();
 
     Long getCreationDate();
 
@@ -86,4 +92,8 @@ public interface Transaction {
     Type getType();
 
     String getQR();
+
+    BigDecimal getBalance();
+
+    Long getFailedDate();
 }

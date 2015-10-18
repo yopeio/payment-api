@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import org.springframework.data.neo4j.annotation.EndNode;
 import org.springframework.data.neo4j.annotation.Fetch;
 import org.springframework.data.neo4j.annotation.GraphId;
+import org.springframework.data.neo4j.annotation.Indexed;
 import org.springframework.data.neo4j.annotation.RelationshipEntity;
 import org.springframework.data.neo4j.annotation.StartNode;
 
@@ -45,9 +46,14 @@ public class Neo4JTransaction implements Transaction {
     @EndNode
     private Neo4JWallet destination;
 
+    @Indexed
     private String transactionHash;
 
+    @Indexed
     private String senderHash;
+
+    @Indexed
+    private String receiverHash;
 
     private Type type;
 
@@ -59,11 +65,19 @@ public class Neo4JTransaction implements Transaction {
 
     private BigDecimal amount;
 
+    private BigDecimal balance;
+
+    private BigDecimal blockchainFees;
+
+    private BigDecimal fees;
+
     private Long creationDate;
 
     private Long acceptedDate;
 
     private Long deniedDate;
+
+    private Long failedDate;
 
     private Long expiredDate;
 
@@ -75,6 +89,9 @@ public class Neo4JTransaction implements Transaction {
         return Neo4JTransaction.builder()
                 .type(transaction.getType())
                 .amount(transaction.getAmount())
+                .balance(transaction.getBalance())
+                .blockchainFees(transaction.getBlockchainFees())
+                .fees(transaction.getFees())
                 .creationDate(transaction.getCreationDate())
                 .description(transaction.getDescription())
                 .destination(Neo4JWallet.from(transaction.getDestination()).build())
@@ -85,7 +102,9 @@ public class Neo4JTransaction implements Transaction {
                 .QR(transaction.getQR())
                 .transactionHash(transaction.getTransactionHash())
                 .senderHash(transaction.getSenderHash())
+                .receiverHash(transaction.getReceiverHash())
                 .acceptedDate(transaction.getAcceptedDate())
+                .failedDate(transaction.getFailedDate())
                 .expiredDate(transaction.getExpiredDate())
                 .deniedDate(transaction.getDeniedDate())
                 .completedDate(transaction.getCompletedDate());

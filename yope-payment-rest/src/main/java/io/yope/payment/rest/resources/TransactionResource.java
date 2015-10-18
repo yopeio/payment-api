@@ -22,6 +22,7 @@ import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.domain.transferobjects.TransactionTO;
+import io.yope.payment.exceptions.AuthorizationException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.BadRequestException;
 import io.yope.payment.rest.helpers.AccountHelper;
@@ -43,13 +44,13 @@ public class TransactionResource extends BaseResource {
 
     /**
      * Create Transaction.
+     *
      * @param transaction
      * @return
      */
     @RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<Transaction> create(
-            final HttpServletResponse response,
-            @RequestBody(required=true) final TransactionTO transaction) {
+    public @ResponseBody PaymentResponse<Transaction> create(final HttpServletResponse response,
+            @RequestBody(required = true) final TransactionTO transaction) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.CREATED.getStatusCode());
         final Account loggedAccount = getLoggedAccount();
         try {
@@ -71,13 +72,64 @@ public class TransactionResource extends BaseResource {
         }
     }
 
-    @RequestMapping(value="/{transactionId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/{transactionId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Transaction> get(@PathVariable final long transactionId) {
         final Account loggedAccount = getLoggedAccount();
         final Transaction transaction = transactionHelper.get(transactionId);
+        if (transaction == null) {
+            return notFound("Not found " + transactionId);
+        }
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
-         || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
+                || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
+            return new PaymentResponse<Transaction>(header, transaction);
+        }
+        return unauthorized();
+    }
+
+    @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"senderHash" })
+    public @ResponseBody PaymentResponse<Transaction> getBySenderHash(
+            @RequestParam(value = "senderHash", required = true) final String hash) throws AuthorizationException {
+        final Transaction transaction = transactionHelper.getBySenderHash(hash);
+        if (transaction == null) {
+            return notFound(hash);
+        }
+        final Account loggedAccount = getLoggedAccount();
+        if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
+                || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
+            final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
+            return new PaymentResponse<Transaction>(header, transaction);
+        }
+        return unauthorized();
+    }
+
+    @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"receiverHash" })
+    public @ResponseBody PaymentResponse<Transaction> getByReceiverHash(
+            @RequestParam(value = "receiverHash", required = true) final String hash) throws AuthorizationException {
+        final Transaction transaction = transactionHelper.getByReceiverHash(hash);
+        if (transaction == null) {
+            return notFound(hash);
+        }
+        final Account loggedAccount = getLoggedAccount();
+        if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
+                || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
+            final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
+            return new PaymentResponse<Transaction>(header, transaction);
+        }
+        return unauthorized();
+    }
+
+    @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"hash" })
+    public @ResponseBody PaymentResponse<Transaction> getByTransactionHash(
+            @RequestParam(value = "hash", required = true) final String hash) throws AuthorizationException {
+        final Transaction transaction = transactionHelper.getByTransactionHash(hash);
+        if (transaction == null) {
+            return notFound(hash);
+        }
+        final Account loggedAccount = getLoggedAccount();
+        if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
+                || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
+            final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
             return new PaymentResponse<Transaction>(header, transaction);
         }
         return unauthorized();
@@ -85,15 +137,16 @@ public class TransactionResource extends BaseResource {
 
     /**
      * retrieves an account's transactions.
+     *
      * @param accountId
      * @return
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<List<TransactionTO>> getTransactions(final HttpServletResponse response,
-           @RequestParam(value="reference", required=false) final String reference,
-           @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
-           @RequestParam(value="status", required=false) final Status status,
-           @RequestParam(value="type", required=false) final Type type) {
+            @RequestParam(value = "reference", required = false) final String reference,
+            @RequestParam(value = "dir", required = false, defaultValue = "BOTH") final Direction direction,
+            @RequestParam(value = "status", required = false) final Status status,
+            @RequestParam(value = "type", required = false) final Type type) {
 
         final Account loggedAccount = getLoggedAccount();
         final Long accountId = loggedAccount.getId();

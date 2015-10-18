@@ -207,6 +207,52 @@ public class AdminResource extends BaseResource {
         return getAccountTransactions(response, accountId, reference, direction, status, type);
     }
 
+    @RequestMapping(value="/transactions/{transactionId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"senderHash"})
+    public @ResponseBody PaymentResponse<Transaction> getBySenderHash(
+            @PathVariable("transactionId") final Long transactionId) throws AuthorizationException {
+        checkPermission(Type.ADMIN);
+        final Transaction transaction = transactionHelper.get(transactionId);
+        if (transaction == null) {
+            return notFound("Not found " + transactionId);
+        }
+        final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
+        return new PaymentResponse<Transaction>(header, transaction);
+    }
+
+    @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"senderHash"})
+    public @ResponseBody PaymentResponse<Transaction> getBySenderHash(@RequestParam(value="senderHash", required=true)  final String hash) throws AuthorizationException {
+        checkPermission(Type.ADMIN);
+        final Transaction transaction = transactionHelper.getBySenderHash(hash);
+        if (transaction == null) {
+            return notFound(hash);
+        }
+        final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
+        return new PaymentResponse<Transaction>(header, transaction);
+    }
+
+    @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"receiverHash"})
+    public @ResponseBody PaymentResponse<Transaction> getByReceiverHash(@RequestParam(value="receiverHash", required=true)  final String hash) throws AuthorizationException {
+        checkPermission(Type.ADMIN);
+        final Transaction transaction = transactionHelper.getByReceiverHash(hash);
+        if (transaction == null) {
+            return notFound(hash);
+        }
+        final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
+        return new PaymentResponse<Transaction>(header, transaction);
+    }
+
+    @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"hash"})
+    public @ResponseBody PaymentResponse<Transaction> getByTransactionHash(@RequestParam(value="hash", required=true)  final String hash) throws AuthorizationException {
+        checkPermission(Type.ADMIN);
+        final Transaction transaction = transactionHelper.getByTransactionHash(hash);
+        if (transaction == null) {
+            return notFound(hash);
+        }
+        final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
+        return new PaymentResponse<Transaction>(header, transaction);
+    }
+
+
     /**
      * Get Transactions for Wallet Id.
      * @param walletId

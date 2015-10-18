@@ -42,22 +42,35 @@ public class WalletEventListener extends AbstractWalletEventListener {
         final DeterministicKey freshKey = wallet.freshReceiveKey();
         final String freshHash = freshKey.toAddress(params).toString();
         log.info("******** fresh hash: {}", freshHash);
+        BitcoinjBlockchainServiceImpl.HASH_STACK.push(freshHash);
 
         log.info("******** Coins on central wallet to me {} from me {}",  valueSentToMe, valueSentFromMe);
-        final String hash = getHash(tx);
+        final String receiverHash = getReceiverHash(tx);
+        final String senderHash = getSenderHash(tx);
         try {
-            final Transaction pending = transactionService.getForHash(hash);
+            final Transaction pending = transactionService.getByReceiverHash(receiverHash);
             if (pending == null) {
-                log.error("transaction hash {} does not exist", hash);
+                log.error("transaction hash {} does not exist", receiverHash);
                 return;
             }
-            final BigDecimal amount = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue());
+            if (!Transaction.Status.PENDING.equals(pending.getStatus())) {
+                log.error("transaction {} has status {}", pending.getId(), pending.getStatus());
+                return;
+            }
+            final BigDecimal amount = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(new BigDecimal(Constants.MILLI_TO_SATOSHI));
+            BigDecimal fees = new BigDecimal(valueSentFromMe.getValue());
+            if (fees.floatValue() >0) {
+                fees = fees.divide(new BigDecimal(Constants.MILLI_TO_SATOSHI));
+            }
             final Transaction transaction = TransactionTO
                     .from(pending)
                     .transactionHash(tx.getHashAsString())
+                    .balance(amount)
+                    .blockchainFees(fees)
+                    .senderHash(senderHash)
+                    .receiverHash(null)
+                    .QR(null)
                     .status(Transaction.Status.ACCEPTED)
-                    .acceptedDate(System.currentTimeMillis())
-                    .amount(amount)
                     .build();
             transactionService.save(transaction.getId(), transaction);
         } catch (final ObjectNotFoundException e) {
@@ -79,13 +92,22 @@ public class WalletEventListener extends AbstractWalletEventListener {
     @Override
     public void onTransactionConfidenceChanged(final org.bitcoinj.core.Wallet wallet,
                                                final org.bitcoinj.core.Transaction tx) {
-        log.info("-----> confidence changed: {} hash: {}", tx.getHashAsString(), getHash(tx));
+        final String transactionHash = tx.getHashAsString();
+        final Transaction loaded = transactionService.getByTransactionHash(transactionHash);
+        if (loaded == null) {
+            log.error("transaction hash {} does not exist", transactionHash);
+            return;
+        }
+        log.info("-----> confidence changed on {} {}", loaded.getId(), transactionHash);
         final TransactionConfidence confidence = tx.getConfidence();
         log.info("new block depth: {} ", confidence.getDepthInBlocks());
         if (confidence.getDepthInBlocks() >= settings.getConfirmations()) {
-            final Transaction loaded = transactionService.getForHash(getHash(tx));
+            if (!Transaction.Status.ACCEPTED.equals(loaded.getStatus())) {
+                log.error("transaction {} has status {}", loaded.getId(), loaded.getStatus());
+                return;
+            }
             try {
-                transactionService.transition(loaded.getId(), Transaction.Status.ACCEPTED);
+                transactionService.transition(loaded.getId(), Transaction.Status.COMPLETED);
             } catch (final ObjectNotFoundException e) {
                 log.error("transaction not found", e);
             } catch (final InsufficientFundsException e) {
@@ -96,12 +118,24 @@ public class WalletEventListener extends AbstractWalletEventListener {
         }
     }
 
-    private String getHash(final org.bitcoinj.core.Transaction tx) {
-        String hash = null;
+    private String getSenderHash(final org.bitcoinj.core.Transaction tx) {
         for (final TransactionOutput out : tx.getOutputs() ) {
-            hash = new Script(out.getScriptBytes()).getToAddress(params).toString();
+            final String hash = new Script(out.getScriptBytes()).getToAddress(params).toString();
+            if (!BitcoinjBlockchainServiceImpl.HASH_LIST.contains(hash)) {
+                return hash;
+            }
         }
-        return hash;
+        return null;
+    }
+
+    private String getReceiverHash(final org.bitcoinj.core.Transaction tx) {
+        for (final TransactionOutput out : tx.getOutputs() ) {
+            final String hash = new Script(out.getScriptBytes()).getToAddress(params).toString();
+            if (BitcoinjBlockchainServiceImpl.HASH_LIST.contains(hash)) {
+                return hash;
+            }
+        }
+        return null;
     }
 
 }

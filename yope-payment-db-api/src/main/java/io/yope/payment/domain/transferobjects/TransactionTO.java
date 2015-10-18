@@ -33,6 +33,8 @@ public class TransactionTO implements Transaction {
 
     private String senderHash;
 
+    private String receiverHash;
+
     private WalletTO source;
 
     private WalletTO destination;
@@ -47,9 +49,17 @@ public class TransactionTO implements Transaction {
 
     private BigDecimal amount;
 
+    private BigDecimal balance;
+
+    private BigDecimal blockchainFees;
+
+    private BigDecimal fees;
+
     private Long creationDate;
 
     private Long acceptedDate;
+
+    private Long failedDate;
 
     private Long deniedDate;
 
@@ -63,6 +73,9 @@ public class TransactionTO implements Transaction {
         return TransactionTO.builder()
                 .type(transaction.getType())
                 .amount(transaction.getAmount())
+                .balance(transaction.getBalance())
+                .blockchainFees(transaction.getBlockchainFees())
+                .fees(transaction.getFees())
                 .creationDate(transaction.getCreationDate())
                 .description(transaction.getDescription())
                 .destination(WalletTO.from(transaction.getDestination()).availableBalance(null).balance(null).build())
@@ -73,6 +86,8 @@ public class TransactionTO implements Transaction {
                 .QR(transaction.getQR())
                 .transactionHash(transaction.getTransactionHash())
                 .senderHash(transaction.getSenderHash())
+                .receiverHash(transaction.getReceiverHash())
+                .failedDate(transaction.getFailedDate())
                 .acceptedDate(transaction.getAcceptedDate())
                 .deniedDate(transaction.getDeniedDate())
                 .expiredDate(transaction.getExpiredDate())
