@@ -24,7 +24,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(Include.NON_NULL)
-@ToString(of = {"type", "reference", "amount"}, includeFieldNames = false)
+@ToString(of = {"type", "reference", "amount", "balance", "fees"}, includeFieldNames = false)
 public class TransactionTO implements Transaction {
 
     private Long id;

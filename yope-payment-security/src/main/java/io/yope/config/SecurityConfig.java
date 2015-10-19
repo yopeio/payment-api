@@ -54,7 +54,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     /** This is the configuration for the OAuth module */
     public void configure(final WebSecurity web) throws Exception {
-        web.debug(true).ignoring()
+        web.debug(false).ignoring()
                 .antMatchers(HttpMethod.POST, "/accounts/**")
                 .antMatchers("/webjars/**", "/images/**", "/qr/**", "/registration/**",
                         "/oauth/uncache_approvals", "/oauth/cache_approvals")
@@ -93,7 +93,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(final AuthenticationManagerBuilder auth)
             throws Exception {
-        auth.userDetailsService(userService).passwordEncoder(passEncoder);
+        auth.userDetailsService(this.userService).passwordEncoder(this.passEncoder);
     }
 
     @Override
@@ -112,12 +112,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.anonymous().disable().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .exceptionHandling().accessDeniedHandler(accessDeniedHandler)
+                .exceptionHandling().accessDeniedHandler(this.accessDeniedHandler)
                 // handle access denied in general (for example comming from
                 // @PreAuthorization
-                .authenticationEntryPoint(authenticationEntryPoint)
+                .authenticationEntryPoint(this.authenticationEntryPoint)
                 // handle authentication exceptions for unauthorized calls.
-                .defaultAuthenticationEntryPointFor(authenticationEntryPoint,
+                .defaultAuthenticationEntryPointFor(this.authenticationEntryPoint,
                         preferredMatcher)
                 .and().requestMatchers()
                 // SECURE IT

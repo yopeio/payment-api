@@ -29,7 +29,7 @@ import lombok.ToString;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(of = {"type", "reference", "amount"}, includeFieldNames = false)
+@ToString(of = {"type", "reference", "amount", "balance", "fees"}, includeFieldNames = false)
 @RelationshipEntity(type="PAY")
 public class Neo4JTransaction implements Transaction {
 
