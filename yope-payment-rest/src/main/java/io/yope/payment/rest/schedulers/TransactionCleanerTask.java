@@ -3,6 +3,7 @@
  */
 package io.yope.payment.rest.schedulers;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,12 +42,13 @@ public class TransactionCleanerTask {
     @Scheduled(fixedDelay = DELAY)
     public void purgeTransaction() {
         log.info("cleaning expired transactions");
-        final List<Transaction> transactions = transactionService.getTransaction(DELAY, Status.PENDING);
+        final List<Transaction> transactions = this.transactionService.getTransaction(DELAY, Status.PENDING);
         for (final Transaction transaction : transactions) {
             try {
-                transactionService.save(transaction.getId(), TransactionTO.from(transaction).status(Status.EXPIRED).build());
+                final Transaction expired = this.transactionService.save(transaction.getId(), TransactionTO.from(transaction).status(Status.EXPIRED).build());
+                log.info("Transaction {} expired ", expired);
             } catch (ObjectNotFoundException | InsufficientFundsException | IllegalTransactionStateException e) {
-
+                log.error(MessageFormat.format("Failed to save transaction {}", transaction), e);
             }
         }
         log.info("cleaned {} expired transactions", transactions.size());

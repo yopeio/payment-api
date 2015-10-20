@@ -50,11 +50,11 @@ public class WalletEventListener extends AbstractWalletEventListener {
         try {
             final Transaction pending = this.transactionService.getByReceiverHash(receiverHash);
             if (pending == null) {
-                log.error("receiver hash {} does not exist", receiverHash);
+                log.error("******** receiver hash {} does not exist", receiverHash);
                 return;
             }
             if (!Transaction.Status.PENDING.equals(pending.getStatus())) {
-                log.error("transaction {} has status {}", pending.getId(), pending.getStatus());
+                log.error("******** transaction {} with {} has status {}", pending.getId(), receiverHash, pending.getStatus());
                 return;
             }
             final BigDecimal balance = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(new BigDecimal(Constants.MILLI_TO_SATOSHI));
@@ -62,7 +62,14 @@ public class WalletEventListener extends AbstractWalletEventListener {
             if (fees.floatValue() > 0) {
                 fees = fees.divide(new BigDecimal(Constants.MILLI_TO_SATOSHI));
             }
+            final BigDecimal amount = balance.add(fees);
             log.info("transaction: amount {} = {} + {} (balance + fees)", pending.getAmount(), balance, fees);
+            if (amount.compareTo(pending.getAmount()) > 0) {
+                log.error("Transaction {}: paid amount {} greater than expected amont {}", receiverHash, amount, pending.getAmount());
+            }
+            if (amount.compareTo(pending.getAmount()) < 0) {
+                log.error("Transaction {}: paid amount {} less than expected amont {}", receiverHash, amount, pending.getAmount());
+            }
             final Transaction transaction = TransactionTO
                     .from(pending)
                     .transactionHash(tx.getHashAsString())
