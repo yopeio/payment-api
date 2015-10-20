@@ -48,7 +48,7 @@ public class TransactionCleanerTask {
                 final Transaction expired = this.transactionService.save(transaction.getId(), TransactionTO.from(transaction).status(Status.EXPIRED).build());
                 log.info("Transaction {} expired ", expired);
             } catch (ObjectNotFoundException | InsufficientFundsException | IllegalTransactionStateException e) {
-                log.error(MessageFormat.format("Failed to save transaction {}", transaction), e);
+                log.error(MessageFormat.format("Failed to save transaction {0}", transaction), e);
             }
         }
         log.info("cleaned {} expired transactions", transactions.size());
