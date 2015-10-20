@@ -3,6 +3,9 @@
  */
 package io.yope.payment.rest.requests;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -13,7 +16,10 @@ import lombok.Getter;
  * @author mgerardi
  *
  */
+@Builder
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class RegistrationRequest {
 
     @Email

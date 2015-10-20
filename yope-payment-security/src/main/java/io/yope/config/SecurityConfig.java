@@ -56,6 +56,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(final WebSecurity web) throws Exception {
         web.debug(false).ignoring()
                 .antMatchers(HttpMethod.POST, "/accounts/**")
+                .antMatchers(HttpMethod.POST, "/mailchimp/**")
+                .antMatchers(HttpMethod.GET, "/mailchimp/**")
                 .antMatchers("/webjars/**", "/images/**", "/qr/**", "/registration/**",
                         "/oauth/uncache_approvals", "/oauth/cache_approvals")
                 .and().ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
