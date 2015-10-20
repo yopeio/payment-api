@@ -99,6 +99,7 @@ public class Neo4JTransactionService implements TransactionService {
                     if (Transaction.Status.ACCEPTED.equals(current.getStatus())) {
                         this.restoreBalance(current.getDestination(), transaction.getBalance());
                     }
+                    break;
                 case ACCEPTED:
                     next.acceptedDate(System.currentTimeMillis());
                     this.transferFunds(current.getSource(), current.getDestination(), transaction.getAmount(), transaction.getBalance(), transaction.getReference());
