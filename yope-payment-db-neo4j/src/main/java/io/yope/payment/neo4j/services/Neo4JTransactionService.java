@@ -78,15 +78,13 @@ public class Neo4JTransactionService implements TransactionService {
 
     /**
      * actions:
-     * PENDING
+     * from PENDING
      *     -> ACCEPTED - transfer balance
      *     -> DENIED|FAILED|EXPIRED - do nothing
-     * ACCEPTED
+     * from ACCEPTED
      *     -> COMPLETED - transfer availableBalance
      *     -> FAILED|EXPIRED restore balance
-     * COMPLETED
-     * FAILED
-     * EXPIRED
+     * from COMPLETED |FAILED|EXPIRED
      *     -> NONE
      * @param current
      * @param transaction
@@ -102,16 +100,13 @@ public class Neo4JTransactionService implements TransactionService {
             switch (current.getStatus()) {
                 case PENDING:
                     if (Status.ACCEPTED.equals(next.getType())) {
-                        //transfer balance
                         this.updateBalance(current);
                     }
                     break;
                 case ACCEPTED:
                     if (Status.ACCEPTED.equals(next.getType())) {
                         this.updateAvailableBalance(current);
-                    }
-                    if (Status.FAILED.equals(next.getType()) || Status.EXPIRED.equals(next.getType())) {
-                        //restore balance
+                    } else if (Status.FAILED.equals(next.getType()) || Status.EXPIRED.equals(next.getType())) {
                         this.restoreBalance(current);
                     }
                     break;
@@ -119,9 +114,7 @@ public class Neo4JTransactionService implements TransactionService {
                     break;
             }
         }
-
         return this.repository.save(transaction.amount(current.getAmount()).id(current.getId()).type(current.getType()).source(current.getSource()).destination(current.getDestination()).build());
-
     }
 
     /**
