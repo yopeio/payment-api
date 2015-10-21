@@ -86,9 +86,9 @@ public class Neo4JTransactionService implements TransactionService {
      *     -> FAILED|EXPIRED restore balance
      * from COMPLETED |FAILED|EXPIRED
      *     -> NONE
-     * @param current
-     * @param transaction
-     * @return
+     * @param current the existing transaction
+     * @param next the new transaction
+     * @return an updated transaction
      * @throws ObjectNotFoundException
      * @throws InsufficientFundsException
      * @throws IllegalTransactionStateException
