@@ -65,10 +65,10 @@ public class WalletEventListener extends AbstractWalletEventListener {
             final BigDecimal amount = balance.add(fees);
             log.info("transaction: amount {} = {} + {} (balance + fees)", pending.getAmount(), balance, fees);
             if (amount.compareTo(pending.getAmount()) > 0) {
-                log.error("Transaction {}: paid amount {} greater than expected amont {}", receiverHash, amount, pending.getAmount());
+                log.info("Transaction {}: paid amount {} greater than expected amont {}", receiverHash, amount, pending.getAmount());
             }
             if (amount.compareTo(pending.getAmount()) < 0) {
-                log.error("Transaction {}: paid amount {} less than expected amont {}", receiverHash, amount, pending.getAmount());
+                log.info("Transaction {}: paid amount {} less than expected amont {}", receiverHash, amount, pending.getAmount());
             }
             final Transaction transaction = TransactionTO
                     .from(pending)

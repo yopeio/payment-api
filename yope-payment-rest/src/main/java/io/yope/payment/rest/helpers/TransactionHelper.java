@@ -56,6 +56,8 @@ public class TransactionHelper {
 
     private static final int QR_HEIGHT = 300;
 
+    private static final BigDecimal FEES = new BigDecimal(0.1);
+
     @Autowired
     private ServerConfiguration serverConfiguration;
 
@@ -149,7 +151,7 @@ public class TransactionHelper {
         final WalletTO source = this.getWallet(seller, transaction.getSource(), true, transaction.getAmount());
         final WalletTO destination = this.getWallet(seller, transaction.getDestination(), false, null);
         final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).fees(BigDecimal.ZERO).source(source).destination(destination).status(Status.PENDING);
-        final QRImage qr = this.getQRImage(transaction.getAmount());
+        final QRImage qr = this.getQRImage(transaction.getAmount().add(FEES));
         pendingTransactionBuilder.QR(qr.getImageUrl()).receiverHash(qr.getHash());
         final Transaction pendingTransaction = this.transactionService.create(pendingTransactionBuilder.build());
         return TransactionTO.from(pendingTransaction).build();

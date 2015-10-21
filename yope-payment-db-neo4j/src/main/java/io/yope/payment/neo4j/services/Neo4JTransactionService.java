@@ -3,7 +3,6 @@
  */
 package io.yope.payment.neo4j.services;
 
-import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,43 +76,51 @@ public class Neo4JTransactionService implements TransactionService {
         return this.doSave(current, next);
     }
 
-    private Transaction doSave(final Neo4JTransaction current, final Neo4JTransaction transaction) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
-        final Neo4JTransaction.Neo4JTransactionBuilder next = Neo4JTransaction.from(transaction);
-        if (!current.getStatus().equals(transaction.getStatus())) {
-            this.checkStatus(current.getStatus(), transaction.getStatus());
-            switch (transaction.getStatus()) {
-                case DENIED:
-                    next.deniedDate(System.currentTimeMillis());
-                    this.makeFundsAvailable(current.getSource(), current.getAmount());
-                    break;
-                case FAILED:
-                    next.failedDate(System.currentTimeMillis());
-                    this.makeFundsAvailable(current.getSource(), current.getAmount());
-                    if (Transaction.Status.ACCEPTED.equals(current.getStatus())) {
-                        this.restoreBalance(current.getDestination(), transaction.getBalance());
-                    }
-                    break;
-                case EXPIRED:
-                    next.expiredDate(System.currentTimeMillis());
-                    this.makeFundsAvailable(current.getSource(), current.getAmount());
-                    if (Transaction.Status.ACCEPTED.equals(current.getStatus())) {
-                        this.restoreBalance(current.getDestination(), transaction.getBalance());
+    /**
+     * actions:
+     * PENDING
+     *     -> ACCEPTED - transfer balance
+     *     -> DENIED|FAILED|EXPIRED - do nothing
+     * ACCEPTED
+     *     -> COMPLETED - transfer availableBalance
+     *     -> FAILED|EXPIRED restore balance
+     * COMPLETED
+     * FAILED
+     * EXPIRED
+     *     -> NONE
+     * @param current
+     * @param transaction
+     * @return
+     * @throws ObjectNotFoundException
+     * @throws InsufficientFundsException
+     * @throws IllegalTransactionStateException
+     */
+    private Transaction doSave(final Neo4JTransaction current, final Neo4JTransaction next) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
+        final Neo4JTransaction.Neo4JTransactionBuilder transaction = Neo4JTransaction.from(next);
+        if (!current.getStatus().equals(next.getStatus())) {
+            this.checkStatus(current.getStatus(), next.getStatus());
+            switch (current.getStatus()) {
+                case PENDING:
+                    if (Status.ACCEPTED.equals(next.getType())) {
+                        //transfer balance
+                        this.updateBalance(current);
                     }
                     break;
                 case ACCEPTED:
-                    next.acceptedDate(System.currentTimeMillis());
-                    this.transferFunds(current.getSource(), current.getDestination(), transaction.getAmount(), transaction.getBalance(), transaction.getReference());
-                    break;
-                case COMPLETED:
-                    next.completedDate(System.currentTimeMillis());
-                    this.makeFundsAvailable(current.getDestination(), transaction.getBalance());
+                    if (Status.ACCEPTED.equals(next.getType())) {
+                        this.updateAvailableBalance(current);
+                    }
+                    if (Status.FAILED.equals(next.getType()) || Status.EXPIRED.equals(next.getType())) {
+                        //restore balance
+                        this.restoreBalance(current);
+                    }
                     break;
                 default:
                     break;
             }
         }
 
-        return this.repository.save(next.amount(current.getAmount()).id(current.getId()).type(current.getType()).source(current.getSource()).destination(current.getDestination()).build());
+        return this.repository.save(transaction.amount(current.getAmount()).id(current.getId()).type(current.getType()).source(current.getSource()).destination(current.getDestination()).build());
 
     }
 
@@ -153,35 +160,58 @@ public class Neo4JTransactionService implements TransactionService {
         }
     }
 
-    private void transferFunds(final Wallet source, final Wallet destination, final BigDecimal amount, final BigDecimal balance, final String transaction) throws ObjectNotFoundException, InsufficientFundsException {
-        if (source.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientFundsException("not enough funds to complete transaction '"+transaction+"'");
+    private void updateBalance(final Neo4JTransaction current)
+            throws ObjectNotFoundException, InsufficientFundsException {
+        final Wallet currentSource = current.getSource();
+        if (currentSource.getAvailableBalance().compareTo(current.getAmount()) < 0) {
+            throw new InsufficientFundsException("not enough funds to accept transaction '"+current+"'");
         }
-        log.info("** transfer funds from {}:{} to {}:{} -> amount {} balance {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), amount, balance);
-        final Wallet newSource = this.walletService.update(source.getId(), Neo4JWallet.from(source)
-                .balance(source.getBalance().subtract(amount))
+        final Wallet currentDestination = current.getDestination();
+        log.info("** balance from {}:{} to {}:{} -> amount {}", currentSource.getName(), currentSource.getBalance(), currentDestination.getName(), currentDestination.getBalance(), current.getAmount());
+        final Wallet nextSource = this.walletService.update(currentSource.getId(), Neo4JWallet.from(currentSource)
+                .balance(currentSource.getBalance().subtract(current.getAmount()))
                 .build());
-        final Wallet newDestination = this.walletService.update(destination.getId(), Neo4JWallet
-                .from(destination)
-                .balance(destination.getBalance().add(balance))
+        final Wallet nextDestination = this.walletService.update(currentDestination.getId(), Neo4JWallet
+                .from(currentDestination)
+                .balance(currentDestination.getBalance().add(current.getAmount()))
                 .build());
-        log.info("** new funds {}:{}  {}:{} ", newSource.getName(), newSource.getBalance(), newDestination.getName(), newDestination.getBalance());
+        log.info("** new balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());
     }
 
-    private void makeFundsAvailable(final Neo4JWallet wallet, final BigDecimal amount) throws ObjectNotFoundException {
-        log.info("** add available funds to {}:{} -> {}", wallet.getName(), wallet.getAvailableBalance(), amount);
-        final Wallet newWallet = this.walletService.update(wallet.getId(), Neo4JWallet.from(wallet)
-                .availableBalance(wallet.getAvailableBalance().add(amount))
+    private void updateAvailableBalance(final Neo4JTransaction current)
+            throws ObjectNotFoundException, InsufficientFundsException {
+        final Wallet currentSource = current.getSource();
+        if (currentSource.getAvailableBalance().compareTo(current.getAmount()) < 0) {
+            throw new InsufficientFundsException("not enough funds to complete transaction '"+current+"'");
+        }
+        final Wallet currentDestination = current.getDestination();
+        log.info("** Available Balance from {}:{} to {}:{} -> amount {}", currentSource.getName(), currentSource.getBalance(), currentDestination.getName(), currentDestination.getBalance(), current.getAmount());
+        final Wallet nextSource = this.walletService.update(currentSource.getId(), Neo4JWallet.from(currentSource)
+                .availableBalance(currentSource.getAvailableBalance().subtract(current.getAmount()))
                 .build());
-        log.info("** available funds to {}:{}", newWallet.getName(), newWallet.getAvailableBalance());
+        final Wallet nextDestination = this.walletService.update(currentDestination.getId(), Neo4JWallet
+                .from(currentDestination)
+                .availableBalance(currentDestination.getAvailableBalance().add(current.getAmount()))
+                .build());
+        log.info("** new Available Balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());
     }
 
-    private void restoreBalance(final Neo4JWallet wallet, final BigDecimal balance) throws ObjectNotFoundException {
-        log.info("** restore balance to {}:{} -> {}", wallet.getName(), wallet.getBalance(), balance);
-        final Wallet newWallet = this.walletService.update(wallet.getId(), Neo4JWallet.from(wallet)
-                .balance(wallet.getBalance().subtract(balance))
+    private void restoreBalance(final Neo4JTransaction current)
+            throws ObjectNotFoundException, InsufficientFundsException {
+        final Wallet currentSource = current.getSource();
+        final Wallet currentDestination = current.getDestination();
+        if (currentDestination.getAvailableBalance().compareTo(current.getAmount()) < 0) {
+            throw new InsufficientFundsException("not enough funds to restore transaction '"+current+"'");
+        }
+        log.info("-- restore balance from {}:{} to {}:{} -> amount {}", currentSource.getName(), currentSource.getBalance(), currentDestination.getName(), currentDestination.getBalance(), current.getAmount());
+        final Wallet nextSource = this.walletService.update(currentSource.getId(), Neo4JWallet.from(currentSource)
+                .balance(currentSource.getBalance().add(current.getAmount()))
                 .build());
-        log.info("** restored balance to {}:{}", newWallet.getName(), newWallet.getBalance());
+        final Wallet nextDestination = this.walletService.update(currentDestination.getId(), Neo4JWallet
+                .from(currentDestination)
+                .balance(currentDestination.getBalance().subtract(current.getAmount()))
+                .build());
+        log.info("-- new balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());
     }
 
     private Neo4JTransaction createTransaction(final Transaction transaction) throws ObjectNotFoundException {
