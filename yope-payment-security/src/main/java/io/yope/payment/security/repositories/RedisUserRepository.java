@@ -71,10 +71,9 @@ public class RedisUserRepository implements UserRepository {
     }
 
     private Collection<String> getAuthorities(final User user) {
-        final Collection<String> authorities = Lists.newArrayList();
-        authorities.addAll(
-                user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
-        return authorities;
+        return user.getAuthorities().stream()
+        		.map(GrantedAuthority::getAuthority)
+        		.collect(Collectors.toList());
     }
 
     @Override
