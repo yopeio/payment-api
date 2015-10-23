@@ -10,7 +10,7 @@ public interface BlockChainService {
 
     Wallet register() throws BlockchainException;
 
-    void send(Transaction transaction) throws BlockchainException;
+    String send(Transaction transaction) throws BlockchainException;
 
     /**
      * generated a new hash value from the central wallet.

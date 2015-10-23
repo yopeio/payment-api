@@ -59,7 +59,7 @@ public class Neo4JTransactionService implements TransactionService {
     @Override
     public Transaction save(final Long transactionId, final Transaction next) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
         if (!repository.exists(transactionId)) {
-            throw new ObjectNotFoundException(MessageFormat.format("Transaction with id {} Not Found", transactionId));
+            throw new ObjectNotFoundException(MessageFormat.format("Transaction with id {0} Not Found", transactionId));
         }
         final Transaction current = repository.findOne(transactionId).toTransaction();
         return doSave(current, next);
@@ -68,7 +68,7 @@ public class Neo4JTransactionService implements TransactionService {
     @Override
     public Transaction transition(final Long transactionId, final Status status) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
         if (!repository.exists(transactionId)) {
-            throw new ObjectNotFoundException(MessageFormat.format("Transaction with id {} Not Found", transactionId));
+            throw new ObjectNotFoundException(MessageFormat.format("Transaction with id {0} Not Found", transactionId));
         }
         final Transaction current = repository.findOne(transactionId).toTransaction();
         final Transaction next = current.toBuilder().status(status).build();

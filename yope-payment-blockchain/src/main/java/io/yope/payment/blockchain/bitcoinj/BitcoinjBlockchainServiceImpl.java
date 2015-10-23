@@ -18,6 +18,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.Wallet.SendResult;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.store.UnreadableWalletException;
@@ -130,14 +131,15 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     }
 
     @Override
-    public void send(final Transaction transaction) throws BlockchainException {
+    public String send(final Transaction transaction) throws BlockchainException {
         try {
             final long satoshi = transaction.getAmount().multiply(Constants.MILLI_TO_SATOSHI).longValue();
             final Coin value = Coin.valueOf(satoshi);
             final org.bitcoinj.core.Wallet sender = centralWallet();
             sender.allowSpendingUnconfirmedTransactions();
             final Address receiver = new Address(params, transaction.getDestination().getWalletHash());
-            sender.sendCoins(peerGroup, receiver, value);
+            final SendResult result = sender.sendCoins(peerGroup, receiver, value);
+            return result.tx.getHashAsString();
         } catch (final UnreadableWalletException e) {
             throw new BlockchainException(e);
         } catch (final InsufficientMoneyException e) {

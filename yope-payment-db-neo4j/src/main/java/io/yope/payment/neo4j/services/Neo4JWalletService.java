@@ -60,7 +60,7 @@ public class Neo4JWalletService implements WalletService {
     @Override
     public Wallet update(final Long id, final Wallet wallet) throws ObjectNotFoundException {
         if (!repository.exists(id)) {
-            throw new ObjectNotFoundException(MessageFormat.format("Wallet with id {} Not Found", id));
+            throw new ObjectNotFoundException(MessageFormat.format("Wallet with id {0} Not Found", id));
         }
         return repository.save(Neo4JWallet.from(wallet).modificationDate(System.currentTimeMillis()).build()).toWallet();
     }
@@ -73,7 +73,7 @@ public class Neo4JWalletService implements WalletService {
     public Wallet delete(final Long id) throws ObjectNotFoundException {
         final Wallet wallet = getById(id);
         if (wallet == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Wallet with id {} Not Found", id));
+            throw new ObjectNotFoundException(MessageFormat.format("Wallet with id {0} Not Found", id));
         }
         return repository.save(Neo4JWallet.from(wallet).status(Status.DELETED).modificationDate(System.currentTimeMillis()).build()).toWallet();
     }

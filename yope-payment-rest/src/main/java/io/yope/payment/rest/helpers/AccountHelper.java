@@ -4,6 +4,7 @@
 package io.yope.payment.rest.helpers;
 
 import java.math.BigDecimal;
+import java.text.MessageFormat;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -102,11 +103,18 @@ public class AccountHelper {
         return saved;
     }
 
+    public Wallet createWallet(final Long accountId, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
+        final Account account = getById(accountId);
+        if (account == null) {
+            throw new ObjectNotFoundException(MessageFormat.format("Account with id {0} not found", accountId));
+        }
+        return createWallet(account, wallet);
+    }
+
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
         if (walletHelper.getByName(account.getId(), wallet.getName()) != null) {
             throw new BadRequestException("You already have a wallet with name "+wallet.getName(), "name");
         }
-
         final Wallet newWallet = wallet.toBuilder()
                 .availableBalance(BigDecimal.ZERO)
                 .balance(BigDecimal.ZERO)

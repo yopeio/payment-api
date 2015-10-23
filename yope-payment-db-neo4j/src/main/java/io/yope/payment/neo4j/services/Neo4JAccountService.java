@@ -80,7 +80,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
     @Override
     public Account update(final Long id, final Account account) throws ObjectNotFoundException {
         if (getById(id) == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Account with id {} Not Found", id));
+            throw new ObjectNotFoundException(MessageFormat.format("Account with id {0} Not Found", id));
         }
         return accountRepository.save(Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).id(id).build()).toAccount();
     }
@@ -93,7 +93,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
     public Account delete(final Long id) throws ObjectNotFoundException{
         final Account account = getById(id);
         if (account == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Account with id {} Not Found", id));
+            throw new ObjectNotFoundException(MessageFormat.format("Account with id {0} Not Found", id));
         }
         final Neo4JAccount toDelete = Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).status(Status.DEACTIVATED).build();
         return accountRepository.save(toDelete).toAccount();
