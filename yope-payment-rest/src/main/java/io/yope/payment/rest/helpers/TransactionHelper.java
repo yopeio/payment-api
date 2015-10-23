@@ -5,6 +5,7 @@ package io.yope.payment.rest.helpers;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.MessageFormat;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -103,14 +104,14 @@ public class TransactionHelper {
     public Transaction doTransfer(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, InsufficientFundsException {
         final Wallet source = walletHelper.getByName(accountId, transaction.getSource().getName());
         if (source == null) {
-            throw new ObjectNotFoundException("Source Wallet Not Found", Wallet.class);
+            throw new ObjectNotFoundException(MessageFormat.format("Source Wallet {} Not Found", transaction.getSource()));
         }
         if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
             throw new InsufficientFundsException("not enough funds in the wallet with name "+source.getName());
         }
         final Wallet destination = walletHelper.getByName(accountId, transaction.getDestination().getName());
         if (destination == null) {
-            throw new ObjectNotFoundException("Destination Wallet Not Found", Wallet.class);
+            throw new ObjectNotFoundException(MessageFormat.format("Destination Wallet {} Not Found", transaction.getDestination()));
         }
         final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
         walletService.update(source.getId(), source.toBuilder()
@@ -140,7 +141,7 @@ public class TransactionHelper {
         final Wallet source = getWalletForDeposit(transaction, accountId);
         final Wallet destination = walletHelper.getByName(accountId, transaction.getDestination().getName());
         if (destination == null) {
-            throw new ObjectNotFoundException("Destination Wallet Not Found", Wallet.class);
+            throw new ObjectNotFoundException(MessageFormat.format("Destination Wallet {} Not Found", transaction.getDestination()));
         }
         final Transaction.Builder pendingTransactionBuilder = transaction.toBuilder().fees(BigDecimal.ZERO).source(source).destination(destination).status(Status.PENDING);
         final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
@@ -174,10 +175,10 @@ public class TransactionHelper {
         final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
         final Wallet source = walletHelper.getByName(accountId, transaction.getSource().getName());
         if (source == null) {
-            throw new ObjectNotFoundException("Destination Wallet Not Found", Wallet.class);
+            throw new ObjectNotFoundException(MessageFormat.format("Source Wallet {} Not Found", transaction.getSource()));
         }
         if (source.getAvailableBalance().compareTo(correctedAmount) < 0) {
-            throw new InsufficientFundsException("not enough funds in the wallet with name "+source.getName());
+            throw new InsufficientFundsException(MessageFormat.format("Insufficient Funds Exception in Wallet {}", transaction.getSource()));
         }
         final Wallet destination = getWalletForWithdraw(transaction, accountId);
         final Transaction.Builder pendingTransactionBuilder = transaction.toBuilder()
@@ -193,6 +194,7 @@ public class TransactionHelper {
             transactionService.transition(pendingTransaction.getId(), Transaction.Status.FAILED);
             throw e;
         }
+        walletHelper.save(source.toBuilder().balance(source.getBalance().subtract(correctedAmount)).build());
         return pendingTransaction;
     }
 
@@ -201,10 +203,10 @@ public class TransactionHelper {
         if (StringUtils.isBlank(destination.getWalletHash())) {
             final Wallet wallet = walletHelper.getByName(accountId, transaction.getDestination().getName());
             if (wallet == null) {
-                throw new IllegalArgumentException("missing destination wallet");
+                throw new IllegalArgumentException(MessageFormat.format("Destination Wallet {} Not Found", transaction.getDestination()));
             }
             if (wallet.getWalletHash() == null) {
-                throw new IllegalArgumentException("missing hash for destination");
+                throw new IllegalArgumentException(MessageFormat.format("Destination Wallet {} Has no Hash", transaction.getDestination()));
             }
             return wallet;
         }

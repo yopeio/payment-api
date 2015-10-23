@@ -4,6 +4,7 @@
 package io.yope.payment.neo4j.services;
 
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,7 +80,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
     @Override
     public Account update(final Long id, final Account account) throws ObjectNotFoundException {
         if (getById(id) == null) {
-            throw new ObjectNotFoundException(String.valueOf(id), Account.class);
+            throw new ObjectNotFoundException(MessageFormat.format("Account with id {} Not Found", id));
         }
         return accountRepository.save(Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).id(id).build()).toAccount();
     }
@@ -92,7 +93,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
     public Account delete(final Long id) throws ObjectNotFoundException{
         final Account account = getById(id);
         if (account == null) {
-            throw new ObjectNotFoundException(String.valueOf(id), Account.class);
+            throw new ObjectNotFoundException(MessageFormat.format("Account with id {} Not Found", id));
         }
         final Neo4JAccount toDelete = Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).status(Status.DEACTIVATED).build();
         return accountRepository.save(toDelete).toAccount();

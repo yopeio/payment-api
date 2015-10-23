@@ -131,7 +131,7 @@ public class AccountHelper {
     public Account delete(final Long accountId) throws ObjectNotFoundException {
         final Account account  = accountService.delete(accountId);
         if (account == null) {
-            return null;
+            throw new ObjectNotFoundException(String.valueOf(accountId));
         }
         securityService.deleteUser(account.getEmail());
         return account;

@@ -23,7 +23,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.blockchain.bitcoinj.Constants;
-import io.yope.payment.domain.transferobjects.QRImage;
+import io.yope.payment.domain.QRImage;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.ServerConfiguration;
 import lombok.extern.slf4j.Slf4j;

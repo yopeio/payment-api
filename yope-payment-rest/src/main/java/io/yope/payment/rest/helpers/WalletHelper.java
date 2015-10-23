@@ -3,6 +3,8 @@
  */
 package io.yope.payment.rest.helpers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +34,10 @@ public class WalletHelper {
 
     public Wallet update(final Long walletId, final Wallet wallet) throws ObjectNotFoundException {
         return walletService.update(walletId, wallet);
+    }
+
+    public List<Wallet> get(final Long id) {
+        return walletService.get(id);
     }
 
     public Wallet getById(final Long walletId) {

@@ -16,7 +16,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.bitcoinj.Constants;
-import io.yope.payment.domain.transferobjects.QRImage;
+import io.yope.payment.domain.QRImage;
 import io.yope.payment.rest.ServerConfiguration;
 import lombok.extern.slf4j.Slf4j;
 
