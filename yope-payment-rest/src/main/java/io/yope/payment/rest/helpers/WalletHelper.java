@@ -40,12 +40,35 @@ public class WalletHelper {
         return Lists.newArrayList(walletService.get(id).stream().map(w -> WalletTO.from(w).build()).collect(Collectors.toList()));
     }
 
-    public Wallet getById(final Long walletId) {
-        return WalletTO.from(walletService.getById(walletId)).build();
+    public WalletTO getById(final Long walletId) {
+        final Wallet wallet = walletService.getById(walletId);
+        if (wallet != null) {
+            return WalletTO.from(wallet).build();
+        }
+        return null;
     }
 
-    public Wallet delete(final Long walletId) throws ObjectNotFoundException {
-        return WalletTO.from(walletService.delete(walletId)).build();
+    public WalletTO getByName(final Long accountId, final String name) {
+        final Wallet wallet = walletService.getByName(accountId, name);
+        if (wallet != null) {
+            return WalletTO.from(wallet).build();
+        }
+        return null;
+    }
+
+    public WalletTO delete(final Long walletId) throws ObjectNotFoundException {
+        if (exists(walletId)) {
+            return WalletTO.from(walletService.delete(walletId)).build();
+        }
+        throw new IllegalArgumentException(String.valueOf(walletId));
+    }
+
+    public WalletTO getByWalletHash(final String walletHash) {
+        final Wallet wallet = walletService.getByWalletHash(walletHash);
+        if (wallet != null) {
+            return WalletTO.from(wallet).build();
+        }
+        return null;
     }
 
 

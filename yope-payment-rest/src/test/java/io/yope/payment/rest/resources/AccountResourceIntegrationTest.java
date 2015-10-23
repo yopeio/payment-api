@@ -28,9 +28,9 @@ public class AccountResourceIntegrationTest {
 	public void shouldOnlyCheckOAuthTest() {
 		Assert.notNull(requestAccessToken());
 	}
-	
+
 	static String requestAccessToken() {
 		return IntegrationTestHelper.requestAccessToken("admin@yope.io", "Vit9uZ2S");
 	}
-	
+
 }

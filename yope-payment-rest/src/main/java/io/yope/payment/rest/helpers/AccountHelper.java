@@ -45,7 +45,7 @@ public class AccountHelper {
     private UserSecurityService securityService;
 
     public AccountTO registerAccount(final RegistrationRequest registration) throws DuplicateEmailException {
-        if (this.accountService.getByEmail(registration.getEmail()) != null) {
+        if (accountService.getByEmail(registration.getEmail()) != null) {
             throw new DuplicateEmailException(registration.getEmail());
         }
 
@@ -64,10 +64,10 @@ public class AccountHelper {
                 .build();
         Wallet[] wallets = new Wallet[0];
         if (!Type.ADMIN.equals(account.getType())) {
-            wallets = this.createWallets(registration);
+            wallets = createWallets(registration);
         }
-        final Account savedAccount = this.accountService.create(account, wallets);
-        this.securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
+        final Account savedAccount = accountService.create(account, wallets);
+        securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
         return AccountTO.from(savedAccount).build();
 
     }
@@ -98,19 +98,19 @@ public class AccountHelper {
         return wallets.toArray(new Wallet[] {});
     }
 
-    public Wallet saveWallet(final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        return this.walletService.save(wallet);
+    public WalletTO saveWallet(final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
+        return WalletTO.from(walletService.save(wallet)).build();
     }
 
     public Wallet saveWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        final Wallet saved = this.walletService.save(wallet);
+        final Wallet saved = walletService.save(wallet);
         account.getWallets().add(saved);
-        this.accountService.update(account.getId(), account);
+        accountService.update(account.getId(), account);
         return WalletTO.from(saved).build();
     }
 
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        if (this.walletService.getByName(account.getId(), wallet.getName()) != null) {
+        if (walletService.getByName(account.getId(), wallet.getName()) != null) {
             throw new BadRequestException("You already have a wallet with name "+wallet.getName(), "name");
         }
 
@@ -124,11 +124,11 @@ public class AccountHelper {
 
 
     public AccountTO update(final Long accountId, final AccountTO account) throws ObjectNotFoundException {
-        return AccountTO.from(this.accountService.update(accountId, account)).build();
+        return AccountTO.from(accountService.update(accountId, account)).build();
     }
 
     public AccountTO getById(final Long accountId) {
-        final Account account  = this.accountService.getById(accountId);
+        final Account account  = accountService.getById(accountId);
         if (account == null) {
             return null;
         }
@@ -136,21 +136,21 @@ public class AccountHelper {
     }
 
     public List<AccountTO> getAccounts() {
-        return this.accountService.getAccounts().stream().map(a -> AccountTO.from(a).build()).collect(Collectors.toList());
+        return accountService.getAccounts().stream().map(a -> AccountTO.from(a).build()).collect(Collectors.toList());
     }
 
     public AccountTO delete(final Long accountId) throws ObjectNotFoundException {
-        final Account account  = this.accountService.delete(accountId);
+        final Account account  = accountService.delete(accountId);
         if (account == null) {
             return null;
         }
-        this.securityService.deleteUser(account.getEmail());
+        securityService.deleteUser(account.getEmail());
         return AccountTO.from(account).build();
 
     }
 
     public AccountTO getByEmail(final String email) {
-        final Account account  = this.accountService.getByEmail(email);
+        final Account account  = accountService.getByEmail(email);
         if (account == null) {
             return null;
         }

@@ -156,7 +156,7 @@ public class Neo4JTransactionService implements TransactionService {
     private void updateBalance(final Neo4JTransaction transaction)
             throws ObjectNotFoundException, InsufficientFundsException {
         final Wallet source = transaction.getSource();
-        if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
+        if (source.getAvailableBalance().floatValue() < transaction.getAmount().floatValue()) {
             throw new InsufficientFundsException("not enough funds to accept transaction '"+transaction+"'");
         }
         final Wallet destination = transaction.getDestination();
@@ -174,7 +174,7 @@ public class Neo4JTransactionService implements TransactionService {
     private void updateAvailableBalance(final Neo4JTransaction transaction)
             throws ObjectNotFoundException, InsufficientFundsException {
         final Wallet source = transaction.getSource();
-        if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
+        if (source.getAvailableBalance().floatValue() < transaction.getAmount().floatValue()) {
             throw new InsufficientFundsException("not enough funds to complete transaction '"+transaction+"'");
         }
         final Wallet destination = transaction.getDestination();
@@ -193,7 +193,7 @@ public class Neo4JTransactionService implements TransactionService {
             throws ObjectNotFoundException, InsufficientFundsException {
         final Wallet source = transaction.getSource();
         final Wallet destination = transaction.getDestination();
-        if (destination.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
+        if (destination.getBalance().compareTo(transaction.getAmount()) < 0) {
             throw new InsufficientFundsException("not enough funds to restore transaction '"+transaction+"'");
         }
         log.info("-- restore balance from {}:{} to {}:{} -> amount {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), transaction.getAmount());

@@ -9,7 +9,6 @@ import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.script.Script;
@@ -46,17 +45,14 @@ public class WalletEventListener extends AbstractWalletEventListener {
         final String transactionHash = tx.getHashAsString();
         final Transaction loaded = transactionService.getByTransactionHash(transactionHash);
         if (loaded == null) {
-            log.warn("transaction hash {} does not yet exist", transactionHash);
             return;
         }
-        log.info("-----> confidence changed on {} {}", loaded.getId(), transactionHash);
-        final TransactionConfidence confidence = tx.getConfidence();
-        log.info("new block depth: {} ", confidence.getDepthInBlocks());
-        if (confidence.getDepthInBlocks() >= settings.getConfirmations()) {
+        final int confidence = tx.getConfidence().getDepthInBlocks();
+        if (confidence >= settings.getConfirmations()) {
             if (!Transaction.Status.ACCEPTED.equals(loaded.getStatus())) {
-                log.error("transaction {} has status {}", loaded.getId(), loaded.getStatus());
                 return;
             }
+            log.info("-----> Transaction {} with {} completed", confidence, loaded.getId(), transactionHash);
             try {
                 transactionService.transition(loaded.getId(), Transaction.Status.COMPLETED);
             } catch (final ObjectNotFoundException e) {
@@ -72,15 +68,9 @@ public class WalletEventListener extends AbstractWalletEventListener {
     private void receiveCoins(final org.bitcoinj.core.Wallet wallet,
                                              final org.bitcoinj.core.Transaction tx) {
 //        super.onCoinsReceived(wallet, tx, prevBalance, newBalance);
-        final Coin valueSentToMe = tx.getValueSentToMe(wallet);
-        final Coin valueSentFromMe = tx.getValueSentFromMe(wallet);
 
-        final DeterministicKey freshKey = wallet.freshReceiveKey();
-        final String freshHash = freshKey.toAddress(params).toString();
-        log.info("******** fresh hash: {}", freshHash);
-        BitcoinjBlockchainServiceImpl.HASH_STACK.push(freshHash);
+        saveNewHash(wallet);
 
-        log.info("******** Coins on central wallet to me {} from me {}",  valueSentToMe, valueSentFromMe);
         final String receiverHash = getReceiverHash(tx);
         final String senderHash = getSenderHash(tx);
         if (receiverHash == null) {
@@ -89,13 +79,13 @@ public class WalletEventListener extends AbstractWalletEventListener {
         try {
             final Transaction pending = transactionService.getByReceiverHash(receiverHash);
             if (pending == null) {
-                log.debug("******** receiver hash {} does not exist", receiverHash);
                 return;
             }
             if (!Transaction.Status.PENDING.equals(pending.getStatus())) {
-                log.debug("******** transaction {} with {} has status {}", pending.getId(), receiverHash, pending.getStatus());
                 return;
             }
+            final Coin valueSentToMe = tx.getValueSentToMe(wallet);
+            final Coin valueSentFromMe = tx.getValueSentFromMe(wallet);
             final BigDecimal balance = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(Constants.MILLI_TO_SATOSHI);
             BigDecimal fees = new BigDecimal(valueSentFromMe.getValue());
             if (fees.floatValue() > 0) {
@@ -103,10 +93,10 @@ public class WalletEventListener extends AbstractWalletEventListener {
             }
             log.info("transaction: balance {} amount {} fees {} ", balance, pending.getAmount(), fees);
             if (balance.compareTo(pending.getAmount()) > 0) {
-                log.info("Transaction {}: paid amount {} greater than expected amont {}", receiverHash, balance, pending.getAmount());
+                log.warn("***** WARNING *****\n              Transaction {}: paid amount {} greater than expected amont {}", receiverHash, balance, pending.getAmount());
             }
             if (balance.compareTo(pending.getAmount()) < 0) {
-                log.error("Transaction {}: paid amount {} less than expected amont {}", receiverHash, balance , pending.getAmount());
+                log.error("***** WARNING *****\n              Transaction {}: paid amount {} less than expected amont {}", receiverHash, balance , pending.getAmount());
             }
             final Transaction transaction = TransactionTO
                     .from(pending)
@@ -130,6 +120,12 @@ public class WalletEventListener extends AbstractWalletEventListener {
             log.error("Unexpected error", e);
         }
         saveWallet(wallet);
+    }
+
+    private void saveNewHash(final org.bitcoinj.core.Wallet wallet) {
+        final DeterministicKey freshKey = wallet.freshReceiveKey();
+        final String freshHash = freshKey.toAddress(params).toString();
+        BitcoinjBlockchainServiceImpl.HASH_STACK.push(freshHash);
     }
 
     private void saveWallet(final org.bitcoinj.core.Wallet wallet) {

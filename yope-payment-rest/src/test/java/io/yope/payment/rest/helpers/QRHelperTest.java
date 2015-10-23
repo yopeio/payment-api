@@ -14,19 +14,25 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.bitcoinj.Constants;
+import io.yope.payment.domain.transferobjects.QRImage;
 import io.yope.payment.rest.ServerConfiguration;
 import lombok.extern.slf4j.Slf4j;
 
 @RunWith(MockitoJUnitRunner.class)
 @Slf4j
-public class TransactionHelperTest {
+public class QRHelperTest {
 
     @Mock
     private ServerConfiguration configuration;
 
+    @Mock
+    private BlockChainService blockChainService;
+
+
     @InjectMocks
-    TransactionHelper helper;
+    QRHelper helper;
 
     BigDecimal balance = new BigDecimal(10.029356);
 
@@ -34,14 +40,14 @@ public class TransactionHelperTest {
     public void testGenerateImage() throws Exception {
         Mockito.when(configuration.getImageAbsolutePath()).thenReturn("http://localhost:8080/images/");
         Mockito.when(configuration.getImageFolder()).thenReturn("target/images");
+        Mockito.when(blockChainService.generateCentralWalletHash()).thenReturn("miKBDPKoxqfrcLLafBLyhqeAsmMCB7i5SW");
         final BigDecimal amount = balance.setScale(5, RoundingMode.FLOOR).add(TransactionHelper.BLOCKCHAIN_FEES);
         log.debug("amount {} {} {}", balance, amount, amount.divide(Constants.MILLI_BITCOINS));
-        final String qrCode =
-                helper.generateImageUrl("miKBDPKoxqfrcLLafBLyhqeAsmMCB7i5SW", amount);
+        final QRImage qrCode = helper.getQRImage(amount);
         assertNotNull(qrCode);
-        log.debug("url {}", qrCode);
-
-        final File image = new File("target/images", qrCode.substring(qrCode.lastIndexOf("/")+1, qrCode.length()));
+        final String url = qrCode.getImageUrl();
+        log.debug("url {}", url);
+        final File image = new File("target/images", url.substring(url.lastIndexOf("/")+1, url.length()));
         log.debug("image {}", image.getPath());
         assertTrue(image.getPath(), image.exists());
 
