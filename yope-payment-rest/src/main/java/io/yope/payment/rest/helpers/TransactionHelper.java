@@ -210,9 +210,13 @@ public class TransactionHelper {
             }
             return wallet;
         }
-        final Wallet wallet = walletHelper.getByWalletHash(destination.getWalletHash());
+        Wallet wallet = walletHelper.getByWalletHash(destination.getWalletHash());
         if (wallet != null) {
             return wallet;
+        }
+        wallet = walletHelper.getByName(accountId, transaction.getDestination().getName());
+        if (wallet != null) {
+            return accountHelper.saveWallet(wallet.toBuilder().walletHash(destination.getWalletHash()).build());
         }
         return accountHelper.createWallet(accountId, destination);
     }
