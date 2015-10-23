@@ -3,7 +3,6 @@
  */
 package io.yope.payment.neo4j.services;
 
-import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -77,54 +76,57 @@ public class Neo4JTransactionService implements TransactionService {
         return doSave(current, next);
     }
 
-    private Transaction doSave(final Transaction current, final Transaction transaction) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
-        final Transaction.Builder next = transaction.toBuilder();
-        if (!current.getStatus().equals(transaction.getStatus())) {
-            checkStatus(current.getStatus(), transaction.getStatus());
-            switch (transaction.getStatus()) {
-                case DENIED:
-                    next.deniedDate(System.currentTimeMillis());
-                    makeFundsAvailable(current.getSource(), current.getAmount());
-                    break;
-                case FAILED:
-                    next.failedDate(System.currentTimeMillis());
-                    makeFundsAvailable(current.getSource(), current.getAmount());
-                    if (Transaction.Status.ACCEPTED.equals(current.getStatus())) {
-                        restoreBalance(current.getDestination(), transaction.getBalance());
-                    }
-                    break;
-                case EXPIRED:
-                    next.expiredDate(System.currentTimeMillis());
-                    makeFundsAvailable(current.getSource(), current.getAmount());
-                    if (Transaction.Status.ACCEPTED.equals(current.getStatus())) {
-                        restoreBalance(current.getDestination(), transaction.getBalance());
+    /**
+     * actions:
+     * from PENDING
+     *     -> ACCEPTED - transfer balance
+     *     -> DENIED|FAILED|EXPIRED - do nothing
+     * from ACCEPTED
+     *     -> COMPLETED - transfer availableBalance
+     *     -> FAILED|EXPIRED restore balance
+     * from COMPLETED |FAILED|EXPIRED
+     *     -> DENIED
+     * @param current the existing transaction
+     * @param next the new transaction
+     * @return an updated transaction
+     * @throws ObjectNotFoundException
+     * @throws InsufficientFundsException
+     * @throws IllegalTransactionStateException
+     */
+    private Transaction doSave(final Transaction current, final Transaction next) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
+        final Transaction.Builder transaction = next.toBuilder();
+        if (!current.getStatus().equals(next.getStatus())) {
+            checkStatus(current.getStatus(), next.getStatus());
+            switch (current.getStatus()) {
+                case PENDING:
+                    if (Status.ACCEPTED.equals(next.getStatus())) {
+                        updateBalance(current);
                     }
                     break;
                 case ACCEPTED:
-                    next.acceptedDate(System.currentTimeMillis());
-                    transferFunds(current.getSource(), current.getDestination(), transaction.getAmount(), transaction.getBalance(), transaction.getReference());
-                    break;
-                case COMPLETED:
-                    next.completedDate(System.currentTimeMillis());
-                    makeFundsAvailable(current.getDestination(), transaction.getBalance());
+                    if (Status.COMPLETED.equals(next.getStatus())) {
+                        updateAvailableBalance(current);
+                    } else if (Status.FAILED.equals(next.getStatus()) || Status.EXPIRED.equals(next.getStatus())) {
+                        restoreBalance(current);
+                    }
                     break;
                 default:
                     break;
             }
         }
-        final Transaction toSave = next.amount(current.getAmount()).id(current.getId()).type(current.getType()).source(current.getSource()).destination(current.getDestination()).build();
-        return repository.save(Neo4JTransaction.from(toSave).build()).toTransaction();
+        transaction.amount(current.getAmount()).id(current.getId()).type(current.getType()).source(current.getSource()).destination(current.getDestination());
+        return repository.save(Neo4JTransaction.from(transaction.build()).build()).toTransaction();
 
     }
 
     /**
      * check valid transition according to following rules:
-     * PENDING -> DENIED - ACCEPTED - FAILED - EXPIRED - !COMPLETED
-     * ACCEPTED -> COMPLETED - FAILED - EXPIRED
-     * DENIED -> none
+     * PENDING   -> DENIED - ACCEPTED - FAILED - EXPIRED - !COMPLETED
+     * ACCEPTED  -> COMPLETED - FAILED - EXPIRED
+     * DENIED    -> none
      * COMPLETED -> none
-     * FAILED -> none
-     * EXPIRED -> none
+     * FAILED    -> none
+     * EXPIRED   -> none
      *
      * @param next
      *            the next status
@@ -149,38 +151,60 @@ public class Neo4JTransactionService implements TransactionService {
                 }
                 break;
             default:
-                throw new IllegalTransactionStateException(current, next);
+                return;
         }
+        throw new IllegalTransactionStateException(current, next);
     }
 
-    private void transferFunds(final Wallet source, final Wallet destination, final BigDecimal amount, final BigDecimal balance, final String transaction) throws ObjectNotFoundException, InsufficientFundsException {
-        if (source.getBalance().compareTo(amount) < 0) {
+    private void updateBalance(final Transaction transaction)
+            throws ObjectNotFoundException, InsufficientFundsException {
+        final Wallet source = transaction.getSource();
+        if (source.getAvailableBalance().floatValue() < transaction.getAmount().floatValue()) {
+            throw new InsufficientFundsException("not enough funds to accept transaction '"+transaction+"'");
+        }
+        final Wallet destination = transaction.getDestination();
+        log.info("** balance from {}:{} to {}:{} -> amount {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), transaction.getAmount());
+        final Wallet nextSource = walletService.update(source.getId(), source.toBuilder()
+                .balance(source.getBalance().subtract(transaction.getAmount()))
+                .build());
+        final Wallet nextDestination = walletService.update(destination.getId(), destination.toBuilder()
+                .balance(destination.getBalance().add(transaction.getAmount()))
+                .build());
+        log.info("** new balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());
+    }
+
+    private void updateAvailableBalance(final Transaction transaction)
+            throws ObjectNotFoundException, InsufficientFundsException {
+        final Wallet source = transaction.getSource();
+        if (source.getAvailableBalance().floatValue() < transaction.getAmount().floatValue()) {
             throw new InsufficientFundsException("not enough funds to complete transaction '"+transaction+"'");
         }
-        log.info("** transfer funds from {}:{} to {}:{} -> amount {} balance {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), amount, balance);
-        final Wallet newSource = walletService.update(source.getId(), source.toBuilder()
-                .balance(source.getBalance().subtract(amount))
+        final Wallet destination = transaction.getDestination();
+        log.info("** Available Balance from {}:{} to {}:{} -> amount {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), transaction.getAmount());
+        final Wallet nextSource = walletService.update(source.getId(), source.toBuilder()
+                .availableBalance(source.getAvailableBalance().subtract(transaction.getAmount()))
                 .build());
-        final Wallet newDestination = walletService.update(destination.getId(), destination.toBuilder()
-                .balance(destination.getBalance().add(balance))
+        final Wallet nextDestination = walletService.update(destination.getId(), destination.toBuilder()
+                .availableBalance(destination.getAvailableBalance().add(transaction.getAmount()))
                 .build());
-        log.info("** new funds {}:{}  {}:{} ", newSource.getName(), newSource.getBalance(), newDestination.getName(), newDestination.getBalance());
+        log.info("** new Available Balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());
     }
 
-    private void makeFundsAvailable(final Wallet wallet, final BigDecimal amount) throws ObjectNotFoundException {
-        log.info("** add available funds to {}:{} -> {}", wallet.getName(), wallet.getAvailableBalance(), amount);
-        final Wallet newWallet = walletService.update(wallet.getId(), wallet.toBuilder()
-                .availableBalance(wallet.getAvailableBalance().add(amount))
+    private void restoreBalance(final Transaction transaction)
+            throws ObjectNotFoundException, InsufficientFundsException {
+        final Wallet source = transaction.getSource();
+        final Wallet destination = transaction.getDestination();
+        if (destination.getBalance().compareTo(transaction.getAmount()) < 0) {
+            throw new InsufficientFundsException("not enough funds to restore transaction '"+transaction+"'");
+        }
+        log.info("-- restore balance from {}:{} to {}:{} -> amount {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), transaction.getAmount());
+        final Wallet nextSource = walletService.update(source.getId(), source.toBuilder()
+                .balance(source.getBalance().add(transaction.getAmount()))
                 .build());
-        log.info("** available funds to {}:{}", newWallet.getName(), newWallet.getAvailableBalance());
-    }
-
-    private void restoreBalance(final Wallet wallet, final BigDecimal balance) throws ObjectNotFoundException {
-        log.info("** restore balance to {}:{} -> {}", wallet.getName(), wallet.getBalance(), balance);
-        final Wallet newWallet = walletService.update(wallet.getId(), wallet.toBuilder()
-                .balance(wallet.getBalance().subtract(balance))
+        final Wallet nextDestination = walletService.update(destination.getId(), destination.toBuilder()
+                .balance(destination.getBalance().subtract(transaction.getAmount()))
                 .build());
-        log.info("** restored balance to {}:{}", newWallet.getName(), newWallet.getBalance());
+        log.info("-- new balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());
     }
 
     private Transaction createTransaction(final Transaction transaction) throws ObjectNotFoundException {

@@ -62,7 +62,7 @@ public class AdminResource extends BaseResource {
         checkPermission(Type.ADMIN);
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Transaction saved = transactionHelper.transition(transactionId, status);
+            final Transaction saved = transactionHelper.doTransition(transactionId, status);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Transaction>(header, saved);
         } catch (final ObjectNotFoundException e) {
@@ -208,7 +208,7 @@ public class AdminResource extends BaseResource {
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(
             @PathVariable("transactionId") final Long transactionId) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.get(transactionId);
+        final Transaction transaction = transactionHelper.getTransactionById(transactionId);
         if (transaction == null) {
             return notFound("Not found " + transactionId);
         }
@@ -219,7 +219,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"senderHash"})
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(@RequestParam(value="senderHash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getBySenderHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionBySenderHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -230,7 +230,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"receiverHash"})
     public @ResponseBody PaymentResponse<Transaction> getByReceiverHash(@RequestParam(value="receiverHash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getByReceiverHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionByReceiverHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -241,7 +241,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"hash"})
     public @ResponseBody PaymentResponse<Transaction> getByTransactionHash(@RequestParam(value="hash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getByTransactionHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionByHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }

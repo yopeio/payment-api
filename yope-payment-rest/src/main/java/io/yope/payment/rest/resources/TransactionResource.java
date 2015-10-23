@@ -74,7 +74,7 @@ public class TransactionResource extends BaseResource {
     @RequestMapping(value = "/{transactionId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Transaction> get(@PathVariable final long transactionId) {
         final Account loggedAccount = getLoggedAccount();
-        final Transaction transaction = transactionHelper.get(transactionId);
+        final Transaction transaction = transactionHelper.getTransactionById(transactionId);
         if (transaction == null) {
             return notFound("Not found " + transactionId);
         }
@@ -89,7 +89,7 @@ public class TransactionResource extends BaseResource {
     @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"senderHash" })
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(
             @RequestParam(value = "senderHash", required = true) final String hash) throws AuthorizationException {
-        final Transaction transaction = transactionHelper.getBySenderHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionBySenderHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -105,7 +105,7 @@ public class TransactionResource extends BaseResource {
     @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"receiverHash" })
     public @ResponseBody PaymentResponse<Transaction> getByReceiverHash(
             @RequestParam(value = "receiverHash", required = true) final String hash) throws AuthorizationException {
-        final Transaction transaction = transactionHelper.getByReceiverHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionByReceiverHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -121,7 +121,7 @@ public class TransactionResource extends BaseResource {
     @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"hash" })
     public @ResponseBody PaymentResponse<Transaction> getByTransactionHash(
             @RequestParam(value = "hash", required = true) final String hash) throws AuthorizationException {
-        final Transaction transaction = transactionHelper.getByTransactionHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionByHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }

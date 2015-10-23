@@ -22,7 +22,6 @@ import io.yope.payment.rest.BadRequestException;
 import io.yope.payment.rest.requests.RegistrationRequest;
 import io.yope.payment.services.AccountService;
 import io.yope.payment.services.UserSecurityService;
-import io.yope.payment.services.WalletService;
 
 /**
  * @author massi
@@ -35,7 +34,7 @@ public class AccountHelper {
     private AccountService accountService;
 
     @Autowired
-    private WalletService walletService;
+    private WalletHelper walletHelper;
 
     @Autowired
     private UserSecurityService securityService;
@@ -64,7 +63,6 @@ public class AccountHelper {
         }
         securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
         return accountService.create(account, wallets);
-
     }
 
     private Wallet[] createWallets(final RegistrationRequest registration) {
@@ -94,18 +92,18 @@ public class AccountHelper {
     }
 
     public Wallet saveWallet(final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        return walletService.save(wallet);
+        return walletHelper.save(wallet);
     }
 
     public Wallet saveWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        final Wallet saved = walletService.save(wallet);
+        final Wallet saved = walletHelper.save(wallet);
         account.getWallets().add(saved);
         accountService.update(account.getId(), account);
         return saved;
     }
 
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        if (walletService.getByName(account.getId(), wallet.getName()) != null) {
+        if (walletHelper.getByName(account.getId(), wallet.getName()) != null) {
             throw new BadRequestException("You already have a wallet with name "+wallet.getName(), "name");
         }
 
@@ -146,7 +144,5 @@ public class AccountHelper {
     public boolean owns(final Account account, final Long walletId) {
         return account.getWallets().stream().anyMatch(w -> w.getId().equals(walletId));
     }
-
-
 
 }

@@ -3,6 +3,8 @@
  */
 package io.yope.payment.blockchain.bitcoinj;
 
+import java.math.BigDecimal;
+
 /**
  * @author massi
  *
@@ -11,8 +13,10 @@ public class Constants {
 
     private Constants() {}
 
-    public static final int MILLI_TO_SATOSHI = 100000;
+    public static final BigDecimal MILLI_TO_SATOSHI = new BigDecimal("100000");
 
-    public static final float MILLI_BITCOINS = 1000;
+    public static final BigDecimal MILLI_BITCOINS = new BigDecimal("1000");
+
+
 
 }

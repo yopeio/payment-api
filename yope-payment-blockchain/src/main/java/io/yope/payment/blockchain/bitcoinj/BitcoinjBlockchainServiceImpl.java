@@ -132,7 +132,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     @Override
     public void send(final Transaction transaction) throws BlockchainException {
         try {
-            final long satoshi = transaction.getAmount().multiply(BigDecimal.valueOf(Constants.MILLI_TO_SATOSHI)).longValue();
+            final long satoshi = transaction.getAmount().multiply(Constants.MILLI_TO_SATOSHI).longValue();
             final Coin value = Coin.valueOf(satoshi);
             final org.bitcoinj.core.Wallet sender = centralWallet();
             sender.allowSpendingUnconfirmedTransactions();
@@ -159,21 +159,31 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     @Override
     public String generateCentralWalletHash() throws BlockchainException {
         try {
-            final org.bitcoinj.core.Wallet receiver = centralWallet();
             String freshHash = null;
-            if (HASH_STACK.isEmpty()) {
-                final DeterministicKey freshKey = receiver.freshReceiveKey();
-                freshHash = freshKey.toAddress(params).toString();
-            } else {
-                freshHash = HASH_STACK.pop();
-            }
-            log.info("******** fresh hash: {}", freshHash);
-            HASH_LIST.add(freshHash);
+            Transaction transaction = null;
+            do {
+                freshHash = getFreshHash(freshHash);
+                transaction = transactionService.getByReceiverHash(freshHash);
+            } while (transaction != null);
             return freshHash;
         } catch (final UnreadableWalletException e) {
             log.error("error during hash generation", e);
+            throw new BlockchainException(e);
         }
-        return null;
+    }
+
+    private String getFreshHash(final String previous) throws UnreadableWalletException, BlockchainException {
+        final org.bitcoinj.core.Wallet receiver = centralWallet();
+        if (HASH_STACK.isEmpty()) {
+            final DeterministicKey freshKey = receiver.freshReceiveKey();
+            final String hash = freshKey.toAddress(params).toString();
+            if (hash.equals(previous)) {
+                throw new BlockchainException("cannot generate new hash");
+            }
+            HASH_LIST.add(hash);
+            return hash;
+        }
+        return HASH_STACK.pop();
     }
 
     private org.bitcoinj.core.Wallet centralWallet() throws UnreadableWalletException {
