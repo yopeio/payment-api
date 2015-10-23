@@ -1,11 +1,13 @@
 package io.yope.payment.neo4j.services;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.collect.Lists;
 
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.Wallet.Status;
@@ -27,7 +29,7 @@ public class Neo4JWalletService implements WalletService {
      */
     @Override
     public Wallet save(final Wallet wallet) {
-        return repository.save(Neo4JWallet.from(wallet).creationDate(System.currentTimeMillis()).build());
+        return repository.save(Neo4JWallet.from(wallet).creationDate(System.currentTimeMillis()).build()).toWallet();
     }
 
     /*
@@ -36,7 +38,8 @@ public class Neo4JWalletService implements WalletService {
      */
     @Override
     public Wallet getById(final Long id) {
-        return repository.findOne(id);
+        final Neo4JWallet wallet = repository.findOne(id);
+        return wallet == null? null : wallet.toWallet();
     }
 
     /*
@@ -45,7 +48,8 @@ public class Neo4JWalletService implements WalletService {
      */
     @Override
     public Wallet getByWalletHash(final String hash) {
-        return repository.findByWalletHash(hash);
+        final Neo4JWallet wallet = repository.findByWalletHash(hash);
+        return wallet == null? null : wallet.toWallet();
     }
 
     /*
@@ -57,7 +61,7 @@ public class Neo4JWalletService implements WalletService {
         if (!repository.exists(id)) {
             throw new ObjectNotFoundException(String.valueOf(id), Wallet.class);
         }
-        return repository.save(Neo4JWallet.from(wallet).modificationDate(System.currentTimeMillis()).build());
+        return repository.save(Neo4JWallet.from(wallet).modificationDate(System.currentTimeMillis()).build()).toWallet();
     }
 
     /*
@@ -70,7 +74,7 @@ public class Neo4JWalletService implements WalletService {
         if (wallet == null) {
             throw new ObjectNotFoundException(String.valueOf(id), Wallet.class);
         }
-        return repository.save(Neo4JWallet.from(wallet).status(Status.DELETED).modificationDate(System.currentTimeMillis()).build());
+        return repository.save(Neo4JWallet.from(wallet).status(Status.DELETED).modificationDate(System.currentTimeMillis()).build()).toWallet();
     }
 
     /*
@@ -79,7 +83,7 @@ public class Neo4JWalletService implements WalletService {
      */
     @Override
     public List<Wallet> get(final Long accountId) {
-        return new ArrayList<Wallet>(repository.findAllByOwner(accountId));
+        return Lists.newArrayList(repository.findAllByOwner(accountId)).stream().map(t -> t.toWallet()).collect(Collectors.toList());
     }
 
     /*
@@ -88,7 +92,8 @@ public class Neo4JWalletService implements WalletService {
      */
     @Override
     public Wallet getByName(final Long accountId, final String name) {
-        return repository.findByName(accountId, name);
+        final Neo4JWallet wallet = repository.findByName(accountId, name);
+        return wallet == null? null : wallet.toWallet();
     }
 
     @Override

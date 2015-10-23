@@ -5,6 +5,7 @@ package io.yope.payment.neo4j.services;
 
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
         if (account.getFirstName().equals("wrong")) {
             throw new IllegalArgumentException();
         }
-        return accountRepository.save(Neo4JAccount.from(account).registrationDate(System.currentTimeMillis()).build());
+        return accountRepository.save(Neo4JAccount.from(account).registrationDate(System.currentTimeMillis()).build()).toAccount();
     }
 
     /*
@@ -67,7 +68,8 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public Account getById(final Long id) {
-        return accountRepository.findOne(id);
+        final Neo4JAccount account =  accountRepository.findOne(id);
+        return account == null? null : account.toAccount();
     }
 
     /*
@@ -79,7 +81,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
         if (getById(id) == null) {
             throw new ObjectNotFoundException(String.valueOf(id), Account.class);
         }
-        return accountRepository.save(Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).id(id).build());
+        return accountRepository.save(Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).id(id).build()).toAccount();
     }
 
     /*
@@ -93,7 +95,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
             throw new ObjectNotFoundException(String.valueOf(id), Account.class);
         }
         final Neo4JAccount toDelete = Neo4JAccount.from(account).modificationDate(System.currentTimeMillis()).status(Status.DEACTIVATED).build();
-        return accountRepository.save(toDelete);
+        return accountRepository.save(toDelete).toAccount();
     }
 
     /*
@@ -102,7 +104,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public List<Account> getAccounts() {
-        return Lists.newArrayList(accountRepository.findAll());
+        return Lists.newArrayList(accountRepository.findAll()).stream().map(a -> a.toAccount()).collect(Collectors.toList());
     }
 
     /*
@@ -121,13 +123,14 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public Account getByEmail(final String email) {
-        return accountRepository.findByEmail(email);
+        final Neo4JAccount account = accountRepository.findByEmail(email);
+        return account == null? null : account.toAccount();
     }
 
 
     @Override
     public List<Account> getByType(final Account.Type type) {
-        return accountRepository.findByType(type.name());
+        return accountRepository.findByType(type.name()).stream().map(a -> a.toAccount()).collect(Collectors.toList());
     }
 
 }

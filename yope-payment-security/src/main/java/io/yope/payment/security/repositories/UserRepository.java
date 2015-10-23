@@ -15,5 +15,5 @@ public interface UserRepository {
 
     User getUser(String username);
 
-    Boolean deleteUser(String username);
+    User deleteUser(String username);
 }

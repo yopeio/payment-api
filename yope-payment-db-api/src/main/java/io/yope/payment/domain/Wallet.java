@@ -5,13 +5,30 @@ package io.yope.payment.domain;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.Wither;
+
 /**
  * @author mgerardi
  *
  */
-public interface Wallet {
+@Builder(builderClassName="Builder", toBuilder=true)
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(Include.NON_NULL)
+@ToString(of = {"name", "balance", "availableBalance"})
+public class Wallet {
 
-    enum Status {
+    public enum Status {
         ACTIVE,
         DELETED
     }
@@ -22,28 +39,33 @@ public interface Wallet {
         INTERNAL;
     }
 
-    Long getId();
 
-    String getWalletHash();
+    private Long id;
 
-    BigDecimal getBalance();
+    private String walletHash;
 
-    BigDecimal getAvailableBalance();
+    private String name;
 
-    Status getStatus();
+    private BigDecimal balance;
 
-    String getName();
+    private BigDecimal availableBalance;
 
-    String getDescription();
+    @JsonIgnore
+    private Status status;
 
-    Long getCreationDate();
+    private String description;
 
-    Long getModificationDate();
+    private Long creationDate;
 
-    Type getType();
+    private Long modificationDate;
 
-    String getContent();
+    @JsonIgnore
+    private Type type;
 
-    String getPrivateKey();
+    @JsonIgnore
+    @Wither private String content;
+
+    @JsonIgnore
+    @Wither private String privateKey;
 
 }

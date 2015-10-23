@@ -15,9 +15,9 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.script.Script;
 
 import io.yope.payment.domain.Transaction;
+import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.TransactionTO;
-import io.yope.payment.domain.transferobjects.WalletTO;
+import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
@@ -111,8 +111,7 @@ public class WalletEventListener extends AbstractWalletEventListener {
             if (amount.compareTo(pending.getAmount()) < 0) {
                 log.error("Transaction {}: paid amount {} less than expected amont {}", receiverHash, amount, pending.getAmount());
             }
-            final Transaction transaction = TransactionTO
-                    .from(pending)
+            final Transaction transaction = pending.toBuilder()
                     .transactionHash(tx.getHashAsString())
                     .balance(balance)
                     .blockchainFees(fees)
@@ -139,7 +138,7 @@ public class WalletEventListener extends AbstractWalletEventListener {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             wallet.saveToFileStream(outputStream);
-            walletService.save(WalletTO.from(centralWallet).content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).build());
+            walletService.save(centralWallet.toBuilder().content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).build());
         } catch (final Exception e) {
             log.error("error adding wallet {}", e);
         }

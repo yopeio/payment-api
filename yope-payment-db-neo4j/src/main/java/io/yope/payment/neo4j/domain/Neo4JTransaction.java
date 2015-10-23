@@ -12,8 +12,6 @@ import org.springframework.data.neo4j.annotation.Indexed;
 import org.springframework.data.neo4j.annotation.RelationshipEntity;
 import org.springframework.data.neo4j.annotation.StartNode;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.yope.payment.domain.Transaction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,22 +24,20 @@ import lombok.ToString;
  *
  */
 @Getter
-@Builder
+@Builder(builderClassName="Builder", toBuilder=true)
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString(of = {"type", "reference", "amount", "balance", "fees", "status"}, includeFieldNames = false)
 @RelationshipEntity(type="PAY")
-public class Neo4JTransaction implements Transaction {
+public class Neo4JTransaction {
 
     @GraphId
     private Long id;
 
-    @JsonProperty
     @Fetch
     @StartNode
     private Neo4JWallet source;
 
-    @JsonProperty
     @Fetch
     @EndNode
     private Neo4JWallet destination;
@@ -55,11 +51,11 @@ public class Neo4JTransaction implements Transaction {
     @Indexed
     private String receiverHash;
 
-    private Type type;
+    private Transaction.Type type;
 
     private String reference;
 
-    private Status status;
+    private Transaction.Status status;
 
     private String description;
 
@@ -85,7 +81,7 @@ public class Neo4JTransaction implements Transaction {
 
     private String QR;
 
-    public static Neo4JTransaction.Neo4JTransactionBuilder from(final Transaction transaction) {
+    public static Neo4JTransaction.Builder from(final Transaction transaction) {
         return Neo4JTransaction.builder()
                 .type(transaction.getType())
                 .amount(transaction.getAmount())
@@ -110,4 +106,28 @@ public class Neo4JTransaction implements Transaction {
                 .completedDate(transaction.getCompletedDate());
     }
 
+    public Transaction toTransaction() {
+        return Transaction.builder()
+                .type(getType())
+                .amount(getAmount())
+                .balance(getBalance())
+                .blockchainFees(getBlockchainFees())
+                .fees(getFees())
+                .creationDate(getCreationDate())
+                .description(getDescription())
+                .destination(getDestination().toWallet())
+                .source(getSource().toWallet())
+                .status(getStatus())
+                .reference(getReference())
+                .id(getId())
+                .QR(getQR())
+                .transactionHash(getTransactionHash())
+                .senderHash(getSenderHash())
+                .receiverHash(getReceiverHash())
+                .acceptedDate(getAcceptedDate())
+                .failedDate(getFailedDate())
+                .expiredDate(getExpiredDate())
+                .deniedDate(getDeniedDate())
+                .completedDate(getCompletedDate()).build();
+    }
 }

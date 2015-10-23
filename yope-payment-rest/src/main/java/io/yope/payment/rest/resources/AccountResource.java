@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Type;
-import io.yope.payment.domain.transferobjects.AccountTO;
 import io.yope.payment.exceptions.DuplicateEmailException;
 import io.yope.payment.rest.requests.RegistrationRequest;
 
@@ -38,7 +37,7 @@ public class AccountResource extends BaseResource {
             if (Type.ADMIN.equals(registrationRequest.getType())) {
                 return badRequest("type", "Wrong User Type; please use either SELLER or BUYER");
             }
-            final AccountTO to = accountHelper.registerAccount(registrationRequest);
+            final Account to = accountHelper.registerAccount(registrationRequest);
             final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
             response.setStatus(Response.Status.CREATED.getStatusCode());
             return new PaymentResponse<Account>(header, to);
@@ -58,7 +57,7 @@ public class AccountResource extends BaseResource {
      */
     @RequestMapping(value="/me", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
-                                                                @RequestBody(required=false) final AccountTO account) {
+                                                                @RequestBody(required=false) final Account account) {
         return doUpdateAccount(response, getLoggedAccount().getId(), account);
     }
 

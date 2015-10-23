@@ -19,8 +19,6 @@ import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.TransactionTO;
-import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.BadRequestException;
 
@@ -40,7 +38,7 @@ public class WalletResource extends BaseResource {
     @RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Wallet> createWallet(
             final HttpServletResponse response,
-            @RequestBody(required=false) final WalletTO wallet) {
+            @RequestBody(required=false) final Wallet wallet) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.CREATED.getStatusCode());
         try {
             final Account loggedAccount = getLoggedAccount();
@@ -68,7 +66,7 @@ public class WalletResource extends BaseResource {
     @RequestMapping(value="/{walletId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Wallet> updateWallet(
             @PathVariable final Long walletId,
-            @RequestBody(required=false) final WalletTO wallet,
+            @RequestBody(required=false) final Wallet wallet,
             final HttpServletResponse response) {
         final Account loggedAccount = getLoggedAccount();
         if (!accountHelper.owns(loggedAccount, walletId)) {
@@ -117,7 +115,7 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{walletId}/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<List<TransactionTO>> getTransactions(@PathVariable final Long walletId,
+    public @ResponseBody PaymentResponse<List<Transaction>> getTransactions(@PathVariable final Long walletId,
            @RequestParam(value="reference", required=false) final String reference,
            @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
            @RequestParam(value="status", required=false) final Status status,

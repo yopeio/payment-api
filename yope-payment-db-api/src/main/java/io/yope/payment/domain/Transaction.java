@@ -5,11 +5,26 @@ package io.yope.payment.domain;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 /**
  * @author mgerardi
  *
  */
-public interface Transaction {
+@Builder(builderClassName="Builder", toBuilder=true)
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(Include.NON_NULL)
+@ToString(of = {"type", "reference", "amount", "balance", "fees", "status"}, includeFieldNames = false)
+public class Transaction {
 
     /**
      * the status of the transaction.
@@ -55,45 +70,46 @@ public interface Transaction {
         TRANSFER
     }
 
-    Long getId();
+    private Long id;
 
-    String getTransactionHash();
+    private String transactionHash;
 
-    String getSenderHash();
+    private String senderHash;
 
-    String getReceiverHash();
+    private String receiverHash;
 
-    Wallet getSource();
+    private Wallet source;
 
-    Wallet getDestination();
+    private Wallet destination;
 
-    String getReference();
+    private Type type;
 
-    Status getStatus();
+    private String reference;
 
-    String getDescription();
+    private Status status;
 
-    BigDecimal getAmount();
+    private String description;
 
-    BigDecimal getBlockchainFees();
+    private BigDecimal amount;
 
-    BigDecimal getFees();
+    private BigDecimal balance;
 
-    Long getCreationDate();
+    private BigDecimal blockchainFees;
 
-    Long getAcceptedDate();
+    private BigDecimal fees;
 
-    Long getDeniedDate();
+    private Long creationDate;
 
-    Long getExpiredDate();
+    private Long acceptedDate;
 
-    Long getCompletedDate();
+    private Long failedDate;
 
-    Type getType();
+    private Long deniedDate;
 
-    String getQR();
+    private Long expiredDate;
 
-    BigDecimal getBalance();
+    private Long completedDate;
 
-    Long getFailedDate();
+    private String QR;
+
 }

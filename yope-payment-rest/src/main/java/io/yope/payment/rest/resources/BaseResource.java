@@ -18,9 +18,6 @@ import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.AccountTO;
-import io.yope.payment.domain.transferobjects.TransactionTO;
-import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.AuthorizationException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.rest.helpers.AccountHelper;
@@ -50,12 +47,12 @@ public abstract class BaseResource {
     @Autowired
     protected UserSecurityService securityService;
 
-    protected AccountTO getLoggedAccount() {
+    protected Account getLoggedAccount() {
         final User user = securityService.getCurrentUser();
         if (user == null) {
             return null;
         }
-        final AccountTO account = accountHelper.getByEmail(user.getUsername());
+        final Account account = accountHelper.getByEmail(user.getUsername());
         log.info("logged as {}", account);
         return account;
     }
@@ -90,10 +87,10 @@ public abstract class BaseResource {
     }
 
 
-    protected PaymentResponse<Account> doUpdateAccount(final HttpServletResponse response, final Long accountId, final AccountTO account) {
+    protected PaymentResponse<Account> doUpdateAccount(final HttpServletResponse response, final Long accountId, final Account account) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final AccountTO updated = accountHelper.update(accountId, account);
+            final Account updated = accountHelper.update(accountId, account);
             return new PaymentResponse<Account>(header, updated);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
@@ -107,7 +104,7 @@ public abstract class BaseResource {
     protected PaymentResponse<Account> doDeleteAccount(final HttpServletResponse response, final Long accountId) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final AccountTO account = accountHelper.delete(accountId);
+            final Account account = accountHelper.delete(accountId);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Account>(header, account);
         } catch (final ObjectNotFoundException e) {
@@ -153,7 +150,7 @@ public abstract class BaseResource {
         }
     }
 
-    protected PaymentResponse<Wallet> doUpdateWallet(final long walletId, final WalletTO wallet, final HttpServletResponse response) {
+    protected PaymentResponse<Wallet> doUpdateWallet(final long walletId, final Wallet wallet, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         if (!walletHelper.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
@@ -171,14 +168,14 @@ public abstract class BaseResource {
         }
     }
 
-    protected PaymentResponse<List<TransactionTO>> getAccountTransactions(final HttpServletResponse response,
+    protected PaymentResponse<List<Transaction>> getAccountTransactions(final HttpServletResponse response,
             final Long accountId,
             final String reference,
             final Direction direction,
             final Status status,
             final Transaction.Type type) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        List<TransactionTO> transactions = null;
+        List<Transaction> transactions = null;
         try {
             transactions = transactionHelper.getTransactionsForAccount(accountId, reference, direction, status, type);
         } catch (final ObjectNotFoundException e) {
@@ -188,11 +185,11 @@ public abstract class BaseResource {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
             return serverError(e.getMessage());
         }
-        return new PaymentResponse<List<TransactionTO>>(header, transactions);
+        return new PaymentResponse<List<Transaction>>(header, transactions);
     }
 
 
-    protected PaymentResponse<List<TransactionTO>> getWalletTransactions(final Long walletId, final String reference,
+    protected PaymentResponse<List<Transaction>> getWalletTransactions(final Long walletId, final String reference,
             final Direction direction, final Status status, final Type type, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         if (!walletHelper.exists(walletId)) {
@@ -200,8 +197,8 @@ public abstract class BaseResource {
             return notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         try {
-            final List<TransactionTO> transactions = transactionHelper.getTransactionsForWallet(walletId, reference, direction, status, type);
-            return new PaymentResponse<List<TransactionTO>>(header, transactions);
+            final List<Transaction> transactions = transactionHelper.getTransactionsForWallet(walletId, reference, direction, status, type);
+            return new PaymentResponse<List<Transaction>>(header, transactions);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return notFound(e.getMessage());

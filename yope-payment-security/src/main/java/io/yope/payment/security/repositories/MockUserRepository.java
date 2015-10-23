@@ -52,9 +52,8 @@ public class MockUserRepository implements UserRepository {
 
 
     @Override
-    public Boolean deleteUser(final String username) {
-        users.remove(username);
-        return true;
+    public User deleteUser(final String username) {
+        return users.remove(username);
     }
 
 }

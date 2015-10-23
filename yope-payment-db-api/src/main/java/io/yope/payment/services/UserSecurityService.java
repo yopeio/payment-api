@@ -17,7 +17,7 @@ public interface UserSecurityService {
 
     User getCurrentUser();
 
-    Boolean deleteUser(String username);
+    User deleteUser(String username);
 
 
 }

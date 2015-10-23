@@ -13,8 +13,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
-import com.google.common.collect.Lists;
-
 import io.yope.oauth.model.YopeUser;
 import lombok.AllArgsConstructor;
 
@@ -77,9 +75,8 @@ public class RedisUserRepository implements UserRepository {
     }
 
     @Override
-    public Boolean deleteUser(final String username) {
-        users.remove(username);
-        return true;
+    public User deleteUser(final String username) {
+        return getUser(users.remove(username));
     }
 
 }

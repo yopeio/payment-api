@@ -20,13 +20,13 @@ import lombok.ToString;
  * @author mgerardi
  *
  */
-@Builder
-@Getter
+@Builder(builderClassName="Builder", toBuilder=true)
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
 @ToString(of = {"name", "balance", "availableBalance"})
 @NodeEntity
-public class Neo4JWallet implements Wallet {
+public class Neo4JWallet {
 
     @GraphId
     private Long id;
@@ -40,7 +40,7 @@ public class Neo4JWallet implements Wallet {
 
     private BigDecimal availableBalance;
 
-    private Status status;
+    private Wallet.Status status;
 
     private String description;
 
@@ -48,13 +48,13 @@ public class Neo4JWallet implements Wallet {
 
     private Long modificationDate;
 
-    private Type type;
+    private Wallet.Type type;
 
     private String content;
 
     private String privateKey;
 
-    public static Neo4JWallet.Neo4JWalletBuilder from(final Wallet wallet) {
+    public static Neo4JWallet.Builder from(final Wallet wallet) {
         return Neo4JWallet.builder()
                 .balance(wallet.getBalance())
                 .availableBalance(wallet.getAvailableBalance())
@@ -68,6 +68,22 @@ public class Neo4JWallet implements Wallet {
                 .name(wallet.getName())
                 .privateKey(wallet.getPrivateKey())
                 .content(wallet.getContent());
+    }
+
+    public Wallet toWallet() {
+        return Wallet.builder()
+                .balance(getBalance())
+                .availableBalance(getAvailableBalance())
+                .type(getType())
+                .creationDate(getCreationDate())
+                .modificationDate(getModificationDate())
+                .description(getDescription())
+                .walletHash(getWalletHash())
+                .id(getId())
+                .status(getStatus())
+                .name(getName())
+                .privateKey(getPrivateKey())
+                .content(getContent()).build();
     }
 
 }

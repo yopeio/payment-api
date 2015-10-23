@@ -11,8 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import io.yope.payment.domain.Transaction;
+import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Status;
-import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
@@ -42,10 +42,10 @@ public class TransactionCleanerTask {
     @Scheduled(fixedDelay = DELAY)
     public void purgeTransaction() {
         log.info("cleaning expired transactions");
-        final List<Transaction> transactions = this.transactionService.getTransaction(DELAY, Status.PENDING);
+        final List<Transaction> transactions = transactionService.getTransaction(DELAY, Status.PENDING);
         for (final Transaction transaction : transactions) {
             try {
-                final Transaction expired = this.transactionService.save(transaction.getId(), TransactionTO.from(transaction).status(Status.EXPIRED).build());
+                final Transaction expired = transactionService.save(transaction.getId(), transaction.toBuilder().status(Status.EXPIRED).build());
                 log.info("Transaction {} expired ", expired);
             } catch (ObjectNotFoundException | InsufficientFundsException | IllegalTransactionStateException e) {
                 log.error(MessageFormat.format("Failed to save transaction {0}", transaction), e);
