@@ -31,7 +31,7 @@ import io.yope.config.jwt.ServiceJwtTokenStore;
 @Primary
 public class OAuth2ServerConfig {
 
-	public static final String WEB_APP_CLIENT = "my-trusted-wdpClient";
+	public static final String API_USER_CLIENT = "my-trusted-wdpClient";
 	private static final String API_RESOURCE = "oauth2-resource";
 
 	@Configuration
@@ -41,8 +41,8 @@ public class OAuth2ServerConfig {
 
 		@Autowired private AuthenticationManager authenticationManager;
 
-		private final static Integer accessTokenValiditySeconds = 1800;
-		private final static Integer refreshTokenValiditySeconds = 1500;
+		private final static Integer accessTokenValiditySeconds = -1;
+		private final static Integer refreshTokenValiditySeconds = -1;
 
 		// OAuth2 security configurer
 		@Override
@@ -74,7 +74,7 @@ public class OAuth2ServerConfig {
 		@Override
 		public void configure(final ClientDetailsServiceConfigurer clients) throws Exception {
 		 	clients.inMemory()
-		        .withClient(WEB_APP_CLIENT)
+		        .withClient(API_USER_CLIENT)
 		        .resourceIds(API_RESOURCE)
 		            .authorizedGrantTypes("password", "authorization_code", "refresh_token", "implicit")
 		            .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")

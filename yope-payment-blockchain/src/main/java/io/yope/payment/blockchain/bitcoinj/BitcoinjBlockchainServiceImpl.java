@@ -3,6 +3,7 @@ package io.yope.payment.blockchain.bitcoinj;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
@@ -22,15 +23,18 @@ import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.store.UnreadableWalletException;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.domain.transferobjects.AccountTO;
 import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.services.AccountService;
 import io.yope.payment.services.TransactionService;
+import io.yope.payment.services.WalletService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class BitcoinjBlockchainServiceImpl implements BlockChainService {
+
+    protected static final String ADMIN_EMAIL = "wallet@yope.io";
 
     public static List<String> HASH_LIST = Lists.newArrayList();
 
@@ -53,22 +59,26 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
     private final TransactionService transactionService;
 
+    private final WalletService walletService;
+
     private final AccountService accountService;
 
     private final BlockchainSettings settings;
 
-    public void init(final Wallet wallet) {
+    public void init() {
         final ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
             peerGroup.addPeerDiscovery(new DnsDiscovery(params));
             peerGroup.setBloomFilterFalsePositiveRate(0.00001);
+            final Wallet central = getCentralWallet();
             try {
+                log.info("central wallet hash: {}", central.getWalletHash());
                 registerInBlockchain(org.bitcoinj.core.Wallet.loadFromFileStream(
-                        new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(wallet.getContent()))));
+                        new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(central.getContent()))), central);
                 peerGroup.startAsync();
                 peerGroup.downloadBlockChain();
             } catch (final UnreadableWalletException e) {
-                log.error("wallet {} cannot be registered to the chain", wallet.getWalletHash(), e);
+                log.error("wallet {} cannot be registered to the chain", central.getWalletHash(), e);
             }
         });
     }
@@ -84,12 +94,40 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         } catch (final IOException e) {
             throw new BlockchainException(e);
         }
-        registerInBlockchain(btcjWallet);
 
         final WalletTO wallet = WalletTO.builder().walletHash(freshKey.toAddress(params).toString()).
                 content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).
                 privateKey(freshKey.getPrivateKeyEncoded(params).toString()).build();
         return wallet;
+    }
+
+    private Wallet getCentralWallet() {
+        Account admin = accountService.getByEmail(ADMIN_EMAIL);
+        if (admin == null) {
+            try {
+                final Wallet inBlockChain = register();
+                final Wallet central = WalletTO.builder()
+                        .content(inBlockChain.getContent())
+                        .walletHash(inBlockChain.getWalletHash())
+                        .type(Wallet.Type.EXTERNAL)
+                        .status(Wallet.Status.ACTIVE)
+                        .name("central")
+                        .description("central")
+                        .balance(BigDecimal.ZERO)
+                        .build();
+                final Account adm = AccountTO.builder()
+                        .email(ADMIN_EMAIL)
+                        .firstName("admin")
+                        .lastName("admin")
+                        .type(Account.Type.ADMIN)
+                        .wallets(Sets.newLinkedHashSet())
+                        .build();
+                admin = accountService.create(adm, central);
+            } catch (final BlockchainException e) {
+                log.error("error during blockchain registration", e);
+            }
+        }
+        return admin.getWallets().iterator().next();
     }
 
     @Override
@@ -99,7 +137,6 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             final Coin value = Coin.valueOf(satoshi);
             final org.bitcoinj.core.Wallet sender = centralWallet();
             sender.allowSpendingUnconfirmedTransactions();
-            registerInBlockchain(sender);
             final Address receiver = new Address(params, transaction.getDestination().getWalletHash());
             sender.sendCoins(peerGroup, receiver, value);
         } catch (final UnreadableWalletException e) {
@@ -111,12 +148,12 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         }
     }
 
-    private void registerInBlockchain(final org.bitcoinj.core.Wallet wallet) {
+    private void registerInBlockchain(final org.bitcoinj.core.Wallet wallet, final Wallet centralWallet) {
         log.info("******** register {} in blockchain", wallet.toString());
         chain.addWallet(wallet);
         peerGroup.addWallet(wallet);
         final WalletEventListener walletEventListener =
-                new WalletEventListener(peerGroup,params, transactionService, settings);
+                new WalletEventListener(peerGroup,params, transactionService, settings, walletService, centralWallet);
         wallet.addEventListener(walletEventListener);
     }
 
@@ -141,7 +178,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     }
 
     private org.bitcoinj.core.Wallet centralWallet() throws UnreadableWalletException {
-        final Account admin = accountService.getByEmail(BitcoinjConfiguration.ADMIN_EMAIL);
+        final Account admin = accountService.getByEmail(ADMIN_EMAIL);
         final Wallet centralWallet = admin.getWallets().iterator().next();
         return org.bitcoinj.core.Wallet.loadFromFileStream(
                 new ByteArrayInputStream(DatatypeConverter.parseBase64Binary(centralWallet.getContent())));
