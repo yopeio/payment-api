@@ -149,8 +149,9 @@ public class Neo4JTransactionService implements TransactionService {
                 }
                 break;
             default:
-                throw new IllegalTransactionStateException(current, next);
+                return;
         }
+        throw new IllegalTransactionStateException(current, next);
     }
 
     private void updateBalance(final Neo4JTransaction transaction)
