@@ -3,7 +3,6 @@ package io.yope.payment.blockchain.bitcoinj;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
@@ -96,7 +95,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     @Override
     public void send(final Transaction transaction) throws BlockchainException {
         try {
-            final long satoshi = transaction.getAmount().multiply(BigDecimal.valueOf(Constants.MILLI_TO_SATOSHI)).longValue();
+            final long satoshi = transaction.getAmount().multiply(Constants.MILLI_TO_SATOSHI).longValue();
             final Coin value = Coin.valueOf(satoshi);
             final org.bitcoinj.core.Wallet sender = centralWallet();
             sender.allowSpendingUnconfirmedTransactions();

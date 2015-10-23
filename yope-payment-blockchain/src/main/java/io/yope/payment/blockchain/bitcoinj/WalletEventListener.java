@@ -57,10 +57,10 @@ public class WalletEventListener extends AbstractWalletEventListener {
                 log.error("******** transaction {} with {} has status {}", pending.getId(), receiverHash, pending.getStatus());
                 return;
             }
-            final BigDecimal balance = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(new BigDecimal(Constants.MILLI_TO_SATOSHI));
+            final BigDecimal balance = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(Constants.MILLI_TO_SATOSHI);
             BigDecimal fees = new BigDecimal(valueSentFromMe.getValue());
             if (fees.floatValue() > 0) {
-                fees = fees.divide(new BigDecimal(Constants.MILLI_TO_SATOSHI));
+                fees = fees.divide(Constants.MILLI_TO_SATOSHI);
             }
             log.info("transaction: balance {} amount {} fees {} ", balance, pending.getAmount(), fees);
             if (balance.compareTo(pending.getAmount()) > 0) {

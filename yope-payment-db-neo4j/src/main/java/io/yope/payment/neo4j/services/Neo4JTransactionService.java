@@ -99,14 +99,14 @@ public class Neo4JTransactionService implements TransactionService {
             checkStatus(current.getStatus(), next.getStatus());
             switch (current.getStatus()) {
                 case PENDING:
-                    if (Status.ACCEPTED.equals(next.getType())) {
+                    if (Status.ACCEPTED.equals(next.getStatus())) {
                         updateBalance(current);
                     }
                     break;
                 case ACCEPTED:
-                    if (Status.COMPLETED.equals(next.getType())) {
+                    if (Status.COMPLETED.equals(next.getStatus())) {
                         updateAvailableBalance(current);
-                    } else if (Status.FAILED.equals(next.getType()) || Status.EXPIRED.equals(next.getType())) {
+                    } else if (Status.FAILED.equals(next.getStatus()) || Status.EXPIRED.equals(next.getStatus())) {
                         restoreBalance(current);
                     }
                     break;
