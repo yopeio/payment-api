@@ -18,20 +18,20 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.Wallet.SendResult;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.store.UnreadableWalletException;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.AccountTO;
-import io.yope.payment.domain.transferobjects.WalletTO;
+import io.yope.payment.domain.Wallet;
 import io.yope.payment.services.AccountService;
 import io.yope.payment.services.TransactionService;
 import io.yope.payment.services.WalletService;
@@ -95,7 +95,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             throw new BlockchainException(e);
         }
 
-        final WalletTO wallet = WalletTO.builder().walletHash(freshKey.toAddress(params).toString()).
+        final Wallet wallet = Wallet.builder().walletHash(freshKey.toAddress(params).toString()).
                 content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).
                 privateKey(freshKey.getPrivateKeyEncoded(params).toString()).build();
         return wallet;
@@ -106,7 +106,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         if (admin == null) {
             try {
                 final Wallet inBlockChain = register();
-                final Wallet central = WalletTO.builder()
+                final Wallet central = Wallet.builder()
                         .content(inBlockChain.getContent())
                         .walletHash(inBlockChain.getWalletHash())
                         .type(Wallet.Type.EXTERNAL)
@@ -115,12 +115,12 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
                         .description("central")
                         .balance(BigDecimal.ZERO)
                         .build();
-                final Account adm = AccountTO.builder()
+                final Account adm = Account.builder()
                         .email(ADMIN_EMAIL)
                         .firstName("admin")
                         .lastName("admin")
                         .type(Account.Type.ADMIN)
-                        .wallets(Sets.newLinkedHashSet())
+                        .wallets(Lists.newArrayList())
                         .build();
                 admin = accountService.create(adm, central);
             } catch (final BlockchainException e) {
@@ -131,14 +131,15 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     }
 
     @Override
-    public void send(final Transaction transaction) throws BlockchainException {
+    public String send(final Transaction transaction) throws BlockchainException {
         try {
-            final long satoshi = transaction.getAmount().multiply(BigDecimal.valueOf(Constants.MILLI_TO_SATOSHI)).longValue();
+            final long satoshi = transaction.getAmount().multiply(Constants.MILLI_TO_SATOSHI).longValue();
             final Coin value = Coin.valueOf(satoshi);
             final org.bitcoinj.core.Wallet sender = centralWallet();
             sender.allowSpendingUnconfirmedTransactions();
             final Address receiver = new Address(params, transaction.getDestination().getWalletHash());
-            sender.sendCoins(peerGroup, receiver, value);
+            final SendResult result = sender.sendCoins(peerGroup, receiver, value);
+            return result.tx.getHashAsString();
         } catch (final UnreadableWalletException e) {
             throw new BlockchainException(e);
         } catch (final InsufficientMoneyException e) {
@@ -160,21 +161,31 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     @Override
     public String generateCentralWalletHash() throws BlockchainException {
         try {
-            final org.bitcoinj.core.Wallet receiver = centralWallet();
             String freshHash = null;
-            if (HASH_STACK.isEmpty()) {
-                final DeterministicKey freshKey = receiver.freshReceiveKey();
-                freshHash = freshKey.toAddress(params).toString();
-            } else {
-                freshHash = HASH_STACK.pop();
-            }
-            log.info("******** fresh hash: {}", freshHash);
-            HASH_LIST.add(freshHash);
+            Transaction transaction = null;
+            do {
+                freshHash = getFreshHash(freshHash);
+                transaction = transactionService.getByReceiverHash(freshHash);
+            } while (transaction != null);
             return freshHash;
         } catch (final UnreadableWalletException e) {
             log.error("error during hash generation", e);
+            throw new BlockchainException(e);
         }
-        return null;
+    }
+
+    private String getFreshHash(final String previous) throws UnreadableWalletException, BlockchainException {
+        final org.bitcoinj.core.Wallet receiver = centralWallet();
+        if (HASH_STACK.isEmpty()) {
+            final DeterministicKey freshKey = receiver.freshReceiveKey();
+            final String hash = freshKey.toAddress(params).toString();
+            if (hash.equals(previous)) {
+                throw new BlockchainException("cannot generate new hash");
+            }
+            HASH_LIST.add(hash);
+            return hash;
+        }
+        return HASH_STACK.pop();
     }
 
     private org.bitcoinj.core.Wallet centralWallet() throws UnreadableWalletException {

@@ -2,6 +2,7 @@ package io.yope.payment.blockchain.bitcoinj;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -9,15 +10,13 @@ import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.script.Script;
 
 import io.yope.payment.domain.Transaction;
+import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.TransactionTO;
-import io.yope.payment.domain.transferobjects.WalletTO;
+import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
@@ -40,24 +39,22 @@ public class WalletEventListener extends AbstractWalletEventListener {
     @Override
     public void onTransactionConfidenceChanged(final org.bitcoinj.core.Wallet wallet,
                                                final org.bitcoinj.core.Transaction tx) {
+        final String transactionHash = tx.getHashAsString();
+        final int confidence = tx.getConfidence().getDepthInBlocks();
+        log.info("-----> Transaction {} {} Confidence Changed", transactionHash, confidence);
 
-
+        saveNewHash(wallet);
         receiveCoins(wallet,tx);
 
-        final String transactionHash = tx.getHashAsString();
         final Transaction loaded = transactionService.getByTransactionHash(transactionHash);
         if (loaded == null) {
-            log.warn("transaction hash {} does not yet exist", transactionHash);
             return;
         }
-        log.info("-----> confidence changed on {} {}", loaded.getId(), transactionHash);
-        final TransactionConfidence confidence = tx.getConfidence();
-        log.info("new block depth: {} ", confidence.getDepthInBlocks());
-        if (confidence.getDepthInBlocks() >= settings.getConfirmations()) {
+        if (confidence >= settings.getConfirmations()) {
             if (!Transaction.Status.ACCEPTED.equals(loaded.getStatus())) {
-                log.error("transaction {} has status {}", loaded.getId(), loaded.getStatus());
                 return;
             }
+            log.info("-----> Transaction {} with {} completed", confidence, loaded.getId(), transactionHash);
             try {
                 transactionService.transition(loaded.getId(), Transaction.Status.COMPLETED);
             } catch (final ObjectNotFoundException e) {
@@ -71,53 +68,33 @@ public class WalletEventListener extends AbstractWalletEventListener {
     }
 
     private void receiveCoins(final org.bitcoinj.core.Wallet wallet,
-                                             final org.bitcoinj.core.Transaction tx) {
-//        super.onCoinsReceived(wallet, tx, prevBalance, newBalance);
-        final Coin valueSentToMe = tx.getValueSentToMe(wallet);
-        final Coin valueSentFromMe = tx.getValueSentFromMe(wallet);
-
-        final DeterministicKey freshKey = wallet.freshReceiveKey();
-        final String freshHash = freshKey.toAddress(params).toString();
-        log.info("******** fresh hash: {}", freshHash);
-        BitcoinjBlockchainServiceImpl.HASH_STACK.push(freshHash);
-
-        log.info("******** Coins on central wallet to me {} from me {}",  valueSentToMe, valueSentFromMe);
-        final String receiverHash = getReceiverHash(tx);
-        final String senderHash = getSenderHash(tx);
-        if (receiverHash == null) {
-            return;
-        }
+                              final org.bitcoinj.core.Transaction tx) {
         try {
-
-            final Transaction pending = transactionService.getByReceiverHash(receiverHash);
-            if (pending == null) {
-                log.debug("******** receiver hash {} does not exist", receiverHash);
+            final Transaction pending = getTransaction(tx.getOutputs(), wallet);
+            if (pending == null || !Transaction.Status.PENDING.equals(pending.getStatus())) {
                 return;
             }
-            if (!Transaction.Status.PENDING.equals(pending.getStatus())) {
-                log.debug("******** transaction {} with {} has status {}", pending.getId(), receiverHash, pending.getStatus());
-                return;
-            }
-            final BigDecimal balance = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(new BigDecimal(Constants.MILLI_TO_SATOSHI));
+            final String senderHash = getSenderHash(tx.getOutputs(), wallet);
+            final Coin valueSentToMe = tx.getValueSentToMe(wallet);
+            final Coin valueSentFromMe = tx.getValueSentFromMe(wallet);
+            final BigDecimal balance = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(Constants.MILLI_TO_SATOSHI);
             BigDecimal fees = new BigDecimal(valueSentFromMe.getValue());
             if (fees.floatValue() > 0) {
-                fees = fees.divide(new BigDecimal(Constants.MILLI_TO_SATOSHI));
+                fees = fees.divide(Constants.MILLI_TO_SATOSHI);
             }
-            final BigDecimal amount = balance.add(fees);
-            log.info("transaction: amount {} = {} + {} (balance + fees)", pending.getAmount(), balance, fees);
-            if (amount.compareTo(pending.getAmount()) > 0) {
-                log.error("Transaction {}: paid amount {} greater than expected amont {}", receiverHash, amount, pending.getAmount());
+            log.info("transaction: balance {} amount {} fees {} ", balance, pending.getAmount(), fees);
+            if (balance.compareTo(pending.getAmount()) > 0) {
+                log.warn("***** WARNING *****\n\n              Transaction {}: paid amount {} greater than expected amont {}\n\n", pending.getId(), balance, pending.getAmount());
             }
-            if (amount.compareTo(pending.getAmount()) < 0) {
-                log.error("Transaction {}: paid amount {} less than expected amont {}", receiverHash, amount, pending.getAmount());
+            if (balance.compareTo(pending.getAmount()) < 0) {
+                log.error("***** WARNING *****\n\n              Transaction {}: paid amount {} less than expected amont {}\n\n", pending.getId(), balance , pending.getAmount());
             }
-            final Transaction transaction = TransactionTO
-                    .from(pending)
+            final Transaction transaction = pending.toBuilder()
                     .transactionHash(tx.getHashAsString())
                     .balance(balance)
                     .blockchainFees(fees)
-                    .senderHash(senderHash)
                     .receiverHash(null)
+                    .senderHash(senderHash)
                     .QR(null)
                     .status(Transaction.Status.ACCEPTED)
                     .build();
@@ -135,31 +112,41 @@ public class WalletEventListener extends AbstractWalletEventListener {
         saveWallet(wallet);
     }
 
+    private void saveNewHash(final org.bitcoinj.core.Wallet wallet) {
+        final DeterministicKey freshKey = wallet.freshReceiveKey();
+        final String freshHash = freshKey.toAddress(params).toString();
+        BitcoinjBlockchainServiceImpl.HASH_STACK.push(freshHash);
+    }
+
     private void saveWallet(final org.bitcoinj.core.Wallet wallet) {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             wallet.saveToFileStream(outputStream);
-            walletService.save(WalletTO.from(centralWallet).content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).build());
+            walletService.save(centralWallet.toBuilder().content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).build());
         } catch (final Exception e) {
             log.error("error adding wallet {}", e);
         }
     }
 
-    private String getSenderHash(final org.bitcoinj.core.Transaction tx) {
-        for (final TransactionOutput out : tx.getOutputs() ) {
-            final String hash = new Script(out.getScriptBytes()).getToAddress(params).toString();
-            if (!BitcoinjBlockchainServiceImpl.HASH_LIST.contains(hash)) {
-                return hash;
+    private String getSenderHash(final List<TransactionOutput> outputs, final org.bitcoinj.core.Wallet wallet) {
+        for (final TransactionOutput o : outputs) {
+            if (o.isMine(wallet)) {
+                continue;
             }
+            return o.getScriptPubKey().getToAddress(params).toString();
         }
         return null;
     }
 
-    private String getReceiverHash(final org.bitcoinj.core.Transaction tx) {
-        for (final TransactionOutput out : tx.getOutputs() ) {
-            final String hash = new Script(out.getScriptBytes()).getToAddress(params).toString();
-            if (BitcoinjBlockchainServiceImpl.HASH_LIST.contains(hash)) {
-                return hash;
+    private Transaction getTransaction(final List<TransactionOutput> outputs, final org.bitcoinj.core.Wallet wallet) {
+        for (final TransactionOutput o : outputs) {
+            if (!o.isMine(wallet)) {
+                continue;
+            }
+            final String hash = o.getScriptPubKey().getToAddress(params).toString();
+            final Transaction transaction = transactionService.getByReceiverHash(hash);
+            if (transaction != null) {
+                return transaction;
             }
         }
         return null;

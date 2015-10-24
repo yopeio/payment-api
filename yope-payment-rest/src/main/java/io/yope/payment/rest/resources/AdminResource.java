@@ -21,9 +21,6 @@ import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.AccountTO;
-import io.yope.payment.domain.transferobjects.TransactionTO;
-import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.AuthorizationException;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
@@ -41,11 +38,11 @@ public class AdminResource extends BaseResource {
      * @throws AuthorizationException
      */
     @RequestMapping(value="/accounts", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<List<AccountTO>> getAccounts() throws AuthorizationException {
+    public @ResponseBody PaymentResponse<List<Account>> getAccounts() throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final List<AccountTO> accounts = accountHelper.getAccounts();
+        final List<Account> accounts = accountHelper.getAccounts();
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        return new PaymentResponse<List<AccountTO>>(header, accounts);
+        return new PaymentResponse<List<Account>>(header, accounts);
     }
 
     /**
@@ -65,9 +62,9 @@ public class AdminResource extends BaseResource {
         checkPermission(Type.ADMIN);
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Transaction saved = transactionHelper.transition(transactionId, status);
+            final Transaction saved = transactionHelper.doTransition(transactionId, status);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
-            return new PaymentResponse<Transaction>(header, TransactionTO.from(saved).build());
+            return new PaymentResponse<Transaction>(header, saved);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return notFound(e.getMessage());
@@ -93,7 +90,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/accounts/{accountId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
             @PathVariable("accountId") final Long accountId,
-            @RequestBody(required=false) final AccountTO account) throws AuthorizationException {
+            @RequestBody(required=false) final Account account) throws AuthorizationException {
         checkPermission(Type.ADMIN);
         return doUpdateAccount(response, accountId, account);
     }
@@ -171,7 +168,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/wallets/{walletId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Wallet> updateWallet(
             @PathVariable final long walletId,
-            @RequestBody(required=false) final WalletTO wallet,
+            @RequestBody(required=false) final Wallet wallet,
             final HttpServletResponse response) throws AuthorizationException {
         checkPermission(Type.ADMIN);
         return doUpdateWallet(walletId, wallet, response);
@@ -197,7 +194,7 @@ public class AdminResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/accounts/{accountId}/transactions", method = RequestMethod.GET, produces = "application/json")
-    public @ResponseBody PaymentResponse<List<TransactionTO>> getTransactions(final HttpServletResponse response,
+    public @ResponseBody PaymentResponse<List<Transaction>> getTransactions(final HttpServletResponse response,
            @PathVariable final Long accountId,
            @RequestParam(value="reference", required=false) final String reference,
            @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
@@ -211,7 +208,7 @@ public class AdminResource extends BaseResource {
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(
             @PathVariable("transactionId") final Long transactionId) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.get(transactionId);
+        final Transaction transaction = transactionHelper.getTransactionById(transactionId);
         if (transaction == null) {
             return notFound("Not found " + transactionId);
         }
@@ -222,7 +219,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"senderHash"})
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(@RequestParam(value="senderHash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getBySenderHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionBySenderHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -233,7 +230,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"receiverHash"})
     public @ResponseBody PaymentResponse<Transaction> getByReceiverHash(@RequestParam(value="receiverHash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getByReceiverHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionByReceiverHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -244,7 +241,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"hash"})
     public @ResponseBody PaymentResponse<Transaction> getByTransactionHash(@RequestParam(value="hash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getByTransactionHash(hash);
+        final Transaction transaction = transactionHelper.getTransactionByHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -261,7 +258,7 @@ public class AdminResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/wallets/{walletId}/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<List<TransactionTO>> getTransactions(@PathVariable final Long walletId,
+    public @ResponseBody PaymentResponse<List<Transaction>> getTransactions(@PathVariable final Long walletId,
            @RequestParam(value="reference", required=false) final String reference,
            @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
            @RequestParam(value="status", required=false) final Status status,

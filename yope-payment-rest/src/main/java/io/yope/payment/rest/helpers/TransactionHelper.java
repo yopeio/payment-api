@@ -3,43 +3,27 @@
  */
 package io.yope.payment.rest.helpers;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.MessageFormat;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
-import io.yope.payment.blockchain.bitcoinj.Constants;
-import io.yope.payment.domain.Account;
+import io.yope.payment.domain.QRImage;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.QRImage;
-import io.yope.payment.domain.transferobjects.TransactionTO;
-import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
-import io.yope.payment.neo4j.domain.Neo4JWallet;
 import io.yope.payment.rest.BadRequestException;
-import io.yope.payment.rest.ServerConfiguration;
 import io.yope.payment.services.TransactionService;
 import io.yope.payment.services.WalletService;
 import lombok.extern.slf4j.Slf4j;
@@ -52,15 +36,15 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class TransactionHelper {
 
-    private static final int QR_WIDTH = 300;
+    static final BigDecimal BLOCKCHAIN_FEES = new BigDecimal("0.1");
 
-    private static final int QR_HEIGHT = 300;
-
-    @Autowired
-    private ServerConfiguration serverConfiguration;
+    private static final int SCALE = 5;
 
     @Autowired
     private AccountHelper accountHelper;
+
+    @Autowired
+    private WalletHelper walletHelper;
 
     @Autowired
     private TransactionService transactionService;
@@ -71,24 +55,27 @@ public class TransactionHelper {
     @Autowired
     private BlockChainService blockChainService;
 
-    public Transaction create(final TransactionTO transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, BlockchainException, InsufficientFundsException, IllegalTransactionStateException {
-        final Transaction.Type type = this.getType(transaction, accountId);
+    @Autowired
+    private QRHelper qrHelper;
+
+    public Transaction create(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, BlockchainException, InsufficientFundsException, IllegalTransactionStateException {
+        final Transaction.Type type = getType(transaction, accountId);
         switch (type) {
             case DEPOSIT:
-                return this.deposit(TransactionTO.from(transaction).type(Type.DEPOSIT).build(), accountId);
+                return doDeposit(transaction.toBuilder().type(Type.DEPOSIT).build(), accountId);
             case TRANSFER:
-                return this.transfer(TransactionTO.from(transaction).type(Type.TRANSFER).build(), accountId);
+                return doTransfer(transaction.toBuilder().type(Type.TRANSFER).build(), accountId);
             case WITHDRAW:
-                return this.withdraw(TransactionTO.from(transaction).type(Type.WITHDRAW).build(), accountId);
+                return doWithdraw(transaction.toBuilder().type(Type.WITHDRAW).build(), accountId);
             default:
                 break;
         }
         throw new BadRequestException("Transaction type not recognized "+transaction.getType(), "type");
     }
 
-    private Type getType(final TransactionTO transaction, final Long accountId) throws BadRequestException {
-        final Wallet source = this.getWallet(transaction.getSource(), accountId);
-        final Wallet destination = this.getWallet(transaction.getDestination(), accountId);
+    private Type getType(final Transaction transaction, final Long accountId) throws BadRequestException {
+        final Wallet source = getWallet(transaction.getSource(), accountId);
+        final Wallet destination = getWallet(transaction.getDestination(), accountId);
         if ((source != null && Wallet.Type.INTERNAL.equals(source.getType())) &&
             (destination != null && Wallet.Type.INTERNAL.equals(destination.getType()))) {
             return Transaction.Type.TRANSFER;
@@ -114,26 +101,32 @@ public class TransactionHelper {
      * @throws BadRequestException if the wallets are not found
      * @throws InsufficientFundsException
      */
-    public Transaction transfer(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, InsufficientFundsException {
-        final Account seller = this.accountHelper.getById(accountId);
-        final WalletTO source = this.getWallet(seller, transaction.getSource(), false, null);
-        final WalletTO destination = this.getWallet(seller, transaction.getDestination(), false, null);
+    public Transaction doTransfer(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, InsufficientFundsException {
+        final Wallet source = walletHelper.getByName(accountId, transaction.getSource().getName());
+        if (source == null) {
+            throw new ObjectNotFoundException(MessageFormat.format("Source Wallet {0} Not Found", transaction.getSource()));
+        }
         if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
             throw new InsufficientFundsException("not enough funds in the wallet with name "+source.getName());
         }
-        this.walletService.update(source.getId(), Neo4JWallet.from(source)
-                .balance(source.getBalance().subtract(transaction.getAmount()))
-                .availableBalance(source.getAvailableBalance().subtract(transaction.getAmount()))
+        final Wallet destination = walletHelper.getByName(accountId, transaction.getDestination().getName());
+        if (destination == null) {
+            throw new ObjectNotFoundException(MessageFormat.format("Destination Wallet {0} Not Found", transaction.getDestination()));
+        }
+        final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
+        walletService.update(source.getId(), source.toBuilder()
+                .balance(source.getBalance().subtract(correctedAmount))
+                .availableBalance(source.getAvailableBalance().subtract(correctedAmount))
                 .build());
-        this.walletService.update(destination.getId(), Neo4JWallet.from(destination)
-                .balance(destination.getBalance().add(transaction.getAmount()))
-                .availableBalance(destination.getAvailableBalance().add(transaction.getAmount()))
+        walletService.update(destination.getId(), destination.toBuilder()
+                .balance(destination.getBalance().add(correctedAmount))
+                .availableBalance(destination.getAvailableBalance().add(correctedAmount))
                 .build());
-        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction)
-                .balance(transaction.getAmount()).blockchainFees(BigDecimal.ZERO).fees(BigDecimal.ZERO)
+        final Transaction.Builder pendingTransactionBuilder = transaction.toBuilder()
+                .amount(correctedAmount)
+                .balance(correctedAmount).blockchainFees(BigDecimal.ZERO).fees(BigDecimal.ZERO)
                 .source(source).destination(destination).status(Status.COMPLETED);
-        final Transaction pendingTransaction = this.transactionService.create(pendingTransactionBuilder.build());
-        return TransactionTO.from(pendingTransaction).build();
+        return transactionService.create(pendingTransactionBuilder.build());
     }
 
     /**
@@ -144,15 +137,28 @@ public class TransactionHelper {
      * @throws ObjectNotFoundException if the seller is not found
      * @throws BadRequestException if the internal wallet is not found
      */
-    public Transaction deposit(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, BlockchainException {
-        final Account seller = this.accountHelper.getById(accountId);
-        final WalletTO source = this.getWallet(seller, transaction.getSource(), true, transaction.getAmount());
-        final WalletTO destination = this.getWallet(seller, transaction.getDestination(), false, null);
-        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).fees(BigDecimal.ZERO).source(source).destination(destination).status(Status.PENDING);
-        final QRImage qr = this.getQRImage(transaction.getAmount());
+    public Transaction doDeposit(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException, BlockchainException {
+        final Wallet source = getWalletForDeposit(transaction, accountId);
+        final Wallet destination = walletHelper.getByName(accountId, transaction.getDestination().getName());
+        if (destination == null) {
+            throw new ObjectNotFoundException(MessageFormat.format("Destination Wallet {0} Not Found", transaction.getDestination()));
+        }
+        final Transaction.Builder pendingTransactionBuilder = transaction.toBuilder().fees(BigDecimal.ZERO).source(source).destination(destination).status(Status.PENDING);
+        final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
+        final QRImage qr = qrHelper.getQRImage(correctedAmount.add(BLOCKCHAIN_FEES));
         pendingTransactionBuilder.QR(qr.getImageUrl()).receiverHash(qr.getHash());
-        final Transaction pendingTransaction = this.transactionService.create(pendingTransactionBuilder.build());
-        return TransactionTO.from(pendingTransaction).build();
+        return transactionService.create(pendingTransactionBuilder.amount(correctedAmount).build());
+    }
+
+    private Wallet getWalletForDeposit(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException {
+        Wallet wallet = getWallet(transaction.getSource(), accountId);
+        if (wallet == null) {
+            wallet = accountHelper.saveWallet(
+                        transaction.getSource().toBuilder().type(Wallet.Type.TRANSIT)
+                        .availableBalance(transaction.getAmount())
+                        .balance(transaction.getAmount()).build());
+        }
+        return wallet;
     }
 
     /**
@@ -165,137 +171,89 @@ public class TransactionHelper {
      * @throws IllegalTransactionStateException
      * @throws InsufficientFundsException
      */
-    public Transaction withdraw(final Transaction transaction, final Long accountId) throws BlockchainException, ObjectNotFoundException, BadRequestException, InsufficientFundsException, IllegalTransactionStateException {
-        final Account seller = this.accountHelper.getById(accountId);
-        final WalletTO source = this.getWallet(seller, transaction.getSource(), false, null);
-        final WalletTO destination = this.getWallet(seller, transaction.getDestination(), true, BigDecimal.ZERO);
-        final TransactionTO.Builder pendingTransactionBuilder = TransactionTO.from(transaction).fees(BigDecimal.ZERO).source(source).destination(destination).status(Status.PENDING);
-        final Transaction pendingTransaction = this.transactionService.create(pendingTransactionBuilder.build());
-        if (source.getAvailableBalance().compareTo(transaction.getAmount()) < 0) {
-            throw new InsufficientFundsException("not enough funds in the wallet with name "+source.getName());
+    public Transaction doWithdraw(final Transaction transaction, final Long accountId) throws BlockchainException, ObjectNotFoundException, BadRequestException, InsufficientFundsException, IllegalTransactionStateException {
+        final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
+        final Wallet source = walletHelper.getByName(accountId, transaction.getSource().getName());
+        if (source == null) {
+            throw new ObjectNotFoundException(MessageFormat.format("Source Wallet {0} Not Found", transaction.getSource()));
         }
+        if (source.getAvailableBalance().compareTo(correctedAmount) < 0) {
+            throw new InsufficientFundsException(MessageFormat.format("Insufficient Funds Exception in Wallet {0}", transaction.getSource()));
+        }
+        final Wallet destination = getWalletForWithdraw(transaction, accountId);
+        final Transaction.Builder pendingTransactionBuilder = transaction.toBuilder()
+                .amount(correctedAmount)
+                .fees(BigDecimal.ZERO)
+                .source(source)
+                .destination(destination).status(Status.PENDING);
+        final Transaction pendingTransaction = transactionService.create(pendingTransactionBuilder.build());
         try {
-            this.blockChainService.send(pendingTransaction);
+            final String transactionHash = blockChainService.send(pendingTransaction);
+            transactionService.save(pendingTransaction.getId(), pendingTransactionBuilder.transactionHash(transactionHash).status(Status.ACCEPTED).build());
         } catch (final Exception e) {
             log.error("Transaction "+pendingTransaction.getId(), e);
-            this.transactionService.transition(pendingTransaction.getId(), Transaction.Status.FAILED);
+            transactionService.transition(pendingTransaction.getId(), Transaction.Status.FAILED);
             throw e;
         }
-        this.walletService.update(source.getId(), Neo4JWallet.from(source)
-                .availableBalance(source.getAvailableBalance().subtract(transaction.getAmount())).build());
-        return TransactionTO.from(pendingTransaction).build();
+        return pendingTransaction;
     }
 
-    public QRImage getQRImage(final BigDecimal amount) throws ObjectNotFoundException, BlockchainException {
-        final String hash = this.getHash();
-        final String url = this.generateImageUrl(hash, amount);
-        return QRImage.builder()
-                .amount(amount)
-                .hash(hash)
-                .imageUrl(url)
-                .build();
-    }
-
-    String generateImageUrl(final String hash, final BigDecimal amount) {
-        final String code = this.generateCode(hash, amount);
-        BitMatrix bitMatrix = null;
-        try {
-            bitMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, QR_WIDTH, QR_HEIGHT);
-            final BufferedImage bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
-            final String imageName = hash+".png";
-            final File image = new File(this.getImageFolder(), imageName);
-            ImageIO.write(bufferedImage, "png", image);
-            return this.serverConfiguration.getImageAbsolutePath() + imageName;
-        } catch (final WriterException e) {
-            log.error("creating image", e);
-        } catch (final IOException e) {
-            log.error("saving image", e);
-        }
-        return null;
-    }
-
-    private File getImageFolder() {
-        final File folder = new File(this.serverConfiguration.getImageFolder());
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-        return folder;
-    }
-
-    private String generateCode(final String hash, final BigDecimal amount) {
-        return "bitcoin:" + hash + "?amount=" + amount.floatValue()/Constants.MILLI_BITCOINS;
-    }
-
-    private String getHash() throws BlockchainException {
-        return this.blockChainService.generateCentralWalletHash();
-    }
-
-    private WalletTO getWallet(final Account seller, final Wallet source, final Boolean save, final BigDecimal amount) throws ObjectNotFoundException, BadRequestException {
-        final Wallet wallet = this.getWallet(source, seller.getId());
-        if (wallet == null) {
-            if (save) {
-                return WalletTO.from(this.accountHelper.saveWallet(WalletTO.from(source).type(Wallet.Type.TRANSIT).availableBalance(BigDecimal.ZERO).balance(amount).build())).build();
+    private Wallet getWalletForWithdraw(final Transaction transaction, final Long accountId) throws ObjectNotFoundException, BadRequestException {
+        final Wallet destination = transaction.getDestination();
+        if (StringUtils.isBlank(destination.getWalletHash())) {
+            final Wallet wallet = walletHelper.getByName(accountId, transaction.getDestination().getName());
+            if (wallet == null) {
+                throw new IllegalArgumentException(MessageFormat.format("Destination Wallet {0} Not Found", transaction.getDestination()));
             }
-            throw new BadRequestException("Wallet with name "+source.getName()+" does not exists", null);
+            if (wallet.getWalletHash() == null) {
+                throw new IllegalArgumentException(MessageFormat.format("Destination Wallet {0} Has no Hash", transaction.getDestination()));
+            }
+            return wallet;
         }
-        if (save) {
-            return WalletTO.from(this.accountHelper.saveWallet(WalletTO.from(wallet)
-                    .availableBalance(BigDecimal.ZERO)
-                    .balance(wallet.getAvailableBalance().add(amount))
-                    .build())).build();
+        Wallet wallet = walletHelper.getByWalletHash(destination.getWalletHash());
+        if (wallet != null) {
+            return wallet;
         }
-        return WalletTO.from(wallet).build();
+        wallet = walletHelper.getByName(accountId, transaction.getDestination().getName());
+        if (wallet != null) {
+            return accountHelper.saveWallet(wallet.toBuilder().walletHash(destination.getWalletHash()).build());
+        }
+        return accountHelper.createWallet(accountId, destination);
     }
 
     private Wallet getWallet(final Wallet source, final Long sellerId) {
         if (StringUtils.isNotBlank(source.getWalletHash())) {
-            return this.walletService.getByWalletHash(source.getWalletHash());
+            return walletHelper.getByWalletHash(source.getWalletHash());
         }
-        return this.walletService.getByName(sellerId, source.getName());
+        return walletHelper.getByName(sellerId, source.getName());
     }
 
 
-    public List<TransactionTO> getTransactionsForWallet(final Long walletId, final String reference, final Direction direction, final Status status, final Type type) throws ObjectNotFoundException {
-        return this.transactionService.getForWallet(walletId, reference, direction, status, type).stream().map(t -> TransactionTO.from(t).build()).collect(Collectors.toList());
+    public List<Transaction> getTransactionsForWallet(final Long walletId, final String reference, final Direction direction, final Status status, final Type type) throws ObjectNotFoundException {
+        return transactionService.getForWallet(walletId, reference, direction, status, type);
     }
 
-    public List<TransactionTO> getTransactionsForAccount(final Long accountId, final String reference, final Direction direction, final Status status, final Type type) throws ObjectNotFoundException {
-        return this.transactionService.getForAccount(accountId, reference, direction, status, type).stream().map(t -> TransactionTO.from(t).build()).collect(Collectors.toList());
+    public List<Transaction> getTransactionsForAccount(final Long accountId, final String reference, final Direction direction, final Status status, final Type type) throws ObjectNotFoundException {
+        return transactionService.getForAccount(accountId, reference, direction, status, type);
     }
 
-    public Transaction get(final Long transactionId) {
-        final Transaction transaction = this.transactionService.get(transactionId);
-        if (transaction == null) {
-            return null;
-        }
-        return TransactionTO.from(transaction).build();
+    public Transaction getTransactionById(final Long transactionId) {
+        return transactionService.get(transactionId);
     }
 
-    public Transaction transition(final Long transactionId, final Status status) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
-        return TransactionTO.from(this.transactionService.transition(transactionId, status)).build();
+    public Transaction doTransition(final Long transactionId, final Status status) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
+        return transactionService.transition(transactionId, status);
     }
 
-    public Transaction getByTransactionHash(final String hash) {
-        final Transaction transaction = this.transactionService.getByTransactionHash(hash);
-        if (transaction == null) {
-            return null;
-        }
-        return TransactionTO.from(transaction).build();
+    public Transaction getTransactionByHash(final String hash) {
+        return transactionService.getByTransactionHash(hash);
     }
 
-    public Transaction getBySenderHash(final String hash) {
-        final Transaction transaction = this.transactionService.getBySenderHash(hash);
-        if (transaction == null) {
-            return null;
-        }
-        return TransactionTO.from(transaction).build();
+    public Transaction getTransactionBySenderHash(final String hash) {
+        return transactionService.getBySenderHash(hash);
     }
 
-    public Transaction getByReceiverHash(final String hash) {
-        final Transaction transaction = this.transactionService.getByReceiverHash(hash);
-        if (transaction == null) {
-            return null;
-        }
-        return TransactionTO.from(transaction).build();
+    public Transaction getTransactionByReceiverHash(final String hash) {
+        return transactionService.getByReceiverHash(hash);
     }
 }

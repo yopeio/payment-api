@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Status;
-import io.yope.payment.domain.transferobjects.TransactionTO;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
@@ -27,11 +26,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TransactionCleanerTask {
 
+    private static final int MINUTE = 60 * 1000;
+
+    private static final int HOUR = 60 * MINUTE;
+
     /**
      * the delay for the scheduler.
      * currently 30 minutes.
      */
-    private static final int DELAY = 900000;
+    private static final int PENDING_DELAY = 30 * MINUTE;
+
+    /**
+     * the delay for the scheduler.
+     * currently 2 hours.
+     */
+    private static final int ACCEPTED_DELAY = 2 * HOUR;
 
     @Autowired
     private TransactionService transactionService;
@@ -39,18 +48,27 @@ public class TransactionCleanerTask {
     /**
      *
      */
-    @Scheduled(fixedDelay = DELAY)
-    public void purgeTransaction() {
-        log.info("cleaning expired transactions");
-        final List<Transaction> transactions = this.transactionService.getTransaction(DELAY, Status.PENDING);
+    @Scheduled(fixedDelay = PENDING_DELAY)
+    public void purgePendingTransactions() {
+        purgeTransactions(Status.PENDING);
+    }
+
+    @Scheduled(fixedDelay = ACCEPTED_DELAY)
+    public void purgeAcceptedTransactions() {
+        purgeTransactions(Status.ACCEPTED);
+    }
+
+    private void purgeTransactions(final Status status) {
+        final List<Transaction> transactions = transactionService.getTransaction(PENDING_DELAY, status);
+        log.info("cleaning {} {} transactions", transactions.size(), status);
         for (final Transaction transaction : transactions) {
             try {
-                final Transaction expired = this.transactionService.save(transaction.getId(), TransactionTO.from(transaction).status(Status.EXPIRED).build());
-                log.info("Transaction {} expired ", expired);
+                transactionService.save(transaction.getId(),
+                        transaction.toBuilder().receiverHash(null).QR(null).status(Status.EXPIRED).build());
             } catch (ObjectNotFoundException | InsufficientFundsException | IllegalTransactionStateException e) {
                 log.error(MessageFormat.format("Failed to save transaction {0}", transaction), e);
             }
         }
-        log.info("cleaned {} expired transactions", transactions.size());
     }
+
 }

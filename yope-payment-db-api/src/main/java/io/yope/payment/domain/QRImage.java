@@ -1,7 +1,7 @@
 /**
  *
  */
-package io.yope.payment.domain.transferobjects;
+package io.yope.payment.domain;
 
 import java.math.BigDecimal;
 

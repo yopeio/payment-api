@@ -3,14 +3,24 @@
  */
 package io.yope.payment.domain;
 
-import java.util.Set;
+import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
- *
  * @author mgerardi
  *
  */
-public interface Account {
+@Builder(builderClassName="Builder", toBuilder=true)
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString(of= {"type", "email"}, includeFieldNames = false)
+public class Account {
 
     public enum Status {
         ACTIVE,
@@ -23,21 +33,23 @@ public interface Account {
         SELLER, BUYER, ADMIN;
     }
 
-    Long getId();
+    private Type type;
 
-    String getEmail();
+    private Long id;
 
-    Set<Wallet> getWallets();
+    private String email;
 
-    String getFirstName();
+    private List<Wallet> wallets;
 
-    String getLastName();
+    private String firstName;
 
-    Status getStatus();
+    private String lastName;
 
-    Type getType();
+    private Status status;
 
-    Long getRegistrationDate();
+    private Long registrationDate;
 
-    Long getModificationDate();
+    private Long modificationDate;
+
+
 }

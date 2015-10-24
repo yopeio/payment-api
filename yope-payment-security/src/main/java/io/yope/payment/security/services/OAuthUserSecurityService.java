@@ -56,7 +56,7 @@ public class OAuthUserSecurityService implements UserSecurityService {
     }
 
     @Override
-    public Boolean deleteUser(final String username) {
+    public User deleteUser(final String username) {
         return userRepository.deleteUser(username);
     }
 

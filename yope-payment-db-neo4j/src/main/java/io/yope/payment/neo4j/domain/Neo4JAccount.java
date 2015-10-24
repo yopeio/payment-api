@@ -3,7 +3,6 @@
  */
 package io.yope.payment.neo4j.domain;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -14,7 +13,6 @@ import org.springframework.data.neo4j.annotation.NodeEntity;
 import org.springframework.data.neo4j.annotation.RelatedTo;
 
 import io.yope.payment.domain.Account;
-import io.yope.payment.domain.Wallet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,15 +23,15 @@ import lombok.ToString;
  * @author mgerardi
  *
  */
-@Builder
-@Getter
+@Builder(builderClassName="Builder", toBuilder=true)
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
 @ToString(of= {"type", "email"}, includeFieldNames = false)
 @NodeEntity
-public class Neo4JAccount implements Account {
+public class Neo4JAccount {
 
-    private Type type;
+    private Account.Type type;
 
     @GraphId
     private Long id;
@@ -49,14 +47,14 @@ public class Neo4JAccount implements Account {
 
     private String lastName;
 
-    private Status status;
+    private Account.Status status;
 
     private Long registrationDate;
 
     private Long modificationDate;
 
-    public static Neo4JAccount.Neo4JAccountBuilder from(final Account account) {
-        final Neo4JAccountBuilder builder = Neo4JAccount.builder()
+    public static Neo4JAccount.Builder from(final Account account) {
+        final Builder builder = Neo4JAccount.builder()
                 .email(account.getEmail())
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
@@ -71,8 +69,20 @@ public class Neo4JAccount implements Account {
         return builder;
     }
 
-    @Override
-    public Set<Wallet> getWallets() {
-        return new HashSet<Wallet>(this.wallets);
+    public Account toAccount() {
+        final Account.Builder builder = Account.builder()
+                .email(getEmail())
+                .firstName(getFirstName())
+                .lastName(getLastName())
+                .id(getId())
+                .status(getStatus())
+                .type(getType())
+                .modificationDate(getModificationDate())
+                .registrationDate(getRegistrationDate());
+        if (getWallets() != null) {
+            builder.wallets(getWallets().stream().map(w -> w.toWallet()).collect(Collectors.toList()));
+        }
+        return builder.build();
     }
+
 }

@@ -19,6 +19,7 @@
         <module>yope-payment-blockchain</module>
         <module>yope-payment-db-api</module>
         <module>yope-payment-db-neo4j</module>
+        <module>yope-payment-content</module>
     </modules>
 
     <properties>
@@ -174,6 +175,15 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
         </dependency>
     </dependencies>
     <!-- support for out-of-tree builds -->

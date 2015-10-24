@@ -4,16 +4,12 @@
 package io.yope.payment.rest.helpers;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.Lists;
-
 import groovy.util.logging.Slf4j;
 import io.yope.payment.domain.Wallet;
-import io.yope.payment.domain.transferobjects.WalletTO;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.services.WalletService;
 
@@ -32,20 +28,35 @@ public class WalletHelper {
         return walletService.exists(walletId);
     }
 
-    public Wallet update(final Long walletId, final WalletTO wallet) throws ObjectNotFoundException {
-        return WalletTO.from(walletService.update(walletId, wallet)).build();
+    public Wallet save(final Wallet wallet) {
+        return walletService.save(wallet);
+    }
+
+    public Wallet update(final Long walletId, final Wallet wallet) throws ObjectNotFoundException {
+        return walletService.update(walletId, wallet);
     }
 
     public List<Wallet> get(final Long id) {
-        return Lists.newArrayList(walletService.get(id).stream().map(w -> WalletTO.from(w).build()).collect(Collectors.toList()));
+        return walletService.get(id);
     }
 
     public Wallet getById(final Long walletId) {
-        return WalletTO.from(walletService.getById(walletId)).build();
+        return walletService.getById(walletId);
+    }
+
+    public Wallet getByName(final Long accountId, final String name) {
+        return walletService.getByName(accountId, name);
     }
 
     public Wallet delete(final Long walletId) throws ObjectNotFoundException {
-        return WalletTO.from(walletService.delete(walletId)).build();
+        if (exists(walletId)) {
+            return walletService.delete(walletId);
+        }
+        throw new IllegalArgumentException(String.valueOf(walletId));
+    }
+
+    public Wallet getByWalletHash(final String walletHash) {
+        return walletService.getByWalletHash(walletHash);
     }
 
 
