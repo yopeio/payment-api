@@ -55,19 +55,23 @@ public class TransactionResource extends BaseResource {
         try {
             final Transaction saved = transactionHelper.create(transaction, loggedAccount.getId());
             response.setStatus(Response.Status.CREATED.getStatusCode());
-            return new PaymentResponse<Transaction>(header, saved);
+            final Transaction result = saved.toBuilder()
+                    .source(saved.getSource().toBuilder().availableBalance(null).balance(null).creationDate(null).build())
+                    .destination(saved.getDestination().toBuilder().availableBalance(null).balance(null).creationDate(null).build())
+                    .build();
+            return new PaymentResponse<Transaction>(header, result);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
             return serverError(e.getMessage());
         } catch (final BlockchainException e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return serverError("INTERNAL SERVER ERROR");
         } catch (final BadRequestException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
             return badRequest(e.getField(), e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return serverError("INTERNAL SERVER ERROR");
         }
     }
 

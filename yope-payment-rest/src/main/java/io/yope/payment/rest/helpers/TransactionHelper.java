@@ -12,6 +12,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.common.hash.Funnel;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.PrimitiveSink;
+
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.QRImage;
@@ -122,11 +126,33 @@ public class TransactionHelper {
                 .balance(destination.getBalance().add(correctedAmount))
                 .availableBalance(destination.getAvailableBalance().add(correctedAmount))
                 .build());
+        final Long now = System.currentTimeMillis();
         final Transaction.Builder pendingTransactionBuilder = transaction.toBuilder()
+                .creationDate(now)
+                .acceptedDate(now)
+                .completedDate(now)
                 .amount(correctedAmount)
                 .balance(correctedAmount).blockchainFees(BigDecimal.ZERO).fees(BigDecimal.ZERO)
                 .source(source).destination(destination).status(Status.COMPLETED);
+        pendingTransactionBuilder.transactionHash(getInternalTransactionHash(pendingTransactionBuilder.build()));
         return transactionService.create(pendingTransactionBuilder.build());
+    }
+
+    private String getInternalTransactionHash(final Transaction transaction) {
+        return Hashing.sha1().hashObject(transaction, new Funnel<Transaction>() {
+
+            private static final long serialVersionUID = 9193015056720554840L;
+
+            @Override
+            public void funnel(final Transaction from, final PrimitiveSink into) {
+                into.putUnencodedChars(from.getReference())
+                    .putUnencodedChars(from.getSource().getName())
+                    .putUnencodedChars(from.getDestination().getName())
+                    .putFloat(from.getAmount().floatValue())
+                    .putLong(from.getCreationDate());
+
+            }
+        }).toString();
     }
 
     /**
@@ -190,9 +216,12 @@ public class TransactionHelper {
         try {
             final String transactionHash = blockChainService.send(pendingTransaction);
             transactionService.save(pendingTransaction.getId(), pendingTransactionBuilder.transactionHash(transactionHash).status(Status.ACCEPTED).build());
-        } catch (final Exception e) {
+        } catch (final BlockchainException e) {
             log.error("Transaction "+pendingTransaction.getId(), e);
-            transactionService.transition(pendingTransaction.getId(), Transaction.Status.FAILED);
+            transactionService.save(pendingTransaction.getId(), pendingTransaction.toBuilder()
+                    .failedDate(System.currentTimeMillis())
+                    .status(Status.FAILED)
+                    .transactionHash(getInternalTransactionHash(pendingTransaction)).build());
             throw e;
         }
         return pendingTransaction;

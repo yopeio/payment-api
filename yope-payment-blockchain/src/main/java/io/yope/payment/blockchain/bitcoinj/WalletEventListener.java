@@ -14,8 +14,6 @@ import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import io.yope.payment.domain.Transaction;
-import io.yope.payment.domain.Transaction;
-import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
@@ -150,6 +148,14 @@ public class WalletEventListener extends AbstractWalletEventListener {
             }
         }
         return null;
+    }
+
+    @Override
+    public void onCoinsSent(final org.bitcoinj.core.Wallet wallet,
+            final org.bitcoinj.core.Transaction tx, final Coin prevBalance,
+            final Coin newBalance) {
+        super.onCoinsSent(wallet, tx, prevBalance, newBalance);
+        log.info("Sent coins {}", tx.getHashAsString());
     }
 
 }

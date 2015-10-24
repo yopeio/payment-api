@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Status;
@@ -105,7 +106,7 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
      */
     @Override
     public List<Account> getAccounts() {
-        return Lists.newArrayList(accountRepository.findAll()).stream().map(a -> a.toAccount()).collect(Collectors.toList());
+        return Lists.newArrayList(accountRepository.findAll()).stream().map(a -> a.toBuilder().wallets(Sets.newHashSet()).build().toAccount()).collect(Collectors.toList());
     }
 
     /*

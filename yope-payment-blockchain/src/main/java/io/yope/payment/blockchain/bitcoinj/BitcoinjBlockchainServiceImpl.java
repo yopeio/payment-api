@@ -4,8 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -28,9 +28,7 @@ import com.google.common.collect.Lists;
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Account;
-import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
-import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.services.AccountService;
 import io.yope.payment.services.TransactionService;
@@ -46,8 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
     protected static final String ADMIN_EMAIL = "wallet@yope.io";
-
-    public static List<String> HASH_LIST = Lists.newArrayList();
 
     public static Stack<String> HASH_STACK = new Stack<String>();
 
@@ -139,12 +135,17 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             sender.allowSpendingUnconfirmedTransactions();
             final Address receiver = new Address(params, transaction.getDestination().getWalletHash());
             final SendResult result = sender.sendCoins(peerGroup, receiver, value);
+            result.broadcastComplete.get();
             return result.tx.getHashAsString();
         } catch (final UnreadableWalletException e) {
             throw new BlockchainException(e);
         } catch (final InsufficientMoneyException e) {
             throw new BlockchainException(e);
         } catch (final AddressFormatException e) {
+            throw new BlockchainException(e);
+        } catch (final InterruptedException e) {
+            throw new BlockchainException(e);
+        } catch (final ExecutionException e) {
             throw new BlockchainException(e);
         }
     }
@@ -182,7 +183,6 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             if (hash.equals(previous)) {
                 throw new BlockchainException("cannot generate new hash");
             }
-            HASH_LIST.add(hash);
             return hash;
         }
         return HASH_STACK.pop();
