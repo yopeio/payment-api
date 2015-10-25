@@ -45,10 +45,10 @@ public class WalletEventListener extends AbstractWalletEventListener {
             return;
         }
         if (confidence >= settings.getConfirmations()) {
-            saveWallet(wallet);
             if (!Transaction.Status.ACCEPTED.equals(loaded.getStatus())) {
                 return;
             }
+            saveWallet(wallet);
             log.info("-----> Transaction {} with {} completed", confidence, loaded.getId(), transactionHash);
             try {
                 transactionService.save(loaded.getId(), loaded.toBuilder().status(Transaction.Status.COMPLETED).build());
