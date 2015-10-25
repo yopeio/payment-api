@@ -2,8 +2,10 @@ package io.yope.payment.rest.resources;
 
 import static org.junit.Assert.*;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore // TODO TODO TODO
 public class WalletResourceIntegrationTest {
 
 	@Test

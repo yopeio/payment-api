@@ -29,6 +29,8 @@ import org.springframework.web.client.RestTemplate;
 
 import io.yope.auth.AccessDeniedExceptionHandler;
 import io.yope.auth.UnauthorizedEntryPoint;
+import io.yope.oauth.model.OAuthEntity;
+import io.yope.oauth.model.OAuthRefreshToken;
 import io.yope.oauth.model.YopeUser;
 import io.yope.payment.security.repositories.RedisUserRepository;
 import io.yope.payment.security.repositories.UserRepository;
@@ -36,6 +38,8 @@ import io.yope.repository.IOAuthAccessToken;
 import io.yope.repository.IOAuthRefreshToken;
 import io.yope.repository.OAuthAccessTokenStore;
 import io.yope.repository.OAuthRefreshTokenStore;
+import io.yope.repository.redis.OAuthAccessTokenRedisStore;
+import io.yope.repository.redis.OAuthRefreshTokenRedisStore;
 import io.yope.repository.user.UserService;
 import io.yope.repository.user.UserServiceNoSqlImpl;
 
@@ -182,4 +186,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         final RMap<String, YopeUser> users = redisson.getMap("users");
         return new RedisUserRepository(users);
     }
+    
+    @Bean
+    public IOAuthAccessToken oauthAccessTokenRedisStore(final Redisson redisson) {
+        final RMap<String, OAuthEntity> tokens = redisson.getMap("accessTokens");
+        return new OAuthAccessTokenRedisStore(tokens);
+    }
+    
+    @Bean
+    public IOAuthRefreshToken oauthRefreshTokenRedisStore(final Redisson redisson) {
+        final RMap<String, OAuthRefreshToken> tokens = redisson.getMap("refreshTokens");
+        return new OAuthRefreshTokenRedisStore(tokens);
+    }
+    
+    
 }
