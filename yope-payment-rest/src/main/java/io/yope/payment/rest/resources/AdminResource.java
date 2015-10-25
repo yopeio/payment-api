@@ -40,7 +40,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/accounts", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<List<Account>> getAccounts() throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final List<Account> accounts = accountHelper.getAccounts();
+        final List<Account> accounts = accountService.getAccounts();
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         return new PaymentResponse<List<Account>>(header, accounts);
     }
@@ -62,7 +62,7 @@ public class AdminResource extends BaseResource {
         checkPermission(Type.ADMIN);
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Transaction saved = transactionHelper.doTransition(transactionId, status);
+            final Transaction saved = transactionService.save(transactionId, status);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Transaction>(header, saved);
         } catch (final ObjectNotFoundException e) {
@@ -106,7 +106,7 @@ public class AdminResource extends BaseResource {
             final HttpServletResponse response) throws AuthorizationException {
         checkPermission(Type.ADMIN);
         try {
-            final Account account = accountHelper.getById(accountId);
+            final Account account = accountService.getById(accountId);
             if (account == null) {
                 return notFound(MessageFormat.format("Account {0} not found", accountId));
             }
@@ -208,7 +208,7 @@ public class AdminResource extends BaseResource {
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(
             @PathVariable("transactionId") final Long transactionId) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getTransactionById(transactionId);
+        final Transaction transaction = transactionService.getTransactionById(transactionId);
         if (transaction == null) {
             return notFound("Not found " + transactionId);
         }
@@ -219,7 +219,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"senderHash"})
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(@RequestParam(value="senderHash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getTransactionBySenderHash(hash);
+        final Transaction transaction = transactionService.getTransactionBySenderHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -230,7 +230,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"receiverHash"})
     public @ResponseBody PaymentResponse<Transaction> getByReceiverHash(@RequestParam(value="receiverHash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getTransactionByReceiverHash(hash);
+        final Transaction transaction = transactionService.getTransactionByReceiverHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }
@@ -241,7 +241,7 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"hash"})
     public @ResponseBody PaymentResponse<Transaction> getByTransactionHash(@RequestParam(value="hash", required=true)  final String hash) throws AuthorizationException {
         checkPermission(Type.ADMIN);
-        final Transaction transaction = transactionHelper.getTransactionByHash(hash);
+        final Transaction transaction = transactionService.getTransactionByHash(hash);
         if (transaction == null) {
             return notFound(hash);
         }

@@ -1,5 +1,7 @@
 package io.yope.payment.blockchain;
 
+import java.io.IOException;
+
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
 
@@ -8,9 +10,9 @@ import io.yope.payment.domain.Wallet;
  */
 public interface BlockChainService {
 
-    Wallet register() throws BlockchainException;
-
     String send(Transaction transaction) throws BlockchainException;
+
+    Wallet saveCentralWallet(org.bitcoinj.core.Wallet wallet) throws IOException;
 
     /**
      * generated a new hash value from the central wallet.

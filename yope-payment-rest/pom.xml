@@ -21,6 +21,10 @@
         </dependency>
         <dependency>
             <groupId>io.yope.payment</groupId>
+            <artifactId>yope-payment-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.yope.payment</groupId>
             <artifactId>yope-payment-db-neo4j</artifactId>
         </dependency>
         <dependency>
@@ -50,14 +54,6 @@
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>javase</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

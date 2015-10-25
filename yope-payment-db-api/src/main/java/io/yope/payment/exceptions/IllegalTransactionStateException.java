@@ -22,7 +22,4 @@ public class IllegalTransactionStateException extends Exception {
         this.to = to;
     }
 
-
-
-
 }

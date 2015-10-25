@@ -1,10 +1,7 @@
 package io.yope.payment.blockchain.bitcoinj;
 
-import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.List;
-
-import javax.xml.bind.DatatypeConverter;
 
 import org.bitcoinj.core.AbstractWalletEventListener;
 import org.bitcoinj.core.Coin;
@@ -13,13 +10,13 @@ import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 
+import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
-import io.yope.payment.services.TransactionService;
-import io.yope.payment.services.WalletService;
+import io.yope.payment.transaction.services.TransactionStateService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,10 +26,9 @@ public class WalletEventListener extends AbstractWalletEventListener {
 
     private final PeerGroup peerGroup;
     private final NetworkParameters params;
-    private final TransactionService transactionService;
+    private final TransactionStateService transactionService;
     private final BlockchainSettings settings;
-    private final WalletService walletService;
-    private final Wallet centralWallet;
+    private final BlockChainService blockChainService;
 
     @Override
     public void onTransactionConfidenceChanged(final org.bitcoinj.core.Wallet wallet,
@@ -52,9 +48,10 @@ public class WalletEventListener extends AbstractWalletEventListener {
             if (!Transaction.Status.ACCEPTED.equals(loaded.getStatus())) {
                 return;
             }
+            saveWallet(wallet);
             log.info("-----> Transaction {} with {} completed", confidence, loaded.getId(), transactionHash);
             try {
-                transactionService.transition(loaded.getId(), Transaction.Status.COMPLETED);
+                transactionService.save(loaded.getId(), loaded.toBuilder().status(Transaction.Status.COMPLETED).build());
             } catch (final ObjectNotFoundException e) {
                 log.error("transaction not found", e);
             } catch (final InsufficientFundsException e) {
@@ -117,12 +114,14 @@ public class WalletEventListener extends AbstractWalletEventListener {
     }
 
     private void saveWallet(final org.bitcoinj.core.Wallet wallet) {
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
-            wallet.saveToFileStream(outputStream);
-            walletService.save(centralWallet.toBuilder().content(DatatypeConverter.printBase64Binary(outputStream.toByteArray())).build());
+            final Wallet centralWallet = blockChainService.saveCentralWallet(wallet);
+            if (centralWallet == null) {
+                log.error("central wallet not found!");
+            }
         } catch (final Exception e) {
-            log.error("error adding wallet {}", e);
+            log.error("error saving wallet", wallet);
+            log.error("Error:", e);
         }
     }
 
@@ -155,7 +154,17 @@ public class WalletEventListener extends AbstractWalletEventListener {
             final org.bitcoinj.core.Transaction tx, final Coin prevBalance,
             final Coin newBalance) {
         super.onCoinsSent(wallet, tx, prevBalance, newBalance);
-        log.info("Sent coins {}", tx.getHashAsString());
+        log.info("Sent coins tx: {}", tx.getHashAsString());
+        saveWallet(wallet);
+    }
+
+    @Override
+    public void onCoinsReceived(final org.bitcoinj.core.Wallet wallet,
+            final org.bitcoinj.core.Transaction tx, final Coin prevBalance,
+            final Coin newBalance) {
+        super.onCoinsReceived(wallet, tx, prevBalance, newBalance);
+        log.info("Received coins tx: {}", tx.getHashAsString());
+        saveWallet(wallet);
     }
 
 }

@@ -18,14 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.yope.payment.db.services.AccountDbService;
+import io.yope.payment.db.services.WalletDbService;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Status;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.neo4j.domain.Neo4JAccount;
 import io.yope.payment.neo4j.repositories.AccountRepository;
-import io.yope.payment.services.AccountService;
-import io.yope.payment.services.WalletService;
 
 /**
  * @author massi
@@ -33,13 +33,13 @@ import io.yope.payment.services.WalletService;
  */
 @Service
 @Transactional(value="neo4jTransactionManager", propagation = Propagation.REQUIRED)
-public class Neo4JAccountService implements AccountService, InitializingBean {
+public class Neo4JAccountService implements AccountDbService, InitializingBean {
 
     @Autowired
     private AccountRepository accountRepository;
 
     @Autowired
-    private WalletService walletService;
+    private WalletDbService walletService;
 
     @Autowired
     private Neo4jTemplate template;
@@ -133,6 +133,11 @@ public class Neo4JAccountService implements AccountService, InitializingBean {
     @Override
     public List<Account> getByType(final Account.Type type) {
         return accountRepository.findByType(type.name()).stream().map(a -> a.toAccount()).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean exists(final Long accountId) {
+        return accountRepository.exists(accountId);
     }
 
 }

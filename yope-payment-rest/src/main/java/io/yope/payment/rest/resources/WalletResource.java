@@ -19,8 +19,9 @@ import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.exceptions.AuthorizationException;
+import io.yope.payment.exceptions.BadRequestException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
-import io.yope.payment.rest.BadRequestException;
 
 /**
  * Wallet Resource.
@@ -42,7 +43,7 @@ public class WalletResource extends BaseResource {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.CREATED.getStatusCode());
         try {
             final Account loggedAccount = getLoggedAccount();
-            final Wallet saved = accountHelper.createWallet(loggedAccount, wallet);
+            final Wallet saved = accountService.createWallet(loggedAccount, wallet);
             response.setStatus(Response.Status.CREATED.getStatusCode());
             return new PaymentResponse<Wallet>(header, saved);
         } catch (final ObjectNotFoundException e) {
@@ -68,12 +69,13 @@ public class WalletResource extends BaseResource {
             @PathVariable final Long walletId,
             @RequestBody(required=false) final Wallet wallet,
             final HttpServletResponse response) {
-        final Account loggedAccount = getLoggedAccount();
-        if (!accountHelper.owns(loggedAccount, walletId)) {
+        try {
+            checkOwnership(walletId);
+            return doUpdateWallet(walletId, wallet, response);
+        } catch (final AuthorizationException e) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
             return unauthorized();
         }
-        return doUpdateWallet(walletId, wallet, response);
     }
 
 
@@ -99,12 +101,13 @@ public class WalletResource extends BaseResource {
     @RequestMapping(value="/{walletId}", method = RequestMethod.GET, produces = "application/json")
     public PaymentResponse<Wallet> getWallet(@PathVariable final Long walletId,
                                              final HttpServletResponse response) {
-        final Account loggedAccount = getLoggedAccount();
-        if (!accountHelper.owns(loggedAccount, walletId)) {
+        try {
+            checkOwnership(walletId);
+            return retrieveWallet(walletId, response);
+        } catch (final AuthorizationException e) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
             return unauthorized();
         }
-        return retrieveWallet(walletId, response);
     }
 
     /**
@@ -122,7 +125,7 @@ public class WalletResource extends BaseResource {
            @RequestParam(value="type", required=false) final Transaction.Type type,
            final HttpServletResponse response) {
         final Account loggedAccount = getLoggedAccount();
-        if (!accountHelper.owns(loggedAccount, walletId)) {
+        if (!accountService.owns(loggedAccount, walletId)) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
             return unauthorized();
         }
@@ -137,15 +140,16 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{walletId}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
-    public PaymentResponse<Wallet> deactivateWallet(@PathVariable final long walletId,
+    public PaymentResponse<Wallet> deactivateWallet(@PathVariable final Long walletId,
                                                     final HttpServletResponse response) {
         new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
-        final Account loggedAccount = getLoggedAccount();
-        if (!accountHelper.owns(loggedAccount, walletId)) {
+        try {
+            checkOwnership(walletId);
+            return doDeleteWallet(walletId, response);
+        } catch (final AuthorizationException e) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
             return unauthorized();
         }
-        return doDeleteWallet(walletId, response);
     }
 
 }
