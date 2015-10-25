@@ -81,18 +81,26 @@ public class TransactionStateService {
      */
     private Transaction doSave(final Transaction current, final Transaction next) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
         final Transaction.Builder transaction = next.toBuilder();
+        final Long now = System.currentTimeMillis();
         if (!current.getStatus().equals(next.getStatus())) {
             checkStatus(current.getStatus(), next.getStatus());
             switch (current.getStatus()) {
                 case PENDING:
                     if (Status.ACCEPTED.equals(next.getStatus())) {
+                        transaction.acceptedDate(now);
                         updateBalance(current);
+                    } else if (Status.DENIED.equals(next.getStatus()) ||
+                            Status.FAILED.equals(next.getStatus()) ||
+                            Status.EXPIRED.equals(next.getStatus())) {
+                        transaction.failedDate(now).deniedDate(now).expiredDate(now);
                     }
                     break;
                 case ACCEPTED:
                     if (Status.COMPLETED.equals(next.getStatus())) {
+                        transaction.completedDate(now);
                         updateAvailableBalance(current);
                     } else if (Status.FAILED.equals(next.getStatus()) || Status.EXPIRED.equals(next.getStatus())) {
+                        transaction.failedDate(now).expiredDate(now);
                         restoreBalance(current);
                     }
                     break;
@@ -119,7 +127,6 @@ public class TransactionStateService {
      * @param current
      *            the current status
      * @throws IllegalTransactionStateException
-     * @throws IllegalArgumentException
      *             if the check fails
      */
     private void checkStatus(final Status current, final Status next) throws IllegalTransactionStateException {
@@ -137,9 +144,9 @@ public class TransactionStateService {
                 }
                 break;
             default:
-                return;
+                break;
         }
-        throw new IllegalTransactionStateException(current, next);
+        throw new IllegalTransactionStateException().from(current).to(next);
     }
 
     private void updateBalance(final Transaction transaction)
