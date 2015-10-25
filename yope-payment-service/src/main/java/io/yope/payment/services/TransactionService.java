@@ -81,7 +81,7 @@ public class TransactionService {
             default:
                 break;
         }
-        return null;
+        throw new BadRequestException("Transaction type not recognized "+transaction.getType()).field("type");
     }
 
     private Type getType(final Transaction transaction, final Long accountId) throws BadRequestException {
@@ -99,7 +99,7 @@ public class TransactionService {
             (destination == null || (destination != null && Wallet.Type.EXTERNAL.equals(destination.getType())))) {
             return Transaction.Type.WITHDRAW;
         }
-        throw new BadRequestException(MessageFormat.format("Transaction between {0} and {1} not allowed", source, destination));
+        throw new BadRequestException("Transaction not allowed");
     }
 
 

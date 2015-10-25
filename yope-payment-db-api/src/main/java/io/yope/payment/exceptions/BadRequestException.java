@@ -4,12 +4,16 @@
 package io.yope.payment.exceptions;
 
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 /**
  * @author massi
  *
  */
 @Getter
+@Setter
+@Accessors(fluent=true)
 public class BadRequestException extends Exception {
 
     /**
@@ -22,11 +26,6 @@ public class BadRequestException extends Exception {
     /**
      * @param message
      */
-    public BadRequestException(final String message, final String field) {
-        super(message);
-        this.field = field;
-    }
-
     public BadRequestException(final String message) {
         super(message);
     }

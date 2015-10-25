@@ -113,7 +113,7 @@ public class AccountService {
 
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
         if (walletHelper.getByName(account.getId(), wallet.getName()) != null) {
-            throw new BadRequestException(MessageFormat.format("Wallet with name {0} exists", wallet.getName()), "name");
+            throw new BadRequestException("You already have a wallet with name "+wallet.getName()).field("name");
         }
         final Wallet newWallet = wallet.toBuilder()
                 .availableBalance(BigDecimal.ZERO)

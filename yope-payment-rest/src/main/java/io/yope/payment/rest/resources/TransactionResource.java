@@ -62,7 +62,7 @@ public class TransactionResource extends BaseResource {
             return serverError("INTERNAL SERVER ERROR");
         } catch (final BadRequestException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return badRequest(e.getField(), e.getMessage());
+            return badRequest(e.field(), e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
             return serverError("INTERNAL SERVER ERROR");

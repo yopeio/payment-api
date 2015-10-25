@@ -3,10 +3,17 @@
  */
 package io.yope.payment.exceptions;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
 /**
  * @author massi
  *
  */
+@Getter
+@Setter
+@Accessors(fluent=true)
 public class DuplicateEmailException extends Exception {
 
     /**
@@ -16,14 +23,9 @@ public class DuplicateEmailException extends Exception {
 
     public String email;
 
-    public DuplicateEmailException(final String email) {
-        super(email);
-        this.email = email;
+    public DuplicateEmailException(final String message) {
+        super(message);
     }
 
-    public DuplicateEmailException(final String message, final String email) {
-        super(message);
-        this.email = email;
-    }
 
 }
