@@ -1,10 +1,12 @@
 package io.yope.payment.rest.resources;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import javax.ws.rs.core.Response;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,7 +34,8 @@ public class AccountResource extends BaseResource {
     @RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Account> createAccount(
             final HttpServletResponse response,
-            @RequestBody(required=true) final RegistrationRequest registrationRequest) {
+            @RequestBody(required=true) @Valid final RegistrationRequest registrationRequest,
+            final BindingResult bindingResult) {
         try {
             if (Type.ADMIN.equals(registrationRequest.getType())) {
                 return badRequest("type", "Wrong User Type; please use either SELLER or BUYER");

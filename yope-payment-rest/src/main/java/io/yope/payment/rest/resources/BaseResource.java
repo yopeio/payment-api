@@ -81,12 +81,10 @@ public abstract class BaseResource {
         }
     }
 
-
-
     private <T> PaymentResponse<T> error(final String field, final String message, final Response.Status status) {
         final ResponseHeader header = new ResponseHeader(false, status.getStatusCode());
         final Error error = Error.builder().field(field).message(message).build();
-        return new PaymentResponse<T>(header, null, error);
+        return new PaymentResponse<T>(header, error);
     }
 
     protected <T> PaymentResponse<T> unauthorized() {
@@ -98,7 +96,16 @@ public abstract class BaseResource {
     }
 
     protected <T> PaymentResponse<T> badRequest(final String field, final String message) {
+        return error(field, message, Response.Status.BAD_REQUEST);
+    }
+
+    protected <T> PaymentResponse<T> badRequest(final String message) {
         return error(null, message, Response.Status.BAD_REQUEST);
+    }
+
+    protected <T> PaymentResponse<T> badRequest(final List<Error> errors) {
+        final ResponseHeader header = new ResponseHeader(false, Response.Status.BAD_REQUEST.getStatusCode());
+        return new PaymentResponse<T>(header, errors);
     }
 
     protected <T> PaymentResponse<T> notFound(final String message) {
@@ -195,7 +202,7 @@ public abstract class BaseResource {
             final Transaction.Type type) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         if (accountService.exists(accountId)) {
-            return badRequest(null, MessageFormat.format(WALLET_NOT_FOUND, accountId));
+            return badRequest(MessageFormat.format(WALLET_NOT_FOUND, accountId));
         }
         List<Transaction> transactions = null;
         try {
