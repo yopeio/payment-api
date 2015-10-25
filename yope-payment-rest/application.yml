@@ -6,9 +6,17 @@ neo4j:
     neo4jUrl: "http://localhost:7474/db/data/"  
     neo4jUsername: "neo4j"
     neo4jPassword: "Iz0von0f"
+
 server:
     url: http://localhost:8080
     imagePath: /images
     imageFolder: images
+
 blockchain:
-    confirmations: 3
+    confirmations: 1
+    feesThreshold: 20
+    fees: 0.1
+    walletFolder: "wallet"
+    walletName: "centralWallet"
+    adminUsername: "wallet@yope.io"
+    adminPassword: "ag4jal0o"

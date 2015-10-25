@@ -1,16 +1,15 @@
 package io.yope.payment.rest.resources;
 
-import groovy.util.logging.Slf4j;
-import io.yope.payment.exceptions.DuplicateEmailException;
-import io.yope.payment.rest.helpers.AccountHelper;
-import io.yope.payment.rest.requests.RegistrationRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import groovy.util.logging.Slf4j;
+import io.yope.payment.exceptions.DuplicateEmailException;
+import io.yope.payment.requests.RegistrationRequest;
 
 /**
  * Mailchimp resource.
@@ -21,9 +20,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Slf4j
 public class MailChimpResource extends BaseResource {
 
-    @Autowired
-    AccountHelper accountHelper;
-
     @RequestMapping(method=RequestMethod.GET)
     @ResponseBody
     String notified() {
@@ -32,16 +28,16 @@ public class MailChimpResource extends BaseResource {
 
     @RequestMapping(method=RequestMethod.POST)
     @ResponseBody
-    String confirmNotified(@RequestParam(value="data[merges][EMAIL]") String email,
-                           @RequestParam(value="data[merges][FNAME]") String firstName,
-                           @RequestParam(value="data[merges][LNAME]") String lastName,
-                           @RequestParam(value="data[merges][PWD]") String password,
-                           @RequestParam(value="data[merges][WALLET_NM]") String wName,
-                           @RequestParam(value="data[merges][WALLET_DSC]") String wDesc,
-                           @RequestParam(value="data[merges][WALLET_HSH]") String wHash
+    String confirmNotified(@RequestParam(value="data[merges][EMAIL]") final String email,
+                           @RequestParam(value="data[merges][FNAME]") final String firstName,
+                           @RequestParam(value="data[merges][LNAME]") final String lastName,
+                           @RequestParam(value="data[merges][PWD]") final String password,
+                           @RequestParam(value="data[merges][WALLET_NM]") final String wName,
+                           @RequestParam(value="data[merges][WALLET_DSC]") final String wDesc,
+                           @RequestParam(value="data[merges][WALLET_HSH]") final String wHash
 
     ) {
-        RegistrationRequest registration =
+        final RegistrationRequest registration =
                 RegistrationRequest.builder()
                         .description(wDesc)
                         .email(email)
@@ -52,8 +48,8 @@ public class MailChimpResource extends BaseResource {
                         .name(wName)
                         .build();
         try {
-            accountHelper.registerAccount(registration);
-        } catch (DuplicateEmailException e) {
+            accountService.registerAccount(registration);
+        } catch (final DuplicateEmailException e) {
             // voluntarily empty.
             return "Ko";
         }

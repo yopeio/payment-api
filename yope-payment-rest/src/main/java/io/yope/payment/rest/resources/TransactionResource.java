@@ -1,11 +1,11 @@
 package io.yope.payment.rest.resources;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,10 +22,8 @@ import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
 import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.exceptions.AuthorizationException;
+import io.yope.payment.exceptions.BadRequestException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
-import io.yope.payment.rest.BadRequestException;
-import io.yope.payment.rest.helpers.AccountHelper;
-import io.yope.payment.rest.helpers.TransactionHelper;
 
 /**
  * Wallet Resource.
@@ -35,11 +33,7 @@ import io.yope.payment.rest.helpers.TransactionHelper;
 @RequestMapping("/transactions")
 public class TransactionResource extends BaseResource {
 
-    @Autowired
-    private AccountHelper accountHelper;
-
-    @Autowired
-    private TransactionHelper transactionHelper;
+    private final static String NOT_FOUND_MESSAGE = "Transaction with {0} '{1}' not found";
 
     /**
      * Create Transaction.
@@ -53,7 +47,7 @@ public class TransactionResource extends BaseResource {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.CREATED.getStatusCode());
         final Account loggedAccount = getLoggedAccount();
         try {
-            final Transaction saved = transactionHelper.create(transaction, loggedAccount.getId());
+            final Transaction saved = transactionService.create(transaction, loggedAccount.getId());
             response.setStatus(Response.Status.CREATED.getStatusCode());
             final Transaction result = saved.toBuilder()
                     .source(saved.getSource().toBuilder().availableBalance(null).balance(null).creationDate(null).build())
@@ -76,66 +70,43 @@ public class TransactionResource extends BaseResource {
     }
 
     @RequestMapping(value = "/{transactionId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<Transaction> get(@PathVariable final long transactionId) {
-        final Account loggedAccount = getLoggedAccount();
-        final Transaction transaction = transactionHelper.getTransactionById(transactionId);
-        if (transaction == null) {
-            return notFound("Not found " + transactionId);
-        }
-        final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
-                || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
-            return new PaymentResponse<Transaction>(header, transaction);
-        }
-        return unauthorized();
+    public @ResponseBody PaymentResponse<Transaction> get(@PathVariable final Long transactionId) {
+        final Transaction transaction = transactionService.getTransactionById(transactionId);
+        return paymentResponse(transaction, MessageFormat.format(NOT_FOUND_MESSAGE, "id", transactionId));
     }
 
     @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"senderHash" })
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(
             @RequestParam(value = "senderHash", required = true) final String hash) throws AuthorizationException {
-        final Transaction transaction = transactionHelper.getTransactionBySenderHash(hash);
-        if (transaction == null) {
-            return notFound(hash);
-        }
-        final Account loggedAccount = getLoggedAccount();
-        if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
-                || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
-            final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-            return new PaymentResponse<Transaction>(header, transaction);
-        }
-        return unauthorized();
+        final Transaction transaction = transactionService.getTransactionBySenderHash(hash);
+        return paymentResponse(transaction, MessageFormat.format(NOT_FOUND_MESSAGE, "senderHash", hash));
     }
 
     @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"receiverHash" })
     public @ResponseBody PaymentResponse<Transaction> getByReceiverHash(
             @RequestParam(value = "receiverHash", required = true) final String hash) throws AuthorizationException {
-        final Transaction transaction = transactionHelper.getTransactionByReceiverHash(hash);
-        if (transaction == null) {
-            return notFound(hash);
-        }
-        final Account loggedAccount = getLoggedAccount();
-        if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
-                || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
-            final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-            return new PaymentResponse<Transaction>(header, transaction);
-        }
-        return unauthorized();
+        final Transaction transaction = transactionService.getTransactionByReceiverHash(hash);
+        return paymentResponse(transaction, MessageFormat.format(NOT_FOUND_MESSAGE, "receiverHash", hash));
     }
 
     @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params = {"hash" })
     public @ResponseBody PaymentResponse<Transaction> getByTransactionHash(
             @RequestParam(value = "hash", required = true) final String hash) throws AuthorizationException {
-        final Transaction transaction = transactionHelper.getTransactionByHash(hash);
+        final Transaction transaction = transactionService.getTransactionByHash(hash);
+        return paymentResponse(transaction, MessageFormat.format(NOT_FOUND_MESSAGE, "hash", hash));
+    }
+
+    private PaymentResponse<Transaction> paymentResponse(final Transaction transaction, final String message) {
         if (transaction == null) {
-            return notFound(hash);
+            return notFound(message);
         }
-        final Account loggedAccount = getLoggedAccount();
-        if (accountHelper.owns(loggedAccount, transaction.getSource().getId())
-                || accountHelper.owns(loggedAccount, transaction.getDestination().getId())) {
+        try {
+            checkOwnership(transaction);
             final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
             return new PaymentResponse<Transaction>(header, transaction);
+        } catch (final AuthorizationException e) {
+            return unauthorized();
         }
-        return unauthorized();
     }
 
     /**

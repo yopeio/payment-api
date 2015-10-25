@@ -13,8 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
+import io.yope.payment.db.services.UserSecurityService;
 import io.yope.payment.security.repositories.UserRepository;
-import io.yope.payment.services.UserSecurityService;
 
 /**
  * @author mgerardi

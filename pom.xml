@@ -14,12 +14,13 @@
     </parent>
 
     <modules>
-        <module>yope-payment-rest</module>
-        <module>yope-payment-security</module>
-        <module>yope-payment-blockchain</module>
         <module>yope-payment-db-api</module>
         <module>yope-payment-db-neo4j</module>
-        <module>yope-payment-content</module>
+        <module>yope-payment-security</module>
+        <module>yope-payment-blockchain</module>
+        <module>yope-payment-transaction-service</module>
+        <module>yope-payment-service</module>
+        <module>yope-payment-rest</module>
     </modules>
 
     <properties>
@@ -44,6 +45,16 @@
             <dependency>
                 <groupId>io.yope.payment</groupId>
                 <artifactId>yope-payment-blockchain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.yope.payment</groupId>
+                <artifactId>yope-payment-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.yope.payment</groupId>
+                <artifactId>yope-payment-transaction-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -17,6 +17,10 @@
             <artifactId>yope-payment-db-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.yope.payment</groupId>
+            <artifactId>yope-payment-transaction-service</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
         </dependency>
@@ -24,7 +28,19 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+        </dependency>
 
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

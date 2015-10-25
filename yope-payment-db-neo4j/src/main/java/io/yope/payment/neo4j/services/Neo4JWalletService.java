@@ -10,16 +10,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Lists;
 
+import io.yope.payment.db.services.WalletDbService;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.domain.Wallet.Status;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.neo4j.domain.Neo4JWallet;
 import io.yope.payment.neo4j.repositories.WalletRepository;
-import io.yope.payment.services.WalletService;
 
 @Service
 @Transactional
-public class Neo4JWalletService implements WalletService {
+public class Neo4JWalletService implements WalletDbService {
 
     @Autowired
     private WalletRepository repository;
