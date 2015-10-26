@@ -1,9 +1,9 @@
 package io.yope.payment.rest.resources;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import javax.ws.rs.core.Response;
-
+import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Account.Type;
+import io.yope.payment.exceptions.DuplicateEmailException;
+import io.yope.payment.requests.RegistrationRequest;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -12,10 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import io.yope.payment.domain.Account;
-import io.yope.payment.domain.Account.Type;
-import io.yope.payment.exceptions.DuplicateEmailException;
-import io.yope.payment.requests.RegistrationRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 
 /**
  * Account resource.
@@ -34,7 +32,7 @@ public class AccountResource extends BaseResource {
     @RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Account> createAccount(
             final HttpServletResponse response,
-            @RequestBody(required=true) @Valid final RegistrationRequest registrationRequest,
+            @RequestBody(required=true) final RegistrationRequest registrationRequest,
             final BindingResult bindingResult) {
         try {
             if (Type.ADMIN.equals(registrationRequest.getType())) {
