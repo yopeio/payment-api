@@ -2,9 +2,9 @@ package io.yope.repository.redis;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import io.yope.oauth.model.OAuthAccessToken;
@@ -17,9 +17,12 @@ import lombok.extern.slf4j.Slf4j;
  * 
  * @author Gianluigi
  */
-@Repository("oAuthAccessTokenRedisStore")
+@Repository
+@Qualifier(OAuthAccessTokenRedisStore.QUALIFIER)
 @Slf4j
 public class OAuthAccessTokenRedisStore implements IOAuthAccessToken {
+	
+	public static final String QUALIFIER = "oAuthAccessTokenRedisStore";
 	
 	// this contains the accessTokens indexed by TokenId and refreshTokens and AuthId!
 	private final Map<String, OAuthEntity> tokenMap;

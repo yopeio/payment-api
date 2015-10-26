@@ -4,16 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 import org.springframework.security.oauth2.common.util.SerializationUtils;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.AuthenticationKeyGenerator;
-import org.springframework.security.oauth2.provider.token.DefaultAuthenticationKeyGenerator;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
 import io.yope.oauth.model.JWTCommon;
@@ -26,9 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractJwtTokenStore implements TokenStore {
 	
-	@Autowired protected IOAuthRefreshToken refreshTokenDao;
+	protected final IOAuthRefreshToken refreshTokenDao;
+	protected final AuthenticationKeyGenerator authenticationKeyGenerator;
 	
-	protected final AuthenticationKeyGenerator authenticationKeyGenerator = new DefaultAuthenticationKeyGenerator();
+	public AbstractJwtTokenStore(final IOAuthRefreshToken refreshTokenDao, final AuthenticationKeyGenerator authenticationKeyGenerator) {
+		this.refreshTokenDao = refreshTokenDao;
+		this.authenticationKeyGenerator = authenticationKeyGenerator;
+	}
 	
 	/*
 	 * Force all extending sub classed of this one to inherit this functionality

@@ -1,27 +1,32 @@
 package io.yope.config.jwt;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.security.oauth2.provider.token.AuthenticationKeyGenerator;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.yope.oauth.model.JWTCommon;
 import io.yope.oauth.model.OAuthAccessToken;
 import io.yope.oauth.model.OAuthRefreshToken;
 import io.yope.repository.IOAuthAccessToken;
+import io.yope.repository.IOAuthRefreshToken;
 import io.yope.utils.BasicAuth;
 import io.yope.utils.ThreadLocalUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Transactional(rollbackFor = Exception.class) @Slf4j
 public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
-
-	@Autowired private IOAuthAccessToken accessTokenRepository;
+ 
+	private final IOAuthAccessToken accessTokenRepository;
+	
+	public ServiceJwtTokenStore(final IOAuthAccessToken accessTokenRepository, final IOAuthRefreshToken refreshTokenDao, final AuthenticationKeyGenerator authenticationKeyGenerator) {
+		super(refreshTokenDao, authenticationKeyGenerator);
+		this.accessTokenRepository = accessTokenRepository;
+	}
 
 	@Override
 	protected IOAuthAccessToken getAccessDao() {
@@ -33,7 +38,6 @@ public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 		final OAuthAccessToken token = (OAuthAccessToken) readAuthenticationFromDB(paramOAuth2AccessToken.getValue());
 
 		final OAuth2Authentication token2 = org.springframework.security.oauth2.common.util.SerializationUtils.deserialize(token.getAuthentication());
-		log.info("Auth token {}", token2);
 
 		// TODO XXX
 		final User loggedUser = (User) token2.getPrincipal();

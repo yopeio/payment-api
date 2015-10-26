@@ -175,29 +175,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     IOAuthRefreshToken iOAuthRefreshToken() {
         return new OAuthRefreshTokenStore();
     }
-
-    @Bean
-    public Redisson redisson() {
-        return Redisson.create();
-    }
-
-    @Bean
-    public UserRepository redisUserRepository(final Redisson redisson) {
-        final RMap<String, YopeUser> users = redisson.getMap("users");
-        return new RedisUserRepository(users);
-    }
-    
-    @Bean
-    public IOAuthAccessToken oauthAccessTokenRedisStore(final Redisson redisson) {
-        final RMap<String, OAuthEntity> tokens = redisson.getMap("accessTokens");
-        return new OAuthAccessTokenRedisStore(tokens);
-    }
-    
-    @Bean
-    public IOAuthRefreshToken oauthRefreshTokenRedisStore(final Redisson redisson) {
-        final RMap<String, OAuthRefreshToken> tokens = redisson.getMap("refreshTokens");
-        return new OAuthRefreshTokenRedisStore(tokens);
-    }
     
     
 }
