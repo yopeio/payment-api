@@ -36,7 +36,6 @@ public class WalletEventListener extends AbstractWalletEventListener {
             final Coin newBalance) {
         super.onCoinsReceived(wallet, tx, prevBalance, newBalance);
         log.info("Received coins tx: {}", tx.getHashAsString());
-        tx.getConfidence().addEventListener(new ConfidenceListener(transactionService, settings));
         saveWallet(wallet);
         saveNewHash(wallet);
         initializeTransaction(tx, wallet);
@@ -49,6 +48,7 @@ public class WalletEventListener extends AbstractWalletEventListener {
             if (pending == null || !Transaction.Status.PENDING.equals(pending.getStatus())) {
                 return;
             }
+            tx.getConfidence().addEventListener(new ConfidenceListener(transactionService, settings));
             final String senderHash = getSenderHash(tx.getOutputs(), wallet);
             final Coin valueSentToMe = tx.getValueSentToMe(wallet);
             final Coin valueSentFromMe = tx.getValueSentFromMe(wallet);

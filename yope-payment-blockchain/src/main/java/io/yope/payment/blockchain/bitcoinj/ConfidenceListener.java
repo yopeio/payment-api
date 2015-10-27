@@ -29,7 +29,7 @@ public class ConfidenceListener implements TransactionConfidence.Listener {
     public void onConfidenceChanged(final TransactionConfidence confidence, final ChangeReason reason) {
         final String transactionHash = confidence.getTransactionHash().toString();
         final int depth = confidence.getDepthInBlocks();
-        log.info("-----> Transaction {} {} Confidence Changed", transactionHash, depth);
+        log.info("-----> Transaction {} Confidence {} - {}", transactionHash, confidence, depth);
         final Transaction loaded = transactionService.getByTransactionHash(transactionHash);
         if (loaded == null) {
             return;
@@ -47,7 +47,7 @@ public class ConfidenceListener implements TransactionConfidence.Listener {
             } catch (final IllegalTransactionStateException e) {
                 log.error("Illegal transaction state", e);
             }
+            log.info("-----> Transaction {} with id {} completed", transactionHash, loaded.getId(), transactionHash);
         }
-        log.info("-----> Transaction {} with {} completed", confidence, loaded.getId(), transactionHash);
     }
 }
