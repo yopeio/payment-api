@@ -32,3 +32,4 @@ centralwallet
 centralWallet.*
 *.jpg
 /yope-payment-content-counter/
+/dump.rdb

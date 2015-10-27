@@ -173,7 +173,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     private org.bitcoinj.core.Wallet loadFromFile() {
         final File walletFile = new File(settings.getWalletFolder(), settings.getWalletName());
         if (walletFile.exists()) {
-            backup(walletFile);
+            //backup(walletFile);
             try {
                 return org.bitcoinj.core.Wallet.loadFromFile(walletFile);
             } catch (final UnreadableWalletException e) {

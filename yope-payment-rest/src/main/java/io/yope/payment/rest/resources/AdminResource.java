@@ -58,10 +58,10 @@ public class AdminResource extends BaseResource {
     public @ResponseBody PaymentResponse<Transaction> modify(
             final HttpServletResponse response,
             @PathVariable final Long transactionId,
-            @RequestParam(value="status", required=true) final Status status) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
+            @RequestParam(value="status", required=true) final Status status) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
+            checkPermission(Type.ADMIN);
             final Transaction saved = transactionService.save(transactionId, status);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Transaction>(header, saved);

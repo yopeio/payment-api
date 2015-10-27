@@ -31,39 +31,19 @@ public class WalletEventListener extends AbstractWalletEventListener {
     private final BlockChainService blockChainService;
 
     @Override
-    public void onTransactionConfidenceChanged(final org.bitcoinj.core.Wallet wallet,
-                                               final org.bitcoinj.core.Transaction tx) {
-        final String transactionHash = tx.getHashAsString();
-        final int confidence = tx.getConfidence().getDepthInBlocks();
-        log.info("-----> Transaction {} {} Confidence Changed", transactionHash, confidence);
-
+    public void onCoinsReceived(final org.bitcoinj.core.Wallet wallet,
+            final org.bitcoinj.core.Transaction tx, final Coin prevBalance,
+            final Coin newBalance) {
+        super.onCoinsReceived(wallet, tx, prevBalance, newBalance);
+        log.info("Received coins tx: {}", tx.getHashAsString());
+        tx.getConfidence().addEventListener(new ConfidenceListener(transactionService, settings));
+        saveWallet(wallet);
         saveNewHash(wallet);
-        receiveCoins(wallet,tx);
-
-        final Transaction loaded = transactionService.getByTransactionHash(transactionHash);
-        if (loaded == null) {
-            return;
-        }
-        if (confidence >= settings.getConfirmations()) {
-            if (!Transaction.Status.ACCEPTED.equals(loaded.getStatus())) {
-                return;
-            }
-            saveWallet(wallet);
-            log.info("-----> Transaction {} with {} completed", confidence, loaded.getId(), transactionHash);
-            try {
-                transactionService.save(loaded.getId(), loaded.toBuilder().status(Transaction.Status.COMPLETED).build());
-            } catch (final ObjectNotFoundException e) {
-                log.error("transaction not found", e);
-            } catch (final InsufficientFundsException e) {
-                log.error("Insufficient money", e);
-            } catch (final IllegalTransactionStateException e) {
-                log.error("Illegal transaction state", e);
-            }
-        }
+        initializeTransaction(tx, wallet);
     }
 
-    private void receiveCoins(final org.bitcoinj.core.Wallet wallet,
-                              final org.bitcoinj.core.Transaction tx) {
+    private void initializeTransaction(final org.bitcoinj.core.Transaction tx,
+            final org.bitcoinj.core.Wallet wallet) {
         try {
             final Transaction pending = getTransaction(tx.getOutputs(), wallet);
             if (pending == null || !Transaction.Status.PENDING.equals(pending.getStatus())) {
@@ -73,9 +53,9 @@ public class WalletEventListener extends AbstractWalletEventListener {
             final Coin valueSentToMe = tx.getValueSentToMe(wallet);
             final Coin valueSentFromMe = tx.getValueSentFromMe(wallet);
             final BigDecimal balance = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(Constants.MILLI_TO_SATOSHI);
-            BigDecimal fees = new BigDecimal(valueSentFromMe.getValue());
-            if (fees.floatValue() > 0) {
-                fees = fees.divide(Constants.MILLI_TO_SATOSHI);
+            BigDecimal fees = BigDecimal.ZERO;
+            if (valueSentFromMe.getValue() > 0) {
+                fees = new BigDecimal(valueSentFromMe.getValue()).divide(Constants.MILLI_TO_SATOSHI);
             }
             log.info("transaction: balance {} amount {} fees {} ", balance, pending.getAmount(), fees);
             if (balance.compareTo(pending.getAmount()) > 0) {
@@ -94,7 +74,6 @@ public class WalletEventListener extends AbstractWalletEventListener {
                     .status(Transaction.Status.ACCEPTED)
                     .build();
             transactionService.save(transaction.getId(), transaction);
-            peerGroup.broadcastTransaction(tx);
         } catch (final ObjectNotFoundException e) {
             log.error("transaction not found", e);
         } catch (final IllegalTransactionStateException e) {
@@ -104,7 +83,7 @@ public class WalletEventListener extends AbstractWalletEventListener {
         } catch (final Exception e) {
             log.error("Unexpected error", e);
         }
-        saveWallet(wallet);
+        peerGroup.broadcastTransaction(tx);
     }
 
     private void saveNewHash(final org.bitcoinj.core.Wallet wallet) {
@@ -155,15 +134,7 @@ public class WalletEventListener extends AbstractWalletEventListener {
             final Coin newBalance) {
         super.onCoinsSent(wallet, tx, prevBalance, newBalance);
         log.info("Sent coins tx: {}", tx.getHashAsString());
-        saveWallet(wallet);
-    }
-
-    @Override
-    public void onCoinsReceived(final org.bitcoinj.core.Wallet wallet,
-            final org.bitcoinj.core.Transaction tx, final Coin prevBalance,
-            final Coin newBalance) {
-        super.onCoinsReceived(wallet, tx, prevBalance, newBalance);
-        log.info("Received coins tx: {}", tx.getHashAsString());
+        tx.getConfidence().addEventListener(new ConfidenceListener(transactionService, settings));
         saveWallet(wallet);
     }
 
