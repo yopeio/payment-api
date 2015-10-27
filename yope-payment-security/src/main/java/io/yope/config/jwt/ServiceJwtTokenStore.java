@@ -1,5 +1,6 @@
 package io.yope.config.jwt;
 
+import io.yope.oauth.model.YopeUser;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
@@ -41,13 +42,13 @@ public class ServiceJwtTokenStore extends AbstractJwtTokenStore {
 
 		// TODO XXX
 		final User loggedUser = (User) token2.getPrincipal();
-		final User u = token.getUser();
+		final YopeUser u = token.getUser();
 		log.info("------------------------------------");
 		log.info("Logged User  {}", loggedUser);
 		log.info("Registered User  {}", u);
 		log.info("------------------------------------");
 		
-		if(!u.getUsername().equals(loggedUser.getUsername())) {
+		if(!u.getUser().equals(loggedUser.getUsername())) {
 			throw new InvalidTokenException("Invalid access token");
 		}
 

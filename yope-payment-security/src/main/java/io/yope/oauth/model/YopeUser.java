@@ -20,5 +20,8 @@ public class YopeUser {
     private Collection<String> authorities;
     private String user;
     private String pwd;
-
+    private boolean accountNonExpired;
+    private boolean accountNonLocked;
+    private boolean credentialsNonExpired;
+    private boolean enabled;
 }
