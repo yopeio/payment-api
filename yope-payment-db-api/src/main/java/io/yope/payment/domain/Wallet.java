@@ -50,7 +50,6 @@ public class Wallet {
 
     private BigDecimal availableBalance;
 
-    @JsonIgnore
     private Status status;
 
     private String description;

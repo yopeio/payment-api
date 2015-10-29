@@ -35,7 +35,7 @@ public class AccountService {
     private AccountDbService accountService;
 
     @Autowired
-    private WalletService walletHelper;
+    private WalletService walletService;
 
     @Autowired
     private UserSecurityService securityService;
@@ -78,12 +78,14 @@ public class AccountService {
                 .type(Wallet.Type.INTERNAL)
                 .description(walletName)
                 .name(walletName)
+                .status(Wallet.Status.ACTIVE)
                 .build());
         if (StringUtils.isNotBlank(registration.getHash())) {
             final String walletDescription = registration.getFirstName()+"'s External Wallet";
             wallets.add(Wallet.builder()
                     .availableBalance(BigDecimal.ZERO)
                     .balance(BigDecimal.ZERO)
+                    .status(Wallet.Status.ACTIVE)
                     .type(Wallet.Type.EXTERNAL)
                     .description(walletDescription)
                     .name(registration.getFirstName())
@@ -93,11 +95,11 @@ public class AccountService {
     }
 
     public Wallet saveWallet(final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        return walletHelper.save(wallet);
+        return walletService.save(wallet);
     }
 
     public Wallet saveWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        final Wallet saved = walletHelper.save(wallet);
+        final Wallet saved = walletService.save(wallet);
         account.getWallets().add(saved);
         accountService.update(account.getId(), account);
         return saved;
@@ -112,12 +114,13 @@ public class AccountService {
     }
 
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        if (walletHelper.getByName(account.getId(), wallet.getName()) != null) {
+        if (walletService.getByName(account.getId(), wallet.getName()) != null) {
             throw new BadRequestException("You already have a wallet with name "+wallet.getName()).field("name");
         }
         final Wallet newWallet = wallet.toBuilder()
                 .availableBalance(BigDecimal.ZERO)
                 .balance(BigDecimal.ZERO)
+                .status(Wallet.Status.ACTIVE)
                 .type(StringUtils.isBlank(wallet.getWalletHash())? Wallet.Type.INTERNAL : Wallet.Type.EXTERNAL)
                 .build();
         return this.saveWallet(account, newWallet);

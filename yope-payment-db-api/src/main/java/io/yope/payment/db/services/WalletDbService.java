@@ -6,6 +6,7 @@ package io.yope.payment.db.services;
 import java.util.List;
 
 import io.yope.payment.domain.Wallet;
+import io.yope.payment.domain.Wallet.Status;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 
 /**
@@ -73,6 +74,6 @@ public interface WalletDbService {
      * @param accountId the id of the account.
      * @return a list of wallet
      */
-    List<Wallet> get(Long accountId);
+    List<Wallet> getWalletsByAccountId(Long accountId, Status status);
 
 }

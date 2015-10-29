@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,8 +84,9 @@ public class Neo4JWalletService implements WalletDbService {
      * @see io.yope.payment.services.WalletService#get(java.lang.Long)
      */
     @Override
-    public List<Wallet> get(final Long accountId) {
-        return Lists.newArrayList(repository.findAllByOwner(accountId)).stream().map(t -> t.toWallet()).collect(Collectors.toList());
+    public List<Wallet> getWalletsByAccountId(final Long accountId, final Status status) {
+        final String statusParam = StringUtils.defaultIfBlank(status==null? null: status.name(), ".*");
+        return Lists.newArrayList(repository.findAllByOwner(accountId, statusParam)).stream().map(t -> t.toWallet()).collect(Collectors.toList());
     }
 
     /*

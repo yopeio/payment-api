@@ -66,7 +66,7 @@ public class WalletResource extends BaseResource {
      */
     @RequestMapping(value="/{walletId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Wallet> updateWallet(
-            @PathVariable final Long walletId,
+            @PathVariable("walletId") final Long walletId,
             @RequestBody(required=false) final Wallet wallet,
             final HttpServletResponse response) {
         try {
@@ -83,12 +83,26 @@ public class WalletResource extends BaseResource {
      * Get Wallets by Account ID.
      * @param accountId
      * @param response
+     * @param status the status of the wallets being returned
      * @return
      */
-    @RequestMapping(method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response) {
+    @RequestMapping(method = RequestMethod.GET, produces = "application/json")
+    public @ResponseBody PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response,
+            @RequestParam(value="status", required=false, defaultValue="ACTIVE") final String status) {
+        final Wallet.Status statusFilter = getStatus(status);
         final Account loggedAccount = getLoggedAccount();
-        return getWallets(response, loggedAccount.getId());
+        return getWallets(response, loggedAccount.getId(), statusFilter);
+    }
+
+    private io.yope.payment.domain.Wallet.Status getStatus(final String status) {
+        try {
+            if (status.equalsIgnoreCase("all")) {
+                return null;
+            }
+            return Wallet.Status.valueOf(status);
+        } catch (final Exception e) {
+            return Wallet.Status.ACTIVE;
+        }
     }
 
     /**
@@ -99,7 +113,7 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{walletId}", method = RequestMethod.GET, produces = "application/json")
-    public PaymentResponse<Wallet> getWallet(@PathVariable final Long walletId,
+    public @ResponseBody PaymentResponse<Wallet> getWallet(@PathVariable("walletId") final Long walletId,
                                              final HttpServletResponse response) {
         try {
             checkOwnership(walletId);
@@ -117,8 +131,8 @@ public class WalletResource extends BaseResource {
      * @param response
      * @return
      */
-    @RequestMapping(value="/{walletId}/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<List<Transaction>> getTransactions(@PathVariable final Long walletId,
+    @RequestMapping(value="/{walletId}/transactions", method = RequestMethod.GET, produces = "application/json")
+    public @ResponseBody PaymentResponse<List<Transaction>> getTransactions(@PathVariable("walletId") final Long walletId,
            @RequestParam(value="reference", required=false) final String reference,
            @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
            @RequestParam(value="status", required=false) final Status status,
@@ -134,13 +148,12 @@ public class WalletResource extends BaseResource {
 
     /**
      * Delete Wallet.
-     * @param accountId
      * @param walletId
      * @param response
      * @return
      */
-    @RequestMapping(value="/{walletId}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
-    public PaymentResponse<Wallet> deactivateWallet(@PathVariable final Long walletId,
+    @RequestMapping(value="/{walletId}", method = RequestMethod.DELETE, produces = "application/json")
+    public @ResponseBody PaymentResponse<Wallet> deactivateWallet(@PathVariable("walletId") final Long walletId,
                                                     final HttpServletResponse response) {
         new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {

@@ -142,9 +142,9 @@ public abstract class BaseResource {
         }
     }
 
-    protected PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response, final Long accountId) {
+    protected PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response, final Long accountId, final Wallet.Status status) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        final List<Wallet> wallets = walletService.get(accountId);
+        final List<Wallet> wallets = walletService.get(accountId, status);
         return new PaymentResponse<List<Wallet>>(header, wallets);
     }
 
@@ -178,16 +178,12 @@ public abstract class BaseResource {
 
     protected PaymentResponse<Wallet> doUpdateWallet(final long walletId, final Wallet wallet, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
-        if (!walletService.exists(walletId)) {
-            response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
-        }
         try {
             final Wallet saved = walletService.update(walletId, wallet);
             return new PaymentResponse<Wallet>(header, saved);
         } catch (final ObjectNotFoundException e) {
-            response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(e.getMessage());
+            response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
+            return badRequest(e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
             return serverError(e.getMessage());
