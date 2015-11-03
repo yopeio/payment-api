@@ -19,6 +19,7 @@ import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.SPVBlockStore;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -38,6 +39,7 @@ import io.yope.payment.transaction.services.TransactionStateService;
  * @author mgerardi
  *
  */
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class BitcoinjBlockchainServiceImplTest {
 
