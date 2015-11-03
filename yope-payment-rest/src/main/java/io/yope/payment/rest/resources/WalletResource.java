@@ -42,19 +42,19 @@ public class WalletResource extends BaseResource {
             @RequestBody(required=false) final Wallet wallet) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.CREATED.getStatusCode());
         try {
-            final Account loggedAccount = getLoggedAccount();
-            final Wallet saved = accountService.createWallet(loggedAccount, wallet);
+            final Account loggedAccount = this.getLoggedAccount();
+            final Wallet saved = this.accountService.createWallet(loggedAccount, wallet);
             response.setStatus(Response.Status.CREATED.getStatusCode());
             return new PaymentResponse<Wallet>(header, saved);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(e.getMessage());
+            return this.notFound(e.getMessage());
         } catch (final BadRequestException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return badRequest(e.field(), e.getMessage());
+            return this.badRequest(e.field(), e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return this.serverError(e.getMessage());
         }
     }
 
@@ -70,11 +70,11 @@ public class WalletResource extends BaseResource {
             @RequestBody(required=false) final Wallet wallet,
             final HttpServletResponse response) {
         try {
-            checkOwnership(walletId);
-            return doUpdateWallet(walletId, wallet, response);
+            this.checkOwnership(walletId);
+            return this.doUpdateWallet(walletId, wallet, response);
         } catch (final AuthorizationException e) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
-            return unauthorized();
+            return this.unauthorized();
         }
     }
 
@@ -89,20 +89,8 @@ public class WalletResource extends BaseResource {
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response,
             @RequestParam(value="status", required=false, defaultValue="ACTIVE") final String status) {
-        final Wallet.Status statusFilter = getStatus(status);
-        final Account loggedAccount = getLoggedAccount();
-        return getWallets(response, loggedAccount.getId(), statusFilter);
-    }
-
-    private io.yope.payment.domain.Wallet.Status getStatus(final String status) {
-        try {
-            if (status.equalsIgnoreCase("all")) {
-                return null;
-            }
-            return Wallet.Status.valueOf(status);
-        } catch (final Exception e) {
-            return Wallet.Status.ACTIVE;
-        }
+        final Account loggedAccount = this.getLoggedAccount();
+        return this.getWallets(response, loggedAccount.getId(), status);
     }
 
     /**
@@ -116,11 +104,11 @@ public class WalletResource extends BaseResource {
     public @ResponseBody PaymentResponse<Wallet> getWallet(@PathVariable("walletId") final Long walletId,
                                              final HttpServletResponse response) {
         try {
-            checkOwnership(walletId);
-            return retrieveWallet(walletId, response);
+            this.checkOwnership(walletId);
+            return this.retrieveWallet(walletId, response);
         } catch (final AuthorizationException e) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
-            return unauthorized();
+            return this.unauthorized();
         }
     }
 
@@ -138,12 +126,12 @@ public class WalletResource extends BaseResource {
            @RequestParam(value="status", required=false) final Status status,
            @RequestParam(value="type", required=false) final Transaction.Type type,
            final HttpServletResponse response) {
-        final Account loggedAccount = getLoggedAccount();
-        if (!accountService.owns(loggedAccount, walletId)) {
+        final Account loggedAccount = this.getLoggedAccount();
+        if (!this.accountService.owns(loggedAccount, walletId)) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
-            return unauthorized();
+            return this.unauthorized();
         }
-        return getWalletTransactions(walletId, reference, direction, status, type, response);
+        return this.getWalletTransactions(walletId, reference, direction, status, type, response);
     }
 
     /**
@@ -157,11 +145,11 @@ public class WalletResource extends BaseResource {
                                                     final HttpServletResponse response) {
         new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            checkOwnership(walletId);
-            return doDeleteWallet(walletId, response);
+            this.checkOwnership(walletId);
+            return this.doDeleteWallet(walletId, response);
         } catch (final AuthorizationException e) {
             response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
-            return unauthorized();
+            return this.unauthorized();
         }
     }
 

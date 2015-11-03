@@ -139,9 +139,10 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/accounts/{accountId}/wallets", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<List<Wallet>> getWallets(
             @PathVariable("accountId") final Long accountId,
+            @RequestParam(value="status", required=false, defaultValue="ACTIVE") final String status,
             final HttpServletResponse response)  throws AuthorizationException {
         this.checkPermission(Type.ADMIN);
-        return this.getWallets(response, accountId);
+        return this.getWallets(response, accountId, status);
     }
 
     /**
