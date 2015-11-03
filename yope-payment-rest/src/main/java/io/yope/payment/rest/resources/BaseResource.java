@@ -50,33 +50,33 @@ public abstract class BaseResource {
     protected UserSecurityService securityService;
 
     protected Account getLoggedAccount() {
-        final User user = securityService.getCurrentUser();
+        final User user = this.securityService.getCurrentUser();
         if (user == null) {
             return null;
         }
-        final Account account = accountService.getByEmail(user.getUsername());
+        final Account account = this.accountService.getByEmail(user.getUsername());
         log.info("logged as {}", account);
         return account;
     }
 
     protected void checkPermission(final Account.Type type) throws AuthorizationException {
-        final Account loggedAccount = getLoggedAccount();
+        final Account loggedAccount = this.getLoggedAccount();
         if (!type.equals(loggedAccount.getType())) {
             throw new AuthorizationException();
         }
     }
 
     protected void checkOwnership(final Long walletId) throws AuthorizationException {
-        final Account loggedAccount = getLoggedAccount();
-        if (!accountService.owns(loggedAccount, walletId)) {
+        final Account loggedAccount = this.getLoggedAccount();
+        if (!this.accountService.owns(loggedAccount, walletId)) {
             throw new AuthorizationException();
         }
     }
 
     protected void checkOwnership(final Transaction transaction) throws AuthorizationException {
-        final Account loggedAccount = getLoggedAccount();
-        if (!accountService.owns(loggedAccount, transaction.getSource().getId())
-         && !accountService.owns(loggedAccount, transaction.getDestination().getId())) {
+        final Account loggedAccount = this.getLoggedAccount();
+        if (!this.accountService.owns(loggedAccount, transaction.getSource().getId())
+                && !this.accountService.owns(loggedAccount, transaction.getDestination().getId())) {
             throw new AuthorizationException();
         }
     }
@@ -88,19 +88,19 @@ public abstract class BaseResource {
     }
 
     protected <T> PaymentResponse<T> unauthorized() {
-        return error(null, Response.Status.UNAUTHORIZED.toString(), Response.Status.UNAUTHORIZED);
+        return this.error(null, Response.Status.UNAUTHORIZED.toString(), Response.Status.UNAUTHORIZED);
     }
 
     protected <T> PaymentResponse<T> serverError(final String message) {
-        return error(null, message, Response.Status.INTERNAL_SERVER_ERROR);
+        return this.error(null, message, Response.Status.INTERNAL_SERVER_ERROR);
     }
 
     protected <T> PaymentResponse<T> badRequest(final String field, final String message) {
-        return error(field, message, Response.Status.BAD_REQUEST);
+        return this.error(field, message, Response.Status.BAD_REQUEST);
     }
 
     protected <T> PaymentResponse<T> badRequest(final String message) {
-        return error(null, message, Response.Status.BAD_REQUEST);
+        return this.error(null, message, Response.Status.BAD_REQUEST);
     }
 
     protected <T> PaymentResponse<T> badRequest(final List<Error> errors) {
@@ -109,127 +109,139 @@ public abstract class BaseResource {
     }
 
     protected <T> PaymentResponse<T> notFound(final String message) {
-        return error(null, message, Response.Status.NOT_FOUND);
+        return this.error(null, message, Response.Status.NOT_FOUND);
     }
 
 
     protected PaymentResponse<Account> doUpdateAccount(final HttpServletResponse response, final Long accountId, final Account account) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Account updated = accountService.update(accountId, account);
+            final Account updated = this.accountService.update(accountId, account);
             return new PaymentResponse<Account>(header, updated);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(e.getMessage());
+            return this.notFound(e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return this.serverError(e.getMessage());
         }
     }
 
     protected PaymentResponse<Account> doDeleteAccount(final HttpServletResponse response, final Long accountId) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Account account = accountService.delete(accountId);
+            final Account account = this.accountService.delete(accountId);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Account>(header, account);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(e.getMessage());
+            return this.notFound(e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return this.serverError(e.getMessage());
         }
     }
 
-    protected PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response, final Long accountId, final Wallet.Status status) {
+    protected PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response, final Long accountId, final String status) {
+        final Wallet.Status statusFilter = this.getStatus(status);
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        final List<Wallet> wallets = walletService.get(accountId, status);
+        final List<Wallet> wallets = this.walletService.get(accountId, statusFilter);
         return new PaymentResponse<List<Wallet>>(header, wallets);
+    }
+
+    private io.yope.payment.domain.Wallet.Status getStatus(final String status) {
+        try {
+            if (status.equalsIgnoreCase("all")) {
+                return null;
+            }
+            return Wallet.Status.valueOf(status);
+        } catch (final Exception e) {
+            return Wallet.Status.ACTIVE;
+        }
     }
 
     protected PaymentResponse<Wallet> retrieveWallet(final Long walletId, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        if (!walletService.exists(walletId)) {
+        if (!this.walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
+            return this.notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
-        final Wallet wallet = walletService.getById(walletId);
+        final Wallet wallet = this.walletService.getById(walletId);
         return new PaymentResponse<Wallet>(header, wallet);
     }
 
     protected PaymentResponse<Wallet> doDeleteWallet(final long walletId, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
-        if (!walletService.exists(walletId)) {
+        if (!this.walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
+            return this.notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         try {
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
-            return new PaymentResponse<Wallet>(header, walletService.delete(walletId));
+            return new PaymentResponse<Wallet>(header, this.walletService.delete(walletId));
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(e.getMessage());
+            return this.notFound(e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return this.serverError(e.getMessage());
         }
     }
 
     protected PaymentResponse<Wallet> doUpdateWallet(final long walletId, final Wallet wallet, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Wallet saved = walletService.update(walletId, wallet);
+            final Wallet saved = this.walletService.update(walletId, wallet);
             return new PaymentResponse<Wallet>(header, saved);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
-            return badRequest(e.getMessage());
+            return this.badRequest(e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return this.serverError(e.getMessage());
         }
     }
 
     protected PaymentResponse<List<Transaction>> getAccountTransactions(final HttpServletResponse response,
-            final Long accountId,
-            final String reference,
-            final Direction direction,
-            final Status status,
-            final Transaction.Type type) {
+                                                                        final Long accountId,
+                                                                        final String reference,
+                                                                        final Direction direction,
+                                                                        final Status status,
+                                                                        final Transaction.Type type) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        if (accountService.exists(accountId)) {
-            return badRequest(MessageFormat.format(WALLET_NOT_FOUND, accountId));
+        if (this.accountService.exists(accountId)) {
+            return this.badRequest(MessageFormat.format(WALLET_NOT_FOUND, accountId));
         }
         List<Transaction> transactions = null;
         try {
-            transactions = transactionService.getTransactionsForAccount(accountId, reference, direction, status, type);
+            transactions = this.transactionService.getTransactionsForAccount(accountId, reference, direction, status, type);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(e.getMessage());
+            return this.notFound(e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return this.serverError(e.getMessage());
         }
         return new PaymentResponse<List<Transaction>>(header, transactions);
     }
 
 
     protected PaymentResponse<List<Transaction>> getWalletTransactions(final Long walletId, final String reference,
-            final Direction direction, final Status status, final Type type, final HttpServletResponse response) {
+                                                                       final Direction direction, final Status status, final Type type, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        if (!walletService.exists(walletId)) {
+        if (!this.walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
+            return this.notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         try {
-            final List<Transaction> transactions = transactionService.getTransactionsForWallet(walletId, reference, direction, status, type);
+            final List<Transaction> transactions = this.transactionService.getTransactionsForWallet(walletId, reference, direction, status, type);
             return new PaymentResponse<List<Transaction>>(header, transactions);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
-            return notFound(e.getMessage());
+            return this.notFound(e.getMessage());
         } catch (final Exception e) {
             response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-            return serverError(e.getMessage());
+            return this.serverError(e.getMessage());
         }
     }
 }

@@ -264,11 +264,14 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         } catch (final UnreadableWalletException e) {
             log.error("error during hash generation", e);
             throw new BlockchainException(e);
+        } catch (final IOException e) {
+            log.error("cannot save central wallet", e);
+            throw new BlockchainException(e);
         }
     }
 
     private String getFreshHash(final String previous)
-            throws UnreadableWalletException, BlockchainException {
+            throws UnreadableWalletException, BlockchainException, IOException {
         final org.bitcoinj.core.Wallet receiver = centralWallet();
         if (HASH_STACK.isEmpty()) {
             final DeterministicKey freshKey = receiver.freshReceiveKey();
@@ -276,6 +279,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             if (hash.equals(previous)) {
                 throw new BlockchainException("cannot generate new hash");
             }
+            saveCentralWallet(receiver);
             return hash;
         }
         return HASH_STACK.pop();
