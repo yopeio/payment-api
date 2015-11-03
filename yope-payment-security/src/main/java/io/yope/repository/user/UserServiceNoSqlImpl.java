@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import io.yope.payment.db.services.UserSecurityService;
@@ -14,21 +15,23 @@ import io.yope.payment.db.services.UserSecurityService;
 @Service
 public class UserServiceNoSqlImpl implements UserService {
 
-	//@Autowired private BCryptPasswordEncoder encoder;
-
-    @Autowired
-    UserSecurityService service;
+	@Autowired private BCryptPasswordEncoder encoder;
+    @Autowired private UserSecurityService service;
 
 	@Override
 	public UserDetails loadUserByUsername(final String username)
 			throws UsernameNotFoundException {
 
-		final User usero = service.getUser(username);
+		final User user = service.getUser(username);
+		
+		if (null == user) {
+            throw new UsernameNotFoundException("The user with email " + username + " was not found");
+        }
 
 		final Authentication authentication=
-				new UsernamePasswordAuthenticationToken(usero, null, usero.getAuthorities()) ;
+				new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()) ;
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		return usero;
+		return user;
 	}
 }

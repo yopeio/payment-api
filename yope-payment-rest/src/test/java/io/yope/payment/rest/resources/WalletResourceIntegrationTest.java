@@ -4,13 +4,18 @@ import static org.junit.Assert.*;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-@Ignore // TODO TODO TODO
+import io.yope.payment.rest.helpers.IntegrationTest;
+import io.yope.payment.rest.helpers.IntegrationTestHelper;
+
+@Ignore
+@Category(IntegrationTest.class)
 public class WalletResourceIntegrationTest {
 
 	@Test
 	public void shouldCreateWallet() {
-		fail("Not yet implemented");
+
 	}
 
 	@Test

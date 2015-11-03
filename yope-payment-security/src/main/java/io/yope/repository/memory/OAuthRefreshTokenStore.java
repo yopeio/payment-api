@@ -1,4 +1,4 @@
-package io.yope.repository;
+package io.yope.repository.memory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Repository;
 
 import io.yope.oauth.model.OAuthRefreshToken;
+import io.yope.repository.IOAuthRefreshToken;
 
 @Repository("oAuthRefreshTokenStore")
 public class OAuthRefreshTokenStore implements IOAuthRefreshToken {

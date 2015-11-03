@@ -1,4 +1,4 @@
-package io.yope.repository;
+package io.yope.repository.memory;
 
 import java.util.List;
 import java.util.Map;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import io.yope.oauth.model.OAuthAccessToken;
 import io.yope.oauth.model.OAuthEntity;
+import io.yope.repository.IOAuthAccessToken;
 import lombok.extern.slf4j.Slf4j;
 
 /**

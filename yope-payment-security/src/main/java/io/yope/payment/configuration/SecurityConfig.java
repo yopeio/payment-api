@@ -1,7 +1,5 @@
 package io.yope.payment.configuration;
 
-import org.redisson.Redisson;
-import org.redisson.core.RMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +16,7 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -29,17 +28,10 @@ import org.springframework.web.client.RestTemplate;
 
 import io.yope.auth.AccessDeniedExceptionHandler;
 import io.yope.auth.UnauthorizedEntryPoint;
-import io.yope.oauth.model.OAuthEntity;
-import io.yope.oauth.model.OAuthRefreshToken;
-import io.yope.oauth.model.YopeUser;
-import io.yope.payment.security.repositories.RedisUserRepository;
-import io.yope.payment.security.repositories.UserRepository;
 import io.yope.repository.IOAuthAccessToken;
 import io.yope.repository.IOAuthRefreshToken;
-import io.yope.repository.OAuthAccessTokenStore;
-import io.yope.repository.OAuthRefreshTokenStore;
-import io.yope.repository.redis.OAuthAccessTokenRedisStore;
-import io.yope.repository.redis.OAuthRefreshTokenRedisStore;
+import io.yope.repository.memory.OAuthAccessTokenStore;
+import io.yope.repository.memory.OAuthRefreshTokenStore;
 import io.yope.repository.user.UserService;
 import io.yope.repository.user.UserServiceNoSqlImpl;
 
@@ -75,21 +67,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() { // no enconding for the time
-                                               // being
-        return new PasswordEncoder() {
-
-            @Override
-            public boolean matches(final CharSequence rawPassword,
-                    final String encodedPassword) {
-                return true;
-            }
-
-            @Override
-            public String encode(final CharSequence rawPassword) {
-                return rawPassword.toString();
-            }
-        };
+    public PasswordEncoder passwordEncoder() { 
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -164,16 +143,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     AuthenticationEntryPoint entryPointBean() {
         return new UnauthorizedEntryPoint();
-    }
-
-    @Bean
-    IOAuthAccessToken ioAuthAccessToken() {
-        return new OAuthAccessTokenStore();
-    }
-
-    @Bean
-    IOAuthRefreshToken iOAuthRefreshToken() {
-        return new OAuthRefreshTokenStore();
     }
     
     
