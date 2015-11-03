@@ -88,8 +88,8 @@ public class WalletResource extends BaseResource {
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response,
-            @RequestParam(value="status", required=false, defaultValue="ACTIVE") final String status) {
-        final Account loggedAccount = this.getLoggedAccount();
+           @RequestParam(value="status", required=false, defaultValue="ACTIVE") final String status) {
+       final Account loggedAccount = this.getLoggedAccount();
         return this.getWallets(response, loggedAccount.getId(), status);
     }
 
@@ -102,7 +102,7 @@ public class WalletResource extends BaseResource {
      */
     @RequestMapping(value="/{walletId}", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Wallet> getWallet(@PathVariable("walletId") final Long walletId,
-                                             final HttpServletResponse response) {
+                                                           final HttpServletResponse response) {
         try {
             this.checkOwnership(walletId);
             return this.retrieveWallet(walletId, response);
@@ -142,7 +142,7 @@ public class WalletResource extends BaseResource {
      */
     @RequestMapping(value="/{walletId}", method = RequestMethod.DELETE, produces = "application/json")
     public @ResponseBody PaymentResponse<Wallet> deactivateWallet(@PathVariable("walletId") final Long walletId,
-                                                    final HttpServletResponse response) {
+                                                                  final HttpServletResponse response) {
         new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
             this.checkOwnership(walletId);

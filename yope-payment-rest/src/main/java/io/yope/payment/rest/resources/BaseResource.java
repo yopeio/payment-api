@@ -203,11 +203,11 @@ public abstract class BaseResource {
     }
 
     protected PaymentResponse<List<Transaction>> getAccountTransactions(final HttpServletResponse response,
-            final Long accountId,
-            final String reference,
-            final Direction direction,
-            final Status status,
-            final Transaction.Type type) {
+                                                                        final Long accountId,
+                                                                        final String reference,
+                                                                        final Direction direction,
+                                                                        final Status status,
+                                                                        final Transaction.Type type) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         if (this.accountService.exists(accountId)) {
             return this.badRequest(MessageFormat.format(WALLET_NOT_FOUND, accountId));
@@ -227,7 +227,7 @@ public abstract class BaseResource {
 
 
     protected PaymentResponse<List<Transaction>> getWalletTransactions(final Long walletId, final String reference,
-            final Direction direction, final Status status, final Type type, final HttpServletResponse response) {
+                                                                       final Direction direction, final Status status, final Type type, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         if (!this.walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());

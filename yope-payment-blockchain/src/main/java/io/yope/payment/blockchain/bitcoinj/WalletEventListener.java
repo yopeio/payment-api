@@ -8,7 +8,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.crypto.DeterministicKey;
 
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.domain.Transaction;
@@ -36,20 +35,19 @@ public class WalletEventListener extends AbstractWalletEventListener {
             final Coin newBalance) {
         super.onCoinsReceived(wallet, tx, prevBalance, newBalance);
         log.info("Received coins tx: {}", tx.getHashAsString());
-        saveWallet(wallet);
-        saveNewHash(wallet);
-        initializeTransaction(tx, wallet);
+        this.saveWallet(wallet);
+        this.initializeTransaction(tx, wallet);
     }
 
     private void initializeTransaction(final org.bitcoinj.core.Transaction tx,
             final org.bitcoinj.core.Wallet wallet) {
         try {
-            final Transaction pending = getTransaction(tx.getOutputs(), wallet);
+            final Transaction pending = this.getTransaction(tx.getOutputs(), wallet);
             if (pending == null || !Transaction.Status.PENDING.equals(pending.getStatus())) {
                 return;
             }
-            tx.getConfidence().addEventListener(new ConfidenceListener(transactionService, settings));
-            final String senderHash = getSenderHash(tx.getOutputs(), wallet);
+            tx.getConfidence().addEventListener(new ConfidenceListener(this.transactionService, this.settings));
+            final String senderHash = this.getSenderHash(tx.getOutputs(), wallet);
             final Coin valueSentToMe = tx.getValueSentToMe(wallet);
             final Coin valueSentFromMe = tx.getValueSentFromMe(wallet);
             final BigDecimal balance = new BigDecimal(valueSentToMe.subtract(valueSentFromMe).longValue()).divide(Constants.MILLI_TO_SATOSHI);
@@ -73,7 +71,7 @@ public class WalletEventListener extends AbstractWalletEventListener {
                     .QR(null)
                     .status(Transaction.Status.ACCEPTED)
                     .build();
-            transactionService.save(transaction.getId(), transaction);
+            this.transactionService.save(transaction.getId(), transaction);
         } catch (final ObjectNotFoundException e) {
             log.error("transaction not found", e);
         } catch (final IllegalTransactionStateException e) {
@@ -83,18 +81,12 @@ public class WalletEventListener extends AbstractWalletEventListener {
         } catch (final Exception e) {
             log.error("Unexpected error", e);
         }
-        peerGroup.broadcastTransaction(tx);
-    }
-
-    private void saveNewHash(final org.bitcoinj.core.Wallet wallet) {
-        final DeterministicKey freshKey = wallet.freshReceiveKey();
-        final String freshHash = freshKey.toAddress(params).toString();
-        BitcoinjBlockchainServiceImpl.HASH_STACK.push(freshHash);
+        this.peerGroup.broadcastTransaction(tx);
     }
 
     private void saveWallet(final org.bitcoinj.core.Wallet wallet) {
         try {
-            final Wallet centralWallet = blockChainService.saveCentralWallet(wallet);
+            final Wallet centralWallet = this.blockChainService.saveCentralWallet(wallet);
             if (centralWallet == null) {
                 log.error("central wallet not found!");
             }
@@ -109,7 +101,7 @@ public class WalletEventListener extends AbstractWalletEventListener {
             if (o.isMine(wallet)) {
                 continue;
             }
-            return o.getScriptPubKey().getToAddress(params).toString();
+            return o.getScriptPubKey().getToAddress(this.params).toString();
         }
         return null;
     }
@@ -119,8 +111,8 @@ public class WalletEventListener extends AbstractWalletEventListener {
             if (!o.isMine(wallet)) {
                 continue;
             }
-            final String hash = o.getScriptPubKey().getToAddress(params).toString();
-            final Transaction transaction = transactionService.getByReceiverHash(hash);
+            final String hash = o.getScriptPubKey().getToAddress(this.params).toString();
+            final Transaction transaction = this.transactionService.getByReceiverHash(hash);
             if (transaction != null) {
                 return transaction;
             }
@@ -134,8 +126,8 @@ public class WalletEventListener extends AbstractWalletEventListener {
             final Coin newBalance) {
         super.onCoinsSent(wallet, tx, prevBalance, newBalance);
         log.info("Sent coins tx: {}", tx.getHashAsString());
-        tx.getConfidence().addEventListener(new ConfidenceListener(transactionService, settings));
-        saveWallet(wallet);
+        tx.getConfidence().addEventListener(new ConfidenceListener(this.transactionService, this.settings));
+        this.saveWallet(wallet);
     }
 
 }

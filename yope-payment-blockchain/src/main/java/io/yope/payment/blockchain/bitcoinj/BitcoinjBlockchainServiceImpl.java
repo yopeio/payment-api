@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,8 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
-    public static Stack<String> HASH_STACK = new Stack<String>();
-
     private final NetworkParameters params;
 
     private final BlockChain chain;
@@ -69,21 +66,21 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         final ExecutorService executorService = Executors
                 .newSingleThreadExecutor();
         executorService.execute(() -> {
-            peerGroup.addPeerDiscovery(new DnsDiscovery(params));
-            peerGroup.setBloomFilterFalsePositiveRate(0.00001);
+            this.peerGroup.addPeerDiscovery(new DnsDiscovery(this.params));
+            this.peerGroup.setBloomFilterFalsePositiveRate(0.00001);
             try {
-                final File walletFolder = new File(settings.getWalletFolder());
+                final File walletFolder = new File(this.settings.getWalletFolder());
                 if (!walletFolder.exists()) {
                     FileUtils.forceMkdir(walletFolder);
                 }
-                final Wallet central = getCentralWallet();
+                final Wallet central = this.getCentralWallet();
                 log.info("central wallet hash: {}", central.getWalletHash());
-                registerInBlockchain(org.bitcoinj.core.Wallet
+                this.registerInBlockchain(org.bitcoinj.core.Wallet
                         .loadFromFileStream(new ByteArrayInputStream(
                                 DatatypeConverter.parseBase64Binary(
                                         central.getContent()))));
-                peerGroup.startAsync();
-                peerGroup.downloadBlockChain();
+                this.peerGroup.startAsync();
+                this.peerGroup.downloadBlockChain();
             } catch (final UnreadableWalletException e) {
                 log.error("wallet cannot be registered to the chain", e);
             } catch (final IOException e) {
@@ -95,16 +92,16 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     private org.bitcoinj.core.Wallet createBlockchainWallet()
             throws IOException {
         final org.bitcoinj.core.Wallet wallet = new org.bitcoinj.core.Wallet(
-                params);
+                this.params);
         wallet.allowSpendingUnconfirmedTransactions();
         return wallet;
     }
 
     private Wallet getCentralWallet() throws IOException {
-        final org.bitcoinj.core.Wallet blockchainWallet = getOrRegister();
-        Wallet central = saveCentralWallet(blockchainWallet);
+        final org.bitcoinj.core.Wallet blockchainWallet = this.getOrRegister();
+        Wallet central = this.saveCentralWallet(blockchainWallet);
         if (central == null) {
-            central = createCentralWallet(blockchainWallet);
+            central = this.createCentralWallet(blockchainWallet);
         }
         return central;
     }
@@ -112,10 +109,10 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     private Wallet createCentralWallet(
             final org.bitcoinj.core.Wallet blockchainWallet)
                     throws IOException {
-        final Wallet centralWallet = saveCentralWallet(Wallet.builder().build(),
+        final Wallet centralWallet = this.saveCentralWallet(Wallet.builder().build(),
                 blockchainWallet);
-        accountService.create(Account.builder()
-                .email(settings.getAdminUsername()).firstName("admin")
+        this.accountService.create(Account.builder()
+                .email(this.settings.getAdminUsername()).firstName("admin")
                 .lastName("admin").type(Account.Type.ADMIN)
                 .wallets(Lists.newArrayList(centralWallet)).build());
         return centralWallet;
@@ -131,8 +128,8 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         final DeterministicKey freshKey = blockchainWallet.freshReceiveKey();
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         blockchainWallet.saveToFileStream(outputStream);
-        final String walletHash = freshKey.toAddress(params).toString();
-        final String privatekey = freshKey.getPrivateKeyEncoded(params)
+        final String walletHash = freshKey.toAddress(this.params).toString();
+        final String privatekey = freshKey.getPrivateKeyEncoded(this.params)
                 .toString();
         final String content = DatatypeConverter
                 .printBase64Binary(outputStream.toByteArray());
@@ -146,23 +143,23 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
         final Wallet central = wallet.toBuilder().content(content)
                 .walletHash(walletHash).privateKey(privatekey)
                 .type(Wallet.Type.EXTERNAL).status(Wallet.Status.ACTIVE)
-                .name(settings.getWalletName())
-                .description(FilenameUtils.concat(settings.getWalletFolder(), settings.getWalletName()))
+                .name(this.settings.getWalletName())
+                .description(FilenameUtils.concat(this.settings.getWalletFolder(), this.settings.getWalletName()))
                 .balance(balance).availableBalance(availableBalance).build();
-        saveToFile(blockchainWallet);
-        return walletService.save(central);
+        this.saveToFile(blockchainWallet);
+        return this.walletService.save(central);
     }
 
     private org.bitcoinj.core.Wallet getOrRegister() throws IOException {
-        org.bitcoinj.core.Wallet wallet = loadFromFile();
+        org.bitcoinj.core.Wallet wallet = this.loadFromFile();
         if (wallet == null) {
-            wallet = createBlockchainWallet();
+            wallet = this.createBlockchainWallet();
         }
         return wallet;
     }
 
     private void saveToFile(final org.bitcoinj.core.Wallet wallet) {
-        final File walletFile = new File(settings.getWalletFolder(), settings.getWalletName());
+        final File walletFile = new File(this.settings.getWalletFolder(), this.settings.getWalletName());
         try {
             wallet.saveToFile(walletFile);
         } catch (final IOException e) {
@@ -171,7 +168,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     }
 
     private org.bitcoinj.core.Wallet loadFromFile() {
-        final File walletFile = new File(settings.getWalletFolder(), settings.getWalletName());
+        final File walletFile = new File(this.settings.getWalletFolder(), this.settings.getWalletName());
         if (walletFile.exists()) {
             //backup(walletFile);
             try {
@@ -185,8 +182,8 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
     private void backup(final File walletFile) {
         try {
-            final String bakWalletName = settings.getWalletName() + "." + System.currentTimeMillis();
-            FileUtils.copyFile(walletFile, new File(settings.getWalletFolder(), bakWalletName));
+            final String bakWalletName = this.settings.getWalletName() + "." + System.currentTimeMillis();
+            FileUtils.copyFile(walletFile, new File(this.settings.getWalletFolder(), bakWalletName));
         } catch (final IOException e) {
             log.error("Error saving backup file:", e);
         }
@@ -196,13 +193,13 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     public Wallet saveCentralWallet(
             final org.bitcoinj.core.Wallet blockchainWallet)
                     throws IOException {
-        final Wallet centralWallet = getWallet();
-        return saveCentralWallet(centralWallet, blockchainWallet);
+        final Wallet centralWallet = this.getWallet();
+        return this.saveCentralWallet(centralWallet, blockchainWallet);
     }
 
     private Wallet getWallet() {
-        final Account admin = accountService
-                .getByEmail(settings.getAdminUsername());
+        final Account admin = this.accountService
+                .getByEmail(this.settings.getAdminUsername());
         if (admin == null) {
             return null;
         }
@@ -220,11 +217,11 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
             final long satoshi = transaction.getAmount()
                     .multiply(Constants.MILLI_TO_SATOSHI).longValue();
             final Coin value = Coin.valueOf(satoshi);
-            final org.bitcoinj.core.Wallet sender = centralWallet();
+            final org.bitcoinj.core.Wallet sender = this.centralWallet();
             sender.allowSpendingUnconfirmedTransactions();
-            final Address receiver = new Address(params,
+            final Address receiver = new Address(this.params,
                     transaction.getDestination().getWalletHash());
-            final SendResult result = sender.sendCoins(peerGroup, receiver,
+            final SendResult result = sender.sendCoins(this.peerGroup, receiver,
                     value);
             result.broadcastComplete.get();
             return result.tx.getHashAsString();
@@ -243,10 +240,10 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
 
     private void registerInBlockchain(final org.bitcoinj.core.Wallet wallet) {
         log.info("******** register {} in blockchain", wallet.toString());
-        chain.addWallet(wallet);
-        peerGroup.addWallet(wallet);
+        this.chain.addWallet(wallet);
+        this.peerGroup.addWallet(wallet);
         final WalletEventListener walletEventListener = new WalletEventListener(
-                peerGroup, params, transactionService, settings,
+                this.peerGroup, this.params, this.transactionService, this.settings,
                 this);
         wallet.addEventListener(walletEventListener);
     }
@@ -254,36 +251,37 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     @Override
     public String generateCentralWalletHash() throws BlockchainException {
         try {
+            final org.bitcoinj.core.Wallet receiver = this.centralWallet();
             String freshHash = null;
             Transaction transaction = null;
             do {
-                freshHash = getFreshHash(freshHash);
-                transaction = transactionService.getByReceiverHash(freshHash);
+                freshHash = this.getFreshHash(freshHash, receiver);
+                transaction = this.transactionService.getByReceiverHash(freshHash);
             } while (transaction != null);
+            this.saveCentralWallet(receiver);
             return freshHash;
         } catch (final UnreadableWalletException e) {
             log.error("error during hash generation", e);
             throw new BlockchainException(e);
+        } catch (final IOException e) {
+            log.error("cannot save central wallet", e);
+            throw new BlockchainException(e);
         }
     }
 
-    private String getFreshHash(final String previous)
-            throws UnreadableWalletException, BlockchainException {
-        final org.bitcoinj.core.Wallet receiver = centralWallet();
-        if (HASH_STACK.isEmpty()) {
-            final DeterministicKey freshKey = receiver.freshReceiveKey();
-            final String hash = freshKey.toAddress(params).toString();
-            if (hash.equals(previous)) {
-                throw new BlockchainException("cannot generate new hash");
-            }
-            return hash;
+    private String getFreshHash(final String previous, final org.bitcoinj.core.Wallet receiver)
+            throws UnreadableWalletException, BlockchainException, IOException {
+        final DeterministicKey freshKey = receiver.freshReceiveKey();
+        final String hash = freshKey.toAddress(this.params).toString();
+        if (hash.equals(previous)) {
+            throw new BlockchainException("cannot generate new hash");
         }
-        return HASH_STACK.pop();
+        return hash;
     }
 
     private org.bitcoinj.core.Wallet centralWallet()
             throws UnreadableWalletException {
-        final Wallet centralWallet = getWallet();
+        final Wallet centralWallet = this.getWallet();
         return org.bitcoinj.core.Wallet
                 .loadFromFileStream(new ByteArrayInputStream(DatatypeConverter
                         .parseBase64Binary(centralWallet.getContent())));
