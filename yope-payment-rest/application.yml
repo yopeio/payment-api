@@ -20,3 +20,14 @@ blockchain:
     walletName: "centralWallet"
     adminUsername: "wallet@yope.io"
     adminPassword: "ag4jal0o"
+
+security.basic.enabled: false
+
+keystore.file: "src/main/resources/private/keystorejks"
+keystore.pass: "password"
+
+backend:
+    admin:
+        username: "backend_admin"
+        password: "backend_admin"
+        role: "BACKEND_ADMIN"

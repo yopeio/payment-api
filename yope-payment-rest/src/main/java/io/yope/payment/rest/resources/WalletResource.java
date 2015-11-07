@@ -6,13 +6,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
@@ -26,9 +22,9 @@ import io.yope.payment.exceptions.ObjectNotFoundException;
 /**
  * Wallet Resource.
  */
-@Controller
-@EnableAutoConfiguration
 @RequestMapping("/wallets")
+@PreAuthorize("hasAuthority('ROLE_DOMAIN_USER')")
+@RestController
 public class WalletResource extends BaseResource {
 
     /**
@@ -37,9 +33,9 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<Wallet> createWallet(
+    public PaymentResponse<Wallet> createWallet(
             final HttpServletResponse response,
-            @RequestBody(required=false) final Wallet wallet) {
+            @RequestBody(required=true) final Wallet wallet) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.CREATED.getStatusCode());
         try {
             final Account loggedAccount = this.getLoggedAccount();
@@ -65,7 +61,7 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{walletId}", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<Wallet> updateWallet(
+    public PaymentResponse<Wallet> updateWallet(
             @PathVariable("walletId") final Long walletId,
             @RequestBody(required=false) final Wallet wallet,
             final HttpServletResponse response) {
@@ -87,7 +83,7 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public @ResponseBody PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response,
+    public PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response,
            @RequestParam(value="status", required=false, defaultValue="ACTIVE") final String status) {
        final Account loggedAccount = this.getLoggedAccount();
         return this.getWallets(response, loggedAccount.getId(), status);
@@ -101,7 +97,7 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{walletId}", method = RequestMethod.GET, produces = "application/json")
-    public @ResponseBody PaymentResponse<Wallet> getWallet(@PathVariable("walletId") final Long walletId,
+    public PaymentResponse<Wallet> getWallet(@PathVariable("walletId") final Long walletId,
                                                            final HttpServletResponse response) {
         try {
             this.checkOwnership(walletId);
@@ -120,7 +116,7 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{walletId}/transactions", method = RequestMethod.GET, produces = "application/json")
-    public @ResponseBody PaymentResponse<List<Transaction>> getTransactions(@PathVariable("walletId") final Long walletId,
+    public PaymentResponse<List<Transaction>> getTransactions(@PathVariable("walletId") final Long walletId,
            @RequestParam(value="reference", required=false) final String reference,
            @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
            @RequestParam(value="status", required=false) final Status status,
@@ -141,7 +137,7 @@ public class WalletResource extends BaseResource {
      * @return
      */
     @RequestMapping(value="/{walletId}", method = RequestMethod.DELETE, produces = "application/json")
-    public @ResponseBody PaymentResponse<Wallet> deactivateWallet(@PathVariable("walletId") final Long walletId,
+    public PaymentResponse<Wallet> deactivateWallet(@PathVariable("walletId") final Long walletId,
                                                                   final HttpServletResponse response) {
         new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {

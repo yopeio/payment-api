@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,9 +27,10 @@ import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 
-@Controller
-@EnableAutoConfiguration
+//@Controller
+//@EnableAutoConfiguration
 @RequestMapping("/admin")
+@PreAuthorize("hasAuthority('ROLE_BACKEND_ADMIN')")
 public class AdminResource extends BaseResource {
 
     /**

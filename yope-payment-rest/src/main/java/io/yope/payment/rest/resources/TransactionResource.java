@@ -1,20 +1,5 @@
 package io.yope.payment.rest.resources;
 
-import java.text.MessageFormat;
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
-
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
@@ -24,13 +9,20 @@ import io.yope.payment.domain.Transaction.Type;
 import io.yope.payment.exceptions.AuthorizationException;
 import io.yope.payment.exceptions.BadRequestException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
+import java.text.MessageFormat;
+import java.util.List;
 
 /**
  * Wallet Resource.
  */
-@Controller
-@EnableAutoConfiguration
 @RequestMapping("/transactions")
+@PreAuthorize("hasAuthority('ROLE_DOMAIN_USER')")
+@RestController
 public class TransactionResource extends BaseResource {
 
     private final static String NOT_FOUND_MESSAGE = "Transaction with {0} '{1}' not found";

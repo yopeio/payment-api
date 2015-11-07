@@ -262,7 +262,7 @@
 				{
 					"id": "512eb6f8-84e5-eabc-6957-4df6e0af7aa4",
 					"headers": "Authorization: Basic bXktdHJ1c3RlZC13ZHBDbGllbnQ6c2VjcmV0\n",
-					"url": "http://{{host}}:{{port}}/oauth/token?username=admin@yope.io&password=Vit9uZ2S&grant_type=password",
+					"url": "http://{{host}}:{{port}}/authenticate?username=admin@yope.io&password=Vit9uZ2S",
 					"preRequestScript": "",
 					"pathVariables": {},
 					"method": "POST",

@@ -3,6 +3,7 @@ package io.yope.payment.configuration;
 
 import java.io.File;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
@@ -22,9 +23,18 @@ import io.yope.payment.db.services.AccountDbService;
 import io.yope.payment.db.services.WalletDbService;
 import io.yope.payment.transaction.services.TransactionStateService;
 
+import javax.annotation.PostConstruct;
+
 
 @Configuration
+@Slf4j
 public class BitcoinjConfiguration {
+
+    @PostConstruct
+    public void init() {
+        log.info("init Blockchain Service Configuration");
+    }
+
 
     @ConfigurationProperties(prefix = "blockchain")
     @Bean

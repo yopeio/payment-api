@@ -1,38 +1,30 @@
 package io.yope.payment.rest.resources;
 
-import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import javax.ws.rs.core.Response;
-
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Type;
 import io.yope.payment.exceptions.DuplicateEmailException;
 import io.yope.payment.requests.RegistrationRequest;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import javax.ws.rs.core.Response;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Account resource.
  */
-@Controller
-@EnableAutoConfiguration
+//@Controller
+//@EnableAutoConfiguration
+@RestController
 @RequestMapping("/accounts")
 public class AccountResource extends BaseResource {
 
@@ -43,7 +35,7 @@ public class AccountResource extends BaseResource {
      * @return
      */
     @RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    public @ResponseBody PaymentResponse<Account> createAccount(
+    public PaymentResponse<Account> createAccount(
             final HttpServletResponse response,
             @RequestBody(required=true) @Valid final RegistrationRequest registrationRequest,
             final BindingResult bindingResult) {
@@ -73,6 +65,7 @@ public class AccountResource extends BaseResource {
      * @param account
      * @return
      */
+    @PreAuthorize("hasAuthority('ROLE_DOMAIN_USER')")
     @RequestMapping(value="/me", method = RequestMethod.PUT, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
                                                                 @RequestBody(required=false) final Account account) {
@@ -83,6 +76,7 @@ public class AccountResource extends BaseResource {
      * Get Personal Account.
      * @return
      */
+    @PreAuthorize("hasAuthority('ROLE_DOMAIN_USER')")
     @RequestMapping(value="/me", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> getAccount() {
         final Account loggedAccount = getLoggedAccount();
@@ -97,6 +91,7 @@ public class AccountResource extends BaseResource {
      * Delete Personal Account.
      * @return
      */
+    @PreAuthorize("hasAuthority('ROLE_DOMAIN_USER')")
     @RequestMapping(value="/me", method = RequestMethod.DELETE, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> deleteAccount(final HttpServletResponse response) {
         final Account loggedAccount = getLoggedAccount();

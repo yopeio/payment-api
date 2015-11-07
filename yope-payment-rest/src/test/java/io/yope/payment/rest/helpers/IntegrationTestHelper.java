@@ -1,15 +1,12 @@
 package io.yope.payment.rest.helpers;
 
-import static com.jayway.restassured.RestAssured.given;
-
-import org.apache.commons.lang3.RandomStringUtils;
-
 import com.jayway.restassured.response.Header;
-
 import io.yope.payment.domain.Account.Type;
 import io.yope.payment.requests.RegistrationRequest;
-import io.yope.utils.Serializer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
+
+import static com.jayway.restassured.RestAssured.given;
 
 /**
  * Integration test helper
@@ -29,13 +26,13 @@ public abstract class IntegrationTestHelper {
 	public static String requestAccountAndAccessToken() {
 	    final RegistrationRequest registrationRequest = newRegistrationRequest();
         
-        given()
-            .contentType("application/json")
-            .body(Serializer.json(registrationRequest))
-            .post("/accounts").then()
-            .log().all()
-            .assertThat()
-            .statusCode(201);
+//        given()
+//            .contentType("application/json")
+//            .body(Serializer.json(registrationRequest))
+//            .post("/accounts").then()
+//            .log().all()
+//            .assertThat()
+//            .statusCode(201);
         
         log.debug("Registered: {}", registrationRequest);
         return IntegrationTestHelper
