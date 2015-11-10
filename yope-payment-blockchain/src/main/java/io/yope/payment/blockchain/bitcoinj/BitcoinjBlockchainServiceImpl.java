@@ -239,7 +239,6 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
     }
 
     private void registerInBlockchain(final org.bitcoinj.core.Wallet wallet) {
-        log.info("******** register {} in blockchain", wallet.toString());
         this.chain.addWallet(wallet);
         this.peerGroup.addWallet(wallet);
         final WalletEventListener walletEventListener = new WalletEventListener(
