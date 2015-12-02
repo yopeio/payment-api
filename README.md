@@ -13,5 +13,3 @@ More infos: http://developer.yope.io
 Documentation: http://docs.yope.apiary.io
 
 Cookbook: https://github.com/yopeio/payment-api/blob/master/YD-Cookbook-291115-1530-187.pdf
-
-
