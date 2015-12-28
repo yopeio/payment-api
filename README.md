@@ -20,10 +20,10 @@
 * at least 2GB RAM
  
 ## How to run it locally
-* clone the project and build it from the root executing the maven command `mvn clean install`
+* clone the project and build it from the root executing `mvn clean install` command
 * run Neo4j executing `neo4j start` command and change the password in `localhost:7474` using the same `neo4jPassword` defined in `yope-payment-rest/application.yml`
 * run Redis executing `redis-server` command
-* run the project executing the maven command from the path `mvn spring-boot:run`
+* run the project executing `mvn spring-boot:run` command from the `yope-payment-rest` path
 * test it executing the command `curl --include \
      --request POST \
      --header "Content-Type: application/json" \
