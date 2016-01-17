@@ -10,6 +10,7 @@ import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.TransactionOutput;
 
 import io.yope.payment.blockchain.BlockChainService;
+import io.yope.payment.blockchain.BlockchainSettings;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Wallet;
 import io.yope.payment.exceptions.IllegalTransactionStateException;

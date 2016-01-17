@@ -33,6 +33,7 @@ import org.mockito.stubbing.Answer;
 import com.beust.jcommander.internal.Lists;
 
 import io.yope.payment.blockchain.BlockchainException;
+import io.yope.payment.blockchain.BlockchainSettings;
 import io.yope.payment.db.services.AccountDbService;
 import io.yope.payment.db.services.WalletDbService;
 import io.yope.payment.domain.Account;

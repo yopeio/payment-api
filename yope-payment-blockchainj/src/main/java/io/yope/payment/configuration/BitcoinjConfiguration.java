@@ -3,7 +3,8 @@ package io.yope.payment.configuration;
 
 import java.io.File;
 
-import lombok.extern.slf4j.Slf4j;
+import javax.annotation.PostConstruct;
+
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
@@ -16,14 +17,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.yope.payment.blockchain.BlockChainService;
+import io.yope.payment.blockchain.BlockchainSettings;
 import io.yope.payment.blockchain.bitcoinj.BitcoinjBlockchainServiceImpl;
-import io.yope.payment.blockchain.bitcoinj.BlockchainSettings;
-import io.yope.payment.blockchain.bitcoinj.QRHelper;
 import io.yope.payment.db.services.AccountDbService;
 import io.yope.payment.db.services.WalletDbService;
 import io.yope.payment.transaction.services.TransactionStateService;
-
-import javax.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
 
 @Configuration
@@ -40,12 +39,6 @@ public class BitcoinjConfiguration {
     @Bean
     public BlockchainSettings blockchainSettings() {
         return new BlockchainSettings();
-    }
-
-    @Bean
-    public QRHelper qrHelper(final ServerConfiguration configuration,
-                             final BlockChainService blockChainService) {
-        return new QRHelper(configuration, blockChainService);
     }
 
     @Bean

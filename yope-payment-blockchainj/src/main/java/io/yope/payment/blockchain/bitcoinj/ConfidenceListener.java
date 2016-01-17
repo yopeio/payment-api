@@ -5,6 +5,7 @@ package io.yope.payment.blockchain.bitcoinj;
 
 import org.bitcoinj.core.TransactionConfidence;
 
+import io.yope.payment.blockchain.BlockchainSettings;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.exceptions.IllegalTransactionStateException;
 import io.yope.payment.exceptions.InsufficientFundsException;

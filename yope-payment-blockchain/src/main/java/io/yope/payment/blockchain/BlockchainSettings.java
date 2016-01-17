@@ -1,7 +1,7 @@
 /**
  *
  */
-package io.yope.payment.blockchain.bitcoinj;
+package io.yope.payment.blockchain;
 
 import java.math.BigDecimal;
 

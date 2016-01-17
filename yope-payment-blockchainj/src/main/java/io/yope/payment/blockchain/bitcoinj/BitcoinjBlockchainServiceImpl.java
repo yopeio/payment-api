@@ -32,6 +32,7 @@ import com.google.common.collect.Lists;
 
 import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
+import io.yope.payment.blockchain.BlockchainSettings;
 import io.yope.payment.db.services.AccountDbService;
 import io.yope.payment.db.services.WalletDbService;
 import io.yope.payment.domain.Account;
