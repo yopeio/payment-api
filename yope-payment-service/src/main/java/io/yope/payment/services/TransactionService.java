@@ -116,20 +116,20 @@ public class TransactionService {
         final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
         final Wallet source = this.walletHelper.getByName(accountId, transaction.getSource().getName());
         if (source == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Source Wallet {0} Not Found", transaction.getSource()));
+            throw new ObjectNotFoundException(transaction.getSource().getId(), Wallet.class);
         }
         if (!this.canPay(source, correctedAmount)) {
             throw new InsufficientFundsException("not enough funds in the wallet with name "+source.getName());
         }
         final Wallet destination = this.walletHelper.getByName(accountId, transaction.getDestination().getName());
         if (destination == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Destination Wallet {0} Not Found", transaction.getDestination()));
+            throw new ObjectNotFoundException(transaction.getDestination().getId(), Wallet.class);
         }
-        this.walletService.update(source.getId(), source.toBuilder()
+        this.walletService.save(source.getId(), source.toBuilder()
                 .balance(source.getBalance().subtract(correctedAmount))
                 .availableBalance(source.getAvailableBalance().subtract(correctedAmount))
                 .build());
-        this.walletService.update(destination.getId(), destination.toBuilder()
+        this.walletService.save(destination.getId(), destination.toBuilder()
                 .balance(destination.getBalance().add(correctedAmount))
                 .availableBalance(destination.getAvailableBalance().add(correctedAmount))
                 .build());
@@ -174,7 +174,7 @@ public class TransactionService {
         final Wallet source = this.getWalletForDeposit(transaction, accountId);
         final Wallet destination = this.walletHelper.getByName(accountId, transaction.getDestination().getName());
         if (destination == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Destination Wallet {0} Not Found", transaction.getDestination()));
+            throw new ObjectNotFoundException(transaction.getDestination().getId(), Wallet.class);
         }
         final Transaction.Builder pendingTransactionBuilder = transaction.toBuilder().fees(BigDecimal.ZERO).source(source).destination(destination).status(Status.PENDING);
         final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
@@ -212,7 +212,7 @@ public class TransactionService {
         final BigDecimal correctedAmount = transaction.getAmount().setScale(SCALE, RoundingMode.FLOOR);
         final Wallet source = this.walletHelper.getByName(accountId, transaction.getSource().getName());
         if (source == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Source Wallet {0} Not Found", transaction.getSource()));
+            throw new ObjectNotFoundException(transaction.getSource().getId(), Wallet.class);
         }
         if (!this.canPay(source, correctedAmount)) {
             throw new InsufficientFundsException(MessageFormat.format("Insufficient Funds Exception in Wallet {0}", transaction.getSource()));

@@ -23,6 +23,7 @@
         <module>yope-payment-spring-security</module>
         <module>yope-payment-blockchain-j</module>
         <module>yope-payment-model</module>
+        <module>yope-payment-db-dynamodb</module>
     </modules>
 
     <properties>
@@ -95,6 +96,11 @@
                 <version>${project.version}</version>
             </dependency>
             <!-- third party dependencies -->
+            <dependency>
+                <groupId>org.socialsignin</groupId>
+                <artifactId>spring-data-dynamodb</artifactId>
+                <version>4.2.1</version>
+            </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
@@ -241,6 +247,10 @@
     </build>
 
     <repositories>
+        <repository>
+            <id>opensourceagility-release</id>
+            <url>http://repo.opensourceagility.com/release/</url>
+        </repository>
         <repository>
             <id>spring-milestones</id>
             <url>http://repo.spring.io/libs-snapshot</url>

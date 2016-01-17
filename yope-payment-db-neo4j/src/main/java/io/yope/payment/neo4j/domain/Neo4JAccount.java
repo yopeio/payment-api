@@ -18,12 +18,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.Wither;
 
 /**
  * @author mgerardi
  *
  */
 @Builder(builderClassName="Builder", toBuilder=true)
+@Wither
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -71,16 +73,16 @@ public class Neo4JAccount {
 
     public Account toAccount() {
         final Account.Builder builder = Account.builder()
-                .email(getEmail())
-                .firstName(getFirstName())
-                .lastName(getLastName())
-                .id(getId())
-                .status(getStatus())
-                .type(getType())
-                .modificationDate(getModificationDate())
-                .registrationDate(getRegistrationDate());
-        if (getWallets() != null) {
-            builder.wallets(getWallets().stream().map(w -> w.toWallet()).collect(Collectors.toList()));
+                .email(this.getEmail())
+                .firstName(this.getFirstName())
+                .lastName(this.getLastName())
+                .id(this.getId())
+                .status(this.getStatus())
+                .type(this.getType())
+                .modificationDate(this.getModificationDate())
+                .registrationDate(this.getRegistrationDate());
+        if (this.getWallets() != null) {
+            builder.wallets(this.getWallets().stream().map(w -> w.toWallet()).collect(Collectors.toList()));
         }
         return builder.build();
     }

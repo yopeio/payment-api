@@ -157,10 +157,10 @@ public class TransactionStateService {
         }
         final Wallet destination = transaction.getDestination();
         log.info("** balance from {}:{} to {}:{} -> amount {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), transaction.getAmount());
-        final Wallet nextSource = walletService.update(source.getId(), source.toBuilder()
+        final Wallet nextSource = walletService.save(source.getId(), source.toBuilder()
                 .balance(source.getBalance().subtract(transaction.getAmount()))
                 .build());
-        final Wallet nextDestination = walletService.update(destination.getId(), destination.toBuilder()
+        final Wallet nextDestination = walletService.save(destination.getId(), destination.toBuilder()
                 .balance(destination.getBalance().add(transaction.getAmount()))
                 .build());
         log.info("** new balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());
@@ -174,10 +174,10 @@ public class TransactionStateService {
         }
         final Wallet destination = transaction.getDestination();
         log.info("** Available Balance from {}:{} to {}:{} -> amount {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), transaction.getAmount());
-        final Wallet nextSource = walletService.update(source.getId(), source.toBuilder()
+        final Wallet nextSource = walletService.save(source.getId(), source.toBuilder()
                 .availableBalance(source.getAvailableBalance().subtract(transaction.getAmount()))
                 .build());
-        final Wallet nextDestination = walletService.update(destination.getId(), destination.toBuilder()
+        final Wallet nextDestination = walletService.save(destination.getId(), destination.toBuilder()
                 .availableBalance(destination.getAvailableBalance().add(transaction.getAmount()))
                 .build());
         log.info("** new Available Balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());
@@ -191,10 +191,10 @@ public class TransactionStateService {
             throw new InsufficientFundsException("not enough funds to restore transaction '"+transaction+"'");
         }
         log.info("-- restore balance from {}:{} to {}:{} -> amount {}", source.getName(), source.getBalance(), destination.getName(), destination.getBalance(), transaction.getAmount());
-        final Wallet nextSource = walletService.update(source.getId(), source.toBuilder()
+        final Wallet nextSource = walletService.save(source.getId(), source.toBuilder()
                 .balance(source.getBalance().add(transaction.getAmount()))
                 .build());
-        final Wallet nextDestination = walletService.update(destination.getId(), destination.toBuilder()
+        final Wallet nextDestination = walletService.save(destination.getId(), destination.toBuilder()
                 .balance(destination.getBalance().subtract(transaction.getAmount()))
                 .build());
         log.info("-- new balance  {}:{}  {}:{} ", nextSource.getName(), nextSource.getBalance(), nextDestination.getName(), nextDestination.getBalance());

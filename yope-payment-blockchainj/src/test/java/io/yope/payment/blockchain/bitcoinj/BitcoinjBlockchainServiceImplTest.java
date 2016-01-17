@@ -113,7 +113,7 @@ public class BitcoinjBlockchainServiceImplTest {
     @Test
     public void testGenerateCentralWalletHashWithTransaction() throws BlockchainException {
         when(this.transactionService.getByReceiverHash(anyString())).thenReturn(null, this.transaction, null);
-        when(this.walletService.save(any(Wallet.class))).thenAnswer(new Answer<Wallet>() {
+        when(this.walletService.create(any(Wallet.class))).thenAnswer(new Answer<Wallet>() {
             @Override
             public Wallet answer(final InvocationOnMock invocation) throws Throwable {
                 final Wallet wallet = invocation.getArgumentAt(0, Wallet.class);
@@ -130,7 +130,7 @@ public class BitcoinjBlockchainServiceImplTest {
     @Test
     public void testGenerateCentralWalletHash() throws BlockchainException {
         when(this.transactionService.getByReceiverHash(anyString())).thenReturn(null);
-        when(this.walletService.save(any(Wallet.class))).thenAnswer(new Answer<Wallet>() {
+        when(this.walletService.create(any(Wallet.class))).thenAnswer(new Answer<Wallet>() {
             @Override
             public Wallet answer(final InvocationOnMock invocation) throws Throwable {
                 final Wallet wallet = invocation.getArgumentAt(0, Wallet.class);

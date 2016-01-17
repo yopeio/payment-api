@@ -148,7 +148,7 @@ public class BitcoinjBlockchainServiceImpl implements BlockChainService {
                 .description(FilenameUtils.concat(this.settings.getWalletFolder(), this.settings.getWalletName()))
                 .balance(balance).availableBalance(availableBalance).build();
         this.saveToFile(blockchainWallet);
-        return this.walletService.save(central);
+        return this.walletService.create(central);
     }
 
     private org.bitcoinj.core.Wallet getOrRegister() throws IOException {

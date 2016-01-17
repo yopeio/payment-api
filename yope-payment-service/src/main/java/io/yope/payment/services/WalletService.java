@@ -3,7 +3,6 @@
  */
 package io.yope.payment.services;
 
-import java.text.MessageFormat;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,17 +25,17 @@ public class WalletService {
     private WalletDbService walletService;
 
     public boolean exists(final Long walletId) {
-        return walletService.exists(walletId);
+        return this.walletService.exists(walletId);
     }
 
     public Wallet save(final Wallet wallet) {
-        return walletService.save(wallet);
+        return this.walletService.create(wallet);
     }
 
     public Wallet update(final Long walletId, final Wallet wallet) throws ObjectNotFoundException {
-        final Wallet current = getById(walletId);
+        final Wallet current = this.getById(walletId);
         if (current == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Wallet with id {0} Not Found", walletId));
+            throw new ObjectNotFoundException(walletId, Wallet.class);
         }
         final Wallet toSave = wallet.toBuilder()
                 .id(walletId)
@@ -51,30 +50,27 @@ public class WalletService {
                 .status(current.getStatus())
                 .type(current.getType())
                 .build();
-        return walletService.update(walletId, toSave);
+        return this.walletService.save(walletId, toSave);
     }
 
     public List<Wallet> get(final Long id, final Status status) {
-        return walletService.getWalletsByAccountId(id, status);
+        return this.walletService.getWalletsByAccountId(id, status);
     }
 
     public Wallet getById(final Long walletId) {
-        return walletService.getById(walletId);
+        return this.walletService.getById(walletId);
     }
 
     public Wallet getByName(final Long accountId, final String name) {
-        return walletService.getByName(accountId, name);
+        return this.walletService.getByName(accountId, name);
     }
 
     public Wallet delete(final Long walletId) throws ObjectNotFoundException {
-        if (exists(walletId)) {
-            return walletService.delete(walletId);
-        }
-        throw new IllegalArgumentException(String.valueOf(walletId));
+        return this.walletService.delete(walletId);
     }
 
     public Wallet getByWalletHash(final String walletHash) {
-        return walletService.getByWalletHash(walletHash);
+        return this.walletService.getByWalletHash(walletHash);
     }
 
 

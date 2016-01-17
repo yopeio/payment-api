@@ -13,12 +13,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.Wither;
 
 /**
  * @author mgerardi
  *
  */
 @Builder(builderClassName="Builder", toBuilder=true)
+@Wither
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
