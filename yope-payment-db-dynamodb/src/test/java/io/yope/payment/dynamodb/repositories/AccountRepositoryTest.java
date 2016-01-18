@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import io.yope.payment.dynamodb.domain.DynamodbAccount;;
 @ContextConfiguration(loader=AnnotationConfigContextLoader.class,classes={SpringDataDynamoDemoConfig.class})
 @Transactional
 @TransactionConfiguration(defaultRollback = true)
+@Ignore
 public class AccountRepositoryTest {
 
     @Autowired private AccountRepository repository;

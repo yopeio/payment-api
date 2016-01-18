@@ -43,7 +43,7 @@ public class TransactionStateService {
     public Transaction save(final Long id, final Transaction transaction) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException{
         final Transaction current = transactionService.get(id);
         if (current == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Transaction with id {0} Not Found", id));
+            throw new ObjectNotFoundException(id, Transaction.class);
         }
         final Transaction next = transaction.toBuilder()
                 .id(id)
