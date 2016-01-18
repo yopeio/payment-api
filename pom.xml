@@ -23,7 +23,6 @@
         <module>yope-payment-spring-security</module>
         <module>yope-payment-blockchain-j</module>
         <module>yope-payment-model</module>
-        <module>yope-payment-db-dynamodb</module>
     </modules>
 
     <properties>

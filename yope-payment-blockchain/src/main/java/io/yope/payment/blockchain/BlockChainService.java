@@ -12,7 +12,7 @@ public interface BlockChainService {
 
     String send(Transaction transaction) throws BlockchainException;
 
-    Wallet saveCentralWallet(org.bitcoinj.core.Wallet wallet) throws IOException;
+    Wallet saveCentralWallet(Wallet wallet) throws IOException;
 
     /**
      * generated a new hash value from the central wallet.

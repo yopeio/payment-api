@@ -9,12 +9,16 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>yope-payment-blockchain</artifactId>
+    <artifactId>yope-payment-blockchain-j</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>io.yope.payment</groupId>
             <artifactId>yope-payment-db-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bitcoinj</groupId>
+            <artifactId>bitcoinj-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
