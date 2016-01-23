@@ -29,12 +29,13 @@ public class ConfidenceListener implements TransactionConfidence.Listener {
     @Override
     public void onConfidenceChanged(final TransactionConfidence confidence, final ChangeReason reason) {
         final String transactionHash = confidence.getTransactionHash().toString();
-        final int depth = confidence.getDepthInBlocks();
-        log.info("-----> Transaction {} Confidence {} - {}", transactionHash, confidence, depth);
         final Transaction loaded = transactionService.getByTransactionHash(transactionHash);
         if (loaded == null) {
+            confidence.removeEventListener(this);
             return;
         }
+        final int depth = confidence.getDepthInBlocks();
+        log.info("-----> Transaction {} Confidence {} - {}", transactionHash, confidence, depth);
         if (depth >= settings.getConfirmations()) {
             try {
                 if (Transaction.Status.ACCEPTED.equals(loaded.getStatus())) {

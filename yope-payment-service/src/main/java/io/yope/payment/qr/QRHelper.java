@@ -17,7 +17,6 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
-import io.yope.payment.blockchain.BlockChainService;
 import io.yope.payment.blockchain.BlockchainException;
 import io.yope.payment.configuration.ServerConfiguration;
 import io.yope.payment.domain.QRImage;
@@ -37,11 +36,8 @@ public class QRHelper {
 
     private final ServerConfiguration serverConfiguration;
 
-    private final BlockChainService blockChainService;
-
-    public QRImage getQRImage(final BigDecimal amount) throws ObjectNotFoundException, BlockchainException {
-        final String hash = this.getHash();
-        final String url = this.generateImageUrl(hash, amount);
+    public QRImage getQRImage(final BigDecimal amount, final String hash) throws ObjectNotFoundException, BlockchainException {
+        final String url = generateImageUrl(hash, amount);
         return QRImage.builder()
                 .amount(amount)
                 .hash(hash)
@@ -50,15 +46,15 @@ public class QRHelper {
     }
 
     private String generateImageUrl(final String hash, final BigDecimal amount) {
-        final String code = this.generateCode(hash, amount);
+        final String code = generateCode(hash, amount);
         BitMatrix bitMatrix = null;
         try {
             bitMatrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, QR_WIDTH, QR_HEIGHT);
-            final BufferedImage bufferedImage = this.Process2(MatrixToImageWriter.toBufferedImage(bitMatrix), hash, amount);
+            final BufferedImage bufferedImage = Process2(MatrixToImageWriter.toBufferedImage(bitMatrix), hash, amount);
             final String imageName = hash+".png";
-            final File image = new File(this.getImageFolder(), imageName);
+            final File image = new File(getImageFolder(), imageName);
             ImageIO.write(bufferedImage, "png", image);
-            return this.serverConfiguration.getImageAbsolutePath() + imageName;
+            return serverConfiguration.getImageAbsolutePath() + imageName;
         } catch (final WriterException e) {
             log.error("creating image", e);
         } catch (final IOException e) {
@@ -77,7 +73,7 @@ public class QRHelper {
     }
 
     private File getImageFolder() {
-        final File folder = new File(this.serverConfiguration.getImageFolder());
+        final File folder = new File(serverConfiguration.getImageFolder());
         if (!folder.exists()) {
             folder.mkdirs();
         }
@@ -87,11 +83,5 @@ public class QRHelper {
     private String generateCode(final String hash, final BigDecimal amount) {
         return "bitcoin:" + hash + "?amount=" + amount.divide(MILLI_BITCOINS);
     }
-
-    private String getHash() throws BlockchainException {
-        return this.blockChainService.generateCentralWalletHash();
-    }
-
-
 
 }
