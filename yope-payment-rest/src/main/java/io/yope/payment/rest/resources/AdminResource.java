@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.yope.payment.domain.Account;
-import io.yope.payment.domain.Account.Type;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;
 import io.yope.payment.domain.Transaction.Status;
@@ -41,7 +40,6 @@ public class AdminResource extends BaseResource {
      */
     @RequestMapping(value="/accounts", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public @ResponseBody PaymentResponse<List<Account>> getAccounts() throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         final List<Account> accounts = accountService.getAccounts();
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         return new PaymentResponse<List<Account>>(header, accounts);
@@ -63,7 +61,6 @@ public class AdminResource extends BaseResource {
             @RequestParam(value="status", required=true) final Status status) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            checkPermission(Type.ADMIN);
             final Transaction saved = transactionService.save(transactionId, status);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
             return new PaymentResponse<Transaction>(header, saved);
@@ -93,7 +90,6 @@ public class AdminResource extends BaseResource {
     public @ResponseBody PaymentResponse<Account> updateAccount(final HttpServletResponse response,
                                                                 @PathVariable("accountId") final Long accountId,
                                                                 @RequestBody(required=false) final Account account) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         return doUpdateAccount(response, accountId, account);
     }
 
@@ -106,7 +102,6 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/accounts/{accountId}", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> getAccount(@PathVariable("accountId") final Long accountId,
                                                              final HttpServletResponse response) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         try {
             final Account account = accountService.getById(accountId);
             if (account == null) {
@@ -128,7 +123,6 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/accounts/{accountId}", method = RequestMethod.DELETE, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> deleteAccount(final HttpServletResponse response,
                                                                 @PathVariable("accountId") final Long accountId) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         return doDeleteAccount(response, accountId);
     }
 
@@ -143,7 +137,6 @@ public class AdminResource extends BaseResource {
             @PathVariable("accountId") final Long accountId,
             @RequestParam(value="status", required=false, defaultValue="ACTIVE") final String status,
             final HttpServletResponse response)  throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         return this.getWallets(response, accountId, status);
     }
 
@@ -158,7 +151,6 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/wallets/{walletId}", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Wallet> getWallet(@PathVariable final Long walletId,
                                                            final HttpServletResponse response) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         return retrieveWallet(walletId, response);
     }
 
@@ -173,7 +165,6 @@ public class AdminResource extends BaseResource {
             @PathVariable final long walletId,
             @RequestBody(required=false) final Wallet wallet,
             final HttpServletResponse response) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         return doUpdateWallet(walletId, wallet, response);
     }
 
@@ -187,7 +178,6 @@ public class AdminResource extends BaseResource {
     @RequestMapping(value="/wallets/{walletId}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
     public PaymentResponse<Wallet> deactivateWallet(@PathVariable final long walletId,
                                                     final HttpServletResponse response) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         return doDeleteWallet(walletId, response);
     }
 
@@ -203,14 +193,12 @@ public class AdminResource extends BaseResource {
                                                                             @RequestParam(value="dir", required=false, defaultValue = "BOTH") final Direction direction,
                                                                             @RequestParam(value="status", required=false) final Status status,
                                                                             @RequestParam(value="type", required=false) final Transaction.Type type) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         return getAccountTransactions(response, accountId, reference, direction, status, type);
     }
 
     @RequestMapping(value="/transactions/{transactionId}", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"senderHash"})
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(
             @PathVariable("transactionId") final Long transactionId) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         final Transaction transaction = transactionService.getTransactionById(transactionId);
         if (transaction == null) {
             return this.notFound("Not found " + transactionId);
@@ -221,7 +209,6 @@ public class AdminResource extends BaseResource {
 
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"senderHash"})
     public @ResponseBody PaymentResponse<Transaction> getBySenderHash(@RequestParam(value="senderHash", required=true)  final String hash) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         final Transaction transaction = transactionService.getTransactionBySenderHash(hash);
         if (transaction == null) {
             return this.notFound(hash);
@@ -232,7 +219,6 @@ public class AdminResource extends BaseResource {
 
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"receiverHash"})
     public @ResponseBody PaymentResponse<Transaction> getByReceiverHash(@RequestParam(value="receiverHash", required=true)  final String hash) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         final Transaction transaction = transactionService.getTransactionByReceiverHash(hash);
         if (transaction == null) {
             return this.notFound(hash);
@@ -243,7 +229,6 @@ public class AdminResource extends BaseResource {
 
     @RequestMapping(value="/transactions", method = RequestMethod.GET, consumes = "application/json", produces = "application/json", params= {"hash"})
     public @ResponseBody PaymentResponse<Transaction> getByTransactionHash(@RequestParam(value="hash", required=true)  final String hash) throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         final Transaction transaction = transactionService.getTransactionByHash(hash);
         if (transaction == null) {
             return this.notFound(hash);
@@ -267,7 +252,6 @@ public class AdminResource extends BaseResource {
                                                                             @RequestParam(value="status", required=false) final Status status,
                                                                             @RequestParam(value="type", required=false) final Transaction.Type type,
                                                                             final HttpServletResponse response)  throws AuthorizationException {
-        checkPermission(Type.ADMIN);
         return getWalletTransactions(walletId, reference, direction, status, type, response);
     }
 }
