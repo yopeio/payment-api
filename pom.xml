@@ -20,7 +20,6 @@
 		<module>yope-payment-transaction-service</module>
 		<module>yope-payment-service</module>
 		<module>yope-payment-rest</module>
-		<!--module>yope-payment-spring-security</module-->
 	</modules>
 
 	<properties>
