@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @ComponentScan({
     "io.yope.payment.configuration",
+    "io.yope.configuration",
     "io.yope.payment.rest.resources",
     })
 public class YopePaymentApplication {

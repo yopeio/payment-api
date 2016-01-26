@@ -1,8 +1,8 @@
 package io.yope.payment.rest.resources;
 
 
-import io.yope.payment.domain.CurrentlyLoggedUser;
-import io.yope.payment.domain.YopeUser;
+import io.yope.domain.CurrentlyLoggedUser;
+import io.yope.domain.YopeUser;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

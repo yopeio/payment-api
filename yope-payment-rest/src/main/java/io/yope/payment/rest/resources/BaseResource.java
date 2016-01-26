@@ -9,10 +9,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
+import io.yope.services.UserSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 
-import io.yope.payment.db.services.UserSecurityService;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Transaction;
 import io.yope.payment.domain.Transaction.Direction;

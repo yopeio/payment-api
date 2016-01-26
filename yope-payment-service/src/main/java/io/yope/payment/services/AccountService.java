@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.List;
 
+import io.yope.services.UserSecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import com.google.common.collect.Lists;
 
 import io.yope.payment.db.services.AccountDbService;
-import io.yope.payment.db.services.UserSecurityService;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Status;
 import io.yope.payment.domain.Account.Type;
