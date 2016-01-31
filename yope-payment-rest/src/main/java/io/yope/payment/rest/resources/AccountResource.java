@@ -51,10 +51,11 @@ public class AccountResource extends BaseResource {
             if (Type.ADMIN.equals(registrationRequest.getType())) {
                 return badRequest("type", "Wrong User Type; please use either SELLER or BUYER");
             }
-            final Account to = accountService.registerAccount(registrationRequest);
+            final Account account = accountService.registerAccount(registrationRequest);
+            securityService.createUser(registrationRequest.getEmail(), registrationRequest.getPassword(), registrationRequest.getType().toString());
             final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
             response.setStatus(Response.Status.CREATED.getStatusCode());
-            return new PaymentResponse<Account>(header, to);
+            return new PaymentResponse<Account>(header, account);
         } catch (final DuplicateEmailException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
             return badRequest("email", e.getMessage());
@@ -84,9 +85,6 @@ public class AccountResource extends BaseResource {
     @RequestMapping(value="/me", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> getAccount() {
         final Account loggedAccount = getLoggedAccount();
-        if (loggedAccount == null) {
-            return unauthorized();
-        }
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         return new PaymentResponse<Account>(header, loggedAccount);
     }
@@ -99,9 +97,6 @@ public class AccountResource extends BaseResource {
     @RequestMapping(value="/me", method = RequestMethod.DELETE, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> deleteAccount(final HttpServletResponse response) {
         final Account loggedAccount = getLoggedAccount();
-        if (loggedAccount == null) {
-            return unauthorized();
-        }
         return doDeleteAccount(response, loggedAccount.getId());
     }
 

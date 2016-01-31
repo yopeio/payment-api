@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import com.google.common.collect.Lists;
 
 import io.yope.payment.db.services.AccountDbService;
-import io.yope.payment.db.services.UserSecurityService;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Status;
 import io.yope.payment.domain.Account.Type;
@@ -36,11 +35,8 @@ public class AccountService {
     @Autowired
     private WalletService walletService;
 
-    @Autowired
-    private UserSecurityService securityService;
-
     public Account registerAccount(final RegistrationRequest registration) throws DuplicateEmailException {
-        if (this.accountService.getByEmail(registration.getEmail()) != null) {
+        if (accountService.getByEmail(registration.getEmail()) != null) {
             throw new DuplicateEmailException(registration.getEmail());
         }
 
@@ -58,10 +54,9 @@ public class AccountService {
                 .build();
         Wallet[] wallets = new Wallet[0];
         if (!Type.ADMIN.equals(account.getType())) {
-            wallets = this.createWallets(registration);
+            wallets = createWallets(registration);
         }
-        this.securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
-        return this.accountService.create(account, wallets);
+        return accountService.create(account, wallets);
     }
 
     private Wallet[] createWallets(final RegistrationRequest registration) {
@@ -93,18 +88,18 @@ public class AccountService {
     }
 
     public Wallet saveWallet(final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        return this.walletService.save(wallet);
+        return walletService.save(wallet);
     }
 
     public Wallet saveWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        final Wallet saved = this.walletService.save(wallet);
+        final Wallet saved = walletService.save(wallet);
         account.getWallets().add(saved);
-        this.accountService.update(account.getId(), account);
+        accountService.update(account.getId(), account);
         return saved;
     }
 
     public Wallet createWallet(final Long accountId, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        final Account account = this.getById(accountId);
+        final Account account = getById(accountId);
         if (account == null) {
             throw new ObjectNotFoundException(accountId, Account.class);
         }
@@ -112,7 +107,7 @@ public class AccountService {
     }
 
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
-        if (this.walletService.getByName(account.getId(), wallet.getName()) != null) {
+        if (walletService.getByName(account.getId(), wallet.getName()) != null) {
             throw new BadRequestException("You already have a wallet with name "+wallet.getName()).field("name");
         }
         final Wallet newWallet = wallet.toBuilder()
@@ -126,25 +121,24 @@ public class AccountService {
 
 
     public Account update(final Long accountId, final Account account) throws ObjectNotFoundException {
-        return this.accountService.update(accountId, account);
+        return accountService.update(accountId, account);
     }
 
     public Account getById(final Long accountId) {
-        return this.accountService.getById(accountId);
+        return accountService.getById(accountId);
     }
 
     public List<Account> getAccounts() {
-        return this.accountService.getAccounts();
+        return accountService.getAccounts();
     }
 
     public Account delete(final Long accountId) throws ObjectNotFoundException {
-        final Account account  = this.accountService.delete(accountId);
-        this.securityService.deleteUser(account.getEmail());
+        final Account account  = accountService.delete(accountId);
         return account;
     }
 
     public Account getByEmail(final String email) {
-        return this.accountService.getByEmail(email);
+        return accountService.getByEmail(email);
     }
 
     public boolean owns(final Account account, final Long walletId) {
@@ -152,7 +146,7 @@ public class AccountService {
     }
 
     public boolean exists(final Long accountId) {
-        return this.accountService.exists(accountId);
+        return accountService.exists(accountId);
     }
 
 }

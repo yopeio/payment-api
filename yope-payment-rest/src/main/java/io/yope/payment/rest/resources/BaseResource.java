@@ -125,6 +125,7 @@ public abstract class BaseResource {
         try {
             final Account account = accountService.delete(accountId);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
+            securityService.deleteUser(account.getEmail());
             return new PaymentResponse<Account>(header, account);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
