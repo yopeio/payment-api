@@ -3,7 +3,6 @@
  */
 package io.yope.payment.neo4j.services;
 
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +25,6 @@ import io.yope.payment.exceptions.InsufficientFundsException;
 import io.yope.payment.exceptions.ObjectNotFoundException;
 import io.yope.payment.neo4j.domain.Neo4JTransaction;
 import io.yope.payment.neo4j.repositories.TransactionRepository;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author massi
@@ -34,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional
-@Slf4j
 public class Neo4JTransactionService implements TransactionDbService {
 
     @Autowired
@@ -52,31 +49,26 @@ public class Neo4JTransactionService implements TransactionDbService {
      */
     @Override
     public Transaction create(final Transaction transaction) throws ObjectNotFoundException {
-        final Transaction toSave = createTransaction(transaction);
-        return repository.save(Neo4JTransaction.from(toSave).build()).toTransaction();
+        final Transaction toSave = this.createTransaction(transaction);
+        return this.repository.save(Neo4JTransaction.from(toSave).build()).toTransaction();
     }
 
     @Override
     public Transaction save(final Long transactionId, final Transaction transaction) throws ObjectNotFoundException, InsufficientFundsException, IllegalTransactionStateException {
-        if (!repository.exists(transactionId)) {
-            throw new ObjectNotFoundException(MessageFormat.format("Transaction with id {0} Not Found", transactionId));
+        if (!this.repository.exists(transactionId)) {
+            throw new ObjectNotFoundException(transactionId, Transaction.class);
         }
-        return repository.save(Neo4JTransaction.from(transaction).build()).toTransaction();
+        return this.repository.save(Neo4JTransaction.from(transaction).build()).toTransaction();
     }
 
     private Transaction createTransaction(final Transaction transaction) throws ObjectNotFoundException {
-        final Wallet source = walletService.getById(transaction.getSource().getId());
-        final Wallet destination = walletService.getById(transaction.getDestination().getId());
-        final StringBuffer msg = new StringBuffer();
-        if (source == null || destination == null) {
-            if (source == null) {
-                msg.append("source with hash:").append(transaction.getSource().getWalletHash()).append(" not found\n");
-            }
-            if (destination == null) {
-                msg.append("destination with hash:").append(transaction.getDestination().getWalletHash())
-                        .append(" not found\n");
-            }
-            throw new ObjectNotFoundException(msg.toString());
+        final Wallet source = this.walletService.getById(transaction.getSource().getId());
+        final Wallet destination = this.walletService.getById(transaction.getDestination().getId());
+        if (source == null) {
+            throw new ObjectNotFoundException(transaction.getSource().getId(), Wallet.class);
+        }
+        if (destination == null) {
+            throw new ObjectNotFoundException(transaction.getDestination().getId(), Wallet.class);
         }
         return transaction.toBuilder().source(source).destination(destination)
                 .creationDate(System.currentTimeMillis()).build();
@@ -89,7 +81,7 @@ public class Neo4JTransactionService implements TransactionDbService {
      */
     @Override
     public Transaction get(final Long id) {
-        final Neo4JTransaction transaction = repository.findOne(id);
+        final Neo4JTransaction transaction = this.repository.findOne(id);
         return transaction == null? null : transaction.toTransaction();
     }
 
@@ -107,13 +99,13 @@ public class Neo4JTransactionService implements TransactionDbService {
         final String typeParam = StringUtils.defaultIfBlank(type==null?null:type.name(), ".*");
         switch (direction) {
             case IN:
-                return Lists.newArrayList(repository.findWalletTransactionsIn(walledId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
+                return Lists.newArrayList(this.repository.findWalletTransactionsIn(walledId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
             case OUT:
-                return Lists.newArrayList(repository.findWalletTransactionsOut(walledId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
+                return Lists.newArrayList(this.repository.findWalletTransactionsOut(walledId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
             default:
                 break;
         }
-        return Lists.newArrayList(repository.findWalletTransactions(walledId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
+        return Lists.newArrayList(this.repository.findWalletTransactions(walledId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
     }
 
     /*
@@ -132,39 +124,39 @@ public class Neo4JTransactionService implements TransactionDbService {
         final String typeParam = StringUtils.defaultIfBlank(type==null?null:type.name(), ".*");
         switch (direction) {
             case IN:
-                return Lists.newArrayList(repository.findAccountTransactionsIn(accountId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
+                return Lists.newArrayList(this.repository.findAccountTransactionsIn(accountId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
             case OUT:
-                return Lists.newArrayList(repository.findAccountTransactionsOut(accountId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
+                return Lists.newArrayList(this.repository.findAccountTransactionsOut(accountId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
             default:
                 break;
         }
-        return Lists.newArrayList(repository.findAccountTransactions(accountId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
+        return Lists.newArrayList(this.repository.findAccountTransactions(accountId, referenceParam, statusParam, typeParam)).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
     }
 
     @Override
     public Transaction getBySenderHash(final String hash) {
-        final Neo4JTransaction transaction = repository.findBySenderHash(hash);
+        final Neo4JTransaction transaction = this.repository.findBySenderHash(hash);
         return transaction == null? null : transaction.toTransaction();
 
     }
 
     @Override
     public Transaction getByReceiverHash(final String hash) {
-        final Neo4JTransaction transaction = repository.findByReceiverHash(hash);
+        final Neo4JTransaction transaction = this.repository.findByReceiverHash(hash);
         return transaction == null? null : transaction.toTransaction();
 
     }
 
     @Override
     public Transaction getByTransactionHash(final String hash) {
-        final Neo4JTransaction transaction = repository.findByTransactionHash(hash);
+        final Neo4JTransaction transaction = this.repository.findByTransactionHash(hash);
         return transaction == null? null : transaction.toTransaction();
 
     }
 
     @Override
     public List<Transaction> getTransaction(final int delay, final Transaction.Status status) {
-        return Lists.newArrayList(repository.findOlderThan(delay, status.name())).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
+        return Lists.newArrayList(this.repository.findOlderThan(delay, status.name())).stream().map(t -> t.toTransaction()).collect(Collectors.toList());
     }
 
 }

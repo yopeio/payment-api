@@ -1,23 +1,27 @@
 package io.yope.payment.rest.resources;
 
-import com.beust.jcommander.internal.Lists;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import io.yope.payment.domain.Account;
-import io.yope.payment.domain.Account.Type;
-import io.yope.payment.exceptions.DuplicateEmailException;
-import io.yope.payment.requests.RegistrationRequest;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.ws.rs.core.Response;
-import java.util.List;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Collections2;
+
+import io.yope.payment.domain.Account;
+import io.yope.payment.domain.Account.Type;
+import io.yope.payment.exceptions.DuplicateEmailException;
+import io.yope.payment.requests.RegistrationRequest;
 
 /**
  * Account resource.
@@ -40,17 +44,18 @@ public class AccountResource extends BaseResource {
             @RequestBody(required=true) @Valid final RegistrationRequest registrationRequest,
             final BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            List<Error> errors = getErrors(bindingResult);
+            final List<Error> errors = getErrors(bindingResult);
             return badRequest(errors);
         }
         try {
             if (Type.ADMIN.equals(registrationRequest.getType())) {
                 return badRequest("type", "Wrong User Type; please use either SELLER or BUYER");
             }
-            final Account to = accountService.registerAccount(registrationRequest);
+            final Account account = accountService.registerAccount(registrationRequest);
+            securityService.createUser(registrationRequest.getEmail(), registrationRequest.getPassword(), registrationRequest.getType().toString());
             final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
             response.setStatus(Response.Status.CREATED.getStatusCode());
-            return new PaymentResponse<Account>(header, to);
+            return new PaymentResponse<Account>(header, account);
         } catch (final DuplicateEmailException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
             return badRequest("email", e.getMessage());
@@ -80,9 +85,6 @@ public class AccountResource extends BaseResource {
     @RequestMapping(value="/me", method = RequestMethod.GET, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> getAccount() {
         final Account loggedAccount = getLoggedAccount();
-        if (loggedAccount == null) {
-            return unauthorized();
-        }
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
         return new PaymentResponse<Account>(header, loggedAccount);
     }
@@ -95,21 +97,13 @@ public class AccountResource extends BaseResource {
     @RequestMapping(value="/me", method = RequestMethod.DELETE, produces = "application/json")
     public @ResponseBody PaymentResponse<Account> deleteAccount(final HttpServletResponse response) {
         final Account loggedAccount = getLoggedAccount();
-        if (loggedAccount == null) {
-            return unauthorized();
-        }
         return doDeleteAccount(response, loggedAccount.getId());
     }
 
     private List<Error> getErrors(final BindingResult bindingResult) {
-        List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+        final List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         return Lists.newArrayList(Collections2.transform(
-                fieldErrors, new Function<FieldError, Error>() {
-                    @Override
-                    public Error apply(final FieldError error) {
-                        return Error.builder().field(error.getField()).message(error.getDefaultMessage()).build();
-                    }
-                }
+                fieldErrors, error -> Error.builder().field(error.getField()).message(error.getDefaultMessage()).build()
         ));
     }
 

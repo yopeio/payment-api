@@ -1,6 +1,5 @@
 package io.yope.payment.neo4j.services;
 
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,8 +29,8 @@ public class Neo4JWalletService implements WalletDbService {
      * @see io.yope.payment.services.WalletService#create(io.yope.payment.domain.Wallet)
      */
     @Override
-    public Wallet save(final Wallet wallet) {
-        return repository.save(Neo4JWallet.from(wallet).creationDate(System.currentTimeMillis()).build()).toWallet();
+    public Wallet create(final Wallet wallet) {
+        return this.repository.save(Neo4JWallet.from(wallet).creationDate(System.currentTimeMillis()).build()).toWallet();
     }
 
     /*
@@ -40,7 +39,7 @@ public class Neo4JWalletService implements WalletDbService {
      */
     @Override
     public Wallet getById(final Long id) {
-        final Neo4JWallet wallet = repository.findOne(id);
+        final Neo4JWallet wallet = this.repository.findOne(id);
         return wallet == null? null : wallet.toWallet();
     }
 
@@ -50,7 +49,7 @@ public class Neo4JWalletService implements WalletDbService {
      */
     @Override
     public Wallet getByWalletHash(final String hash) {
-        final Neo4JWallet wallet = repository.findByWalletHash(hash);
+        final Neo4JWallet wallet = this.repository.findByWalletHash(hash);
         return wallet == null? null : wallet.toWallet();
     }
 
@@ -59,11 +58,11 @@ public class Neo4JWalletService implements WalletDbService {
      * @see io.yope.payment.services.WalletService#update(java.lang.Long, io.yope.payment.domain.Wallet)
      */
     @Override
-    public Wallet update(final Long id, final Wallet wallet) throws ObjectNotFoundException {
-        if (!repository.exists(id)) {
-            throw new ObjectNotFoundException(MessageFormat.format("Wallet with id {0} Not Found", id));
+    public Wallet save(final Long id, final Wallet wallet) throws ObjectNotFoundException {
+        if (!this.repository.exists(id)) {
+            throw new ObjectNotFoundException(id, Wallet.class);
         }
-        return repository.save(Neo4JWallet.from(wallet).modificationDate(System.currentTimeMillis()).build()).toWallet();
+        return this.repository.save(Neo4JWallet.from(wallet).modificationDate(System.currentTimeMillis()).build()).toWallet();
     }
 
     /*
@@ -72,11 +71,11 @@ public class Neo4JWalletService implements WalletDbService {
      */
     @Override
     public Wallet delete(final Long id) throws ObjectNotFoundException {
-        final Wallet wallet = getById(id);
+        final Wallet wallet = this.getById(id);
         if (wallet == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Wallet with id {0} Not Found", id));
+            throw new ObjectNotFoundException(id, Wallet.class);
         }
-        return repository.save(Neo4JWallet.from(wallet).status(Status.DELETED).modificationDate(System.currentTimeMillis()).build()).toWallet();
+        return this.repository.save(Neo4JWallet.from(wallet).status(Status.DELETED).modificationDate(System.currentTimeMillis()).build()).toWallet();
     }
 
     /*
@@ -86,7 +85,7 @@ public class Neo4JWalletService implements WalletDbService {
     @Override
     public List<Wallet> getWalletsByAccountId(final Long accountId, final Status status) {
         final String statusParam = StringUtils.defaultIfBlank(status==null? null: status.name(), ".*");
-        return Lists.newArrayList(repository.findAllByOwner(accountId, statusParam)).stream().map(t -> t.toWallet()).collect(Collectors.toList());
+        return Lists.newArrayList(this.repository.findAllByOwner(accountId, statusParam)).stream().map(t -> t.toWallet()).collect(Collectors.toList());
     }
 
     /*
@@ -95,13 +94,13 @@ public class Neo4JWalletService implements WalletDbService {
      */
     @Override
     public Wallet getByName(final Long accountId, final String name) {
-        final Neo4JWallet wallet = repository.findByName(accountId, name);
+        final Neo4JWallet wallet = this.repository.findByName(accountId, name);
         return wallet == null? null : wallet.toWallet();
     }
 
     @Override
     public boolean exists(final Long id) {
-        return repository.exists(id);
+        return this.repository.exists(id);
     }
 
 }

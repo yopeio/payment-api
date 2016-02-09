@@ -12,6 +12,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.yope.payment</groupId>
+            <artifactId>yope-payment-model</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-core</artifactId>
         </dependency>

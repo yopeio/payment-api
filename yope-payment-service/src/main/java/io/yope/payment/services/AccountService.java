@@ -4,7 +4,6 @@
 package io.yope.payment.services;
 
 import java.math.BigDecimal;
-import java.text.MessageFormat;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 import com.google.common.collect.Lists;
 
 import io.yope.payment.db.services.AccountDbService;
-import io.yope.payment.db.services.UserSecurityService;
 import io.yope.payment.domain.Account;
 import io.yope.payment.domain.Account.Status;
 import io.yope.payment.domain.Account.Type;
@@ -37,14 +35,10 @@ public class AccountService {
     @Autowired
     private WalletService walletService;
 
-    @Autowired
-    private UserSecurityService securityService;
-
     public Account registerAccount(final RegistrationRequest registration) throws DuplicateEmailException {
         if (accountService.getByEmail(registration.getEmail()) != null) {
             throw new DuplicateEmailException(registration.getEmail());
         }
-
 
         Type type = registration.getType();
         if (type==null) {
@@ -62,7 +56,6 @@ public class AccountService {
         if (!Type.ADMIN.equals(account.getType())) {
             wallets = createWallets(registration);
         }
-        securityService.createUser(registration.getEmail(), registration.getPassword(), registration.getType().toString());
         return accountService.create(account, wallets);
     }
 
@@ -108,9 +101,9 @@ public class AccountService {
     public Wallet createWallet(final Long accountId, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
         final Account account = getById(accountId);
         if (account == null) {
-            throw new ObjectNotFoundException(MessageFormat.format("Account with id {0} not found", accountId));
+            throw new ObjectNotFoundException(accountId, Account.class);
         }
-        return createWallet(account, wallet);
+        return this.createWallet(account, wallet);
     }
 
     public Wallet createWallet(final Account account, final Wallet wallet) throws ObjectNotFoundException, BadRequestException {
@@ -141,10 +134,6 @@ public class AccountService {
 
     public Account delete(final Long accountId) throws ObjectNotFoundException {
         final Account account  = accountService.delete(accountId);
-        if (account == null) {
-            throw new ObjectNotFoundException(String.valueOf(accountId));
-        }
-        securityService.deleteUser(account.getEmail());
         return account;
     }
 

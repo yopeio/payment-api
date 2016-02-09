@@ -50,33 +50,26 @@ public abstract class BaseResource {
     protected UserSecurityService securityService;
 
     protected Account getLoggedAccount() {
-        final User user = this.securityService.getCurrentUser();
+        final User user = securityService.getCurrentUser();
         if (user == null) {
             return null;
         }
-        final Account account = this.accountService.getByEmail(user.getUsername());
+        final Account account = accountService.getByEmail(user.getUsername());
         log.info("logged as {}", account);
         return account;
     }
 
-    protected void checkPermission(final Account.Type type) throws AuthorizationException {
-        final Account loggedAccount = this.getLoggedAccount();
-        if (!type.equals(loggedAccount.getType())) {
-            throw new AuthorizationException();
-        }
-    }
-
     protected void checkOwnership(final Long walletId) throws AuthorizationException {
-        final Account loggedAccount = this.getLoggedAccount();
-        if (!this.accountService.owns(loggedAccount, walletId)) {
+        final Account loggedAccount = getLoggedAccount();
+        if (!accountService.owns(loggedAccount, walletId)) {
             throw new AuthorizationException();
         }
     }
 
     protected void checkOwnership(final Transaction transaction) throws AuthorizationException {
-        final Account loggedAccount = this.getLoggedAccount();
-        if (!this.accountService.owns(loggedAccount, transaction.getSource().getId())
-         && !this.accountService.owns(loggedAccount, transaction.getDestination().getId())) {
+        final Account loggedAccount = getLoggedAccount();
+        if (!accountService.owns(loggedAccount, transaction.getSource().getId())
+         && !accountService.owns(loggedAccount, transaction.getDestination().getId())) {
             throw new AuthorizationException();
         }
     }
@@ -116,7 +109,7 @@ public abstract class BaseResource {
     protected PaymentResponse<Account> doUpdateAccount(final HttpServletResponse response, final Long accountId, final Account account) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Account updated = this.accountService.update(accountId, account);
+            final Account updated = accountService.update(accountId, account);
             return new PaymentResponse<Account>(header, updated);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
@@ -130,8 +123,9 @@ public abstract class BaseResource {
     protected PaymentResponse<Account> doDeleteAccount(final HttpServletResponse response, final Long accountId) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Account account = this.accountService.delete(accountId);
+            final Account account = accountService.delete(accountId);
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
+            securityService.deleteUser(account.getEmail());
             return new PaymentResponse<Account>(header, account);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
@@ -143,9 +137,9 @@ public abstract class BaseResource {
     }
 
     protected PaymentResponse<List<Wallet>> getWallets(final HttpServletResponse response, final Long accountId, final String status) {
-        final Wallet.Status statusFilter = this.getStatus(status);
+        final Wallet.Status statusFilter = getStatus(status);
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        final List<Wallet> wallets = this.walletService.get(accountId, statusFilter);
+        final List<Wallet> wallets = walletService.get(accountId, statusFilter);
         return new PaymentResponse<List<Wallet>>(header, wallets);
     }
 
@@ -162,23 +156,23 @@ public abstract class BaseResource {
 
     protected PaymentResponse<Wallet> retrieveWallet(final Long walletId, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        if (!this.walletService.exists(walletId)) {
+        if (!walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
-        final Wallet wallet = this.walletService.getById(walletId);
+        final Wallet wallet = walletService.getById(walletId);
         return new PaymentResponse<Wallet>(header, wallet);
     }
 
     protected PaymentResponse<Wallet> doDeleteWallet(final long walletId, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
-        if (!this.walletService.exists(walletId)) {
+        if (!walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         try {
             response.setStatus(Response.Status.ACCEPTED.getStatusCode());
-            return new PaymentResponse<Wallet>(header, this.walletService.delete(walletId));
+            return new PaymentResponse<Wallet>(header, walletService.delete(walletId));
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(e.getMessage());
@@ -191,7 +185,7 @@ public abstract class BaseResource {
     protected PaymentResponse<Wallet> doUpdateWallet(final long walletId, final Wallet wallet, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.ACCEPTED.getStatusCode());
         try {
-            final Wallet saved = this.walletService.update(walletId, wallet);
+            final Wallet saved = walletService.update(walletId, wallet);
             return new PaymentResponse<Wallet>(header, saved);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.BAD_REQUEST.getStatusCode());
@@ -209,12 +203,12 @@ public abstract class BaseResource {
                                                                         final Status status,
                                                                         final Transaction.Type type) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        if (this.accountService.exists(accountId)) {
+        if (accountService.exists(accountId)) {
             return this.badRequest(MessageFormat.format(WALLET_NOT_FOUND, accountId));
         }
         List<Transaction> transactions = null;
         try {
-            transactions = this.transactionService.getTransactionsForAccount(accountId, reference, direction, status, type);
+            transactions = transactionService.getTransactionsForAccount(accountId, reference, direction, status, type);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(e.getMessage());
@@ -229,12 +223,12 @@ public abstract class BaseResource {
     protected PaymentResponse<List<Transaction>> getWalletTransactions(final Long walletId, final String reference,
                                                                        final Direction direction, final Status status, final Type type, final HttpServletResponse response) {
         final ResponseHeader header = new ResponseHeader(true, Response.Status.OK.getStatusCode());
-        if (!this.walletService.exists(walletId)) {
+        if (!walletService.exists(walletId)) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());
             return this.notFound(MessageFormat.format(WALLET_NOT_FOUND, walletId));
         }
         try {
-            final List<Transaction> transactions = this.transactionService.getTransactionsForWallet(walletId, reference, direction, status, type);
+            final List<Transaction> transactions = transactionService.getTransactionsForWallet(walletId, reference, direction, status, type);
             return new PaymentResponse<List<Transaction>>(header, transactions);
         } catch (final ObjectNotFoundException e) {
             response.setStatus(Response.Status.NOT_FOUND.getStatusCode());

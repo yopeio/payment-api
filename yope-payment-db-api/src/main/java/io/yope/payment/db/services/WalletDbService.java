@@ -20,7 +20,7 @@ public interface WalletDbService {
      * @param wallet the wallet to be created
      * @return a wallet with a proper id
      */
-    Wallet save(Wallet wallet);
+    Wallet create(Wallet wallet);
 
     /**
      * checks if a wallet exists.
@@ -59,7 +59,7 @@ public interface WalletDbService {
      * @return the new wallet
      * @throws ObjectNotFoundException if no wallet with the given id is found
      */
-    Wallet update(Long id, Wallet wallet) throws ObjectNotFoundException;
+    Wallet save(Long id, Wallet wallet) throws ObjectNotFoundException;
 
     /**
      * deletes a wallet by id
